@@ -8,15 +8,13 @@ import com.example.domain.model.WorkDay
 import com.example.domain.repository.WorkRepository as DomainWorkRepository
 import com.example.util.CalendarHelper
 import com.example.util.CalendarType
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class WorkRepository(
-    private val workDao: WorkDao,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val workDao: WorkDao
 ) : DomainWorkRepository {
 
     override fun getDaysForMonth(year: Int, month: Int): Flow<List<WorkDay>> =
@@ -29,25 +27,25 @@ class WorkRepository(
             it?.toDomain() ?: AppSettings()
         }
 
-    override suspend fun getSettingsDirect(): AppSettings = withContext(ioDispatcher) {
+    override suspend fun getSettingsDirect(): AppSettings = withContext(Dispatchers.IO) {
         workDao.getSettingsDirect()?.toDomain() ?: AppSettings()
     }
 
-    override suspend fun getDaysCountForMonth(year: Int, month: Int): Int = withContext(ioDispatcher) {
+    override suspend fun getDaysCountForMonth(year: Int, month: Int): Int = withContext(Dispatchers.IO) {
         workDao.getDaysCountForMonth(year, month)
     }
 
     override fun getMonthTarget(year: Int, month: Int): Flow<MonthTarget?> =
         workDao.getMonthTargetFlow(year, month).map { it?.toDomain() }
 
-    override suspend fun getMonthTargetDirect(year: Int, month: Int): MonthTarget? = withContext(ioDispatcher) {
+    override suspend fun getMonthTargetDirect(year: Int, month: Int): MonthTarget? = withContext(Dispatchers.IO) {
         workDao.getMonthTargetDirect(year, month)?.toDomain()
     }
 
     fun getAllMonthTargets(): Flow<List<MonthTarget>> =
         workDao.getAllMonthTargetsFlow().map { list -> list.map { it.toDomain() } }
 
-    override suspend fun initializeMonthIfEmpty(year: Int, month: Int): Unit = withContext(ioDispatcher) {
+    override suspend fun initializeMonthIfEmpty(year: Int, month: Int): Unit = withContext(Dispatchers.IO) {
         val currentSettings = workDao.getSettingsDirect() ?: AppSettingsEntity()
         val calType = CalendarHelper.parseCalendarType(currentSettings.calendarType)
         

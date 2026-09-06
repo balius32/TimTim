@@ -18,8 +18,8 @@ android {
     applicationId = "com.aistudio.worktracker.twuoys"
     minSdk = 24
     targetSdk = 36
-    versionCode = 2
-    versionName = "1.0.1"
+    versionCode = 1
+    versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -45,8 +45,7 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      // Use debug signing for this release build to ensure it can be installed on device without keystore issues
-      signingConfig = signingConfigs.getByName("debug")
+      signingConfig = signingConfigs.getByName("release")
     }
     debug { }
   }
@@ -92,8 +91,6 @@ dependencies {
   implementation(libs.coil.compose)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.koin.android)
-  implementation(libs.koin.compose)
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
@@ -117,13 +114,13 @@ dependencies {
   "ksp"(libs.androidx.room.compiler)
 }
 
-// Rename the output APK to timtim_v1.0.1.apk for release builds
+// Rename the output APK to timtim-v1.apk for release builds
 (extensions.getByName("android") as BaseExtension).apply {
   (this as AppExtension).applicationVariants.all {
     if (name == "release") {
       outputs.all {
         val output = this as ApkVariantOutput
-        output.outputFileName = "timtim_v1.0.1.apk"
+        output.outputFileName = "timtim-v1.apk"
       }
     }
   }

@@ -67,7 +67,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.WorkViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import com.example.ui.mvi.AppScreen
 import com.example.ui.mvi.WorkUiEffect
 import com.example.ui.mvi.WorkUiIntent
@@ -90,7 +89,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: WorkViewModel by viewModel()
+    private val viewModel: WorkViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()

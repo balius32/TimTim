@@ -24,7 +24,6 @@ robolectric = "4.16.1"
 roborazzi = "1.59.0"
 secretsGradlePlugin = "2.0.1"
 coreSplashScreen = "1.0.1"
-koin = "4.0.0"
 
 
 [libraries]
@@ -60,9 +59,6 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
 roborazzi-junit-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
-koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
-koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
-
 
 
 [plugins]
