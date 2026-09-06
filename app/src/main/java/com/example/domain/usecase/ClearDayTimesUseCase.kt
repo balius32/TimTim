@@ -5,15 +5,15 @@ import com.example.domain.repository.WorkRepository
 class ClearDayTimesUseCase(
     private val repository: WorkRepository
 ) {
-    suspend fun clearEnter(year: Int, month: Int, dayNumber: Int) {
+    suspend fun clearEnter(year: Int, month: Int, dayNumber: Int): Result<Unit> = runCatching {
         repository.clearEnterTime(year, month, dayNumber)
     }
 
-    suspend fun clearExit(year: Int, month: Int, dayNumber: Int) {
+    suspend fun clearExit(year: Int, month: Int, dayNumber: Int): Result<Unit> = runCatching {
         repository.clearExitTime(year, month, dayNumber)
     }
 
-    suspend fun clearDay(year: Int, month: Int, dayNumber: Int) {
+    suspend fun clearDay(year: Int, month: Int, dayNumber: Int): Result<Unit> = runCatching {
         repository.clearDay(year, month, dayNumber)
     }
 }
