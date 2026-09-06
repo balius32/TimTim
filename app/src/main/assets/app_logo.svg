@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Primary Blue Emblem Circle (#0066EE) -->
+  <circle cx="256" cy="256" r="172" fill="#0066EE"/>
+  
+  <!-- Stylized Geometric Monogram Cutouts in White (#FFFFFF) -->
+  <!-- Left '7' Element -->
+  <path d="M 82,164 L 250,164 L 140,388 L 86,388 L 132,222 L 82,222 Z" fill="#FFFFFF"/>
+  
+  <!-- Right 'T' Element -->
+  <path d="M 278,136 L 416,136 L 416,198 L 318,198 L 254,356 L 192,356 Z" fill="#FFFFFF"/>
+</svg>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Primary Blue Emblem Circle -->
+    <path
+        android:fillColor="#0066EE"
+        android:pathData="M256,256m-172,0a172,172 0,1,1 344,0a172,172 0,1,1 -344,0" />
+
+    <!-- Left '7' Element Cutout (White to match app screen background) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M82,164 L250,164 L140,388 L86,388 L132,222 L82,222 Z" />
+
+    <!-- Right 'T' Element Cutout (White to match app screen background) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M278,136 L416,136 L416,198 L318,198 L254,356 L192,356 Z" />
+</vector>
