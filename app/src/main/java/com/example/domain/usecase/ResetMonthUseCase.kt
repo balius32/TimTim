@@ -5,11 +5,11 @@ import com.example.domain.repository.WorkRepository
 class ResetMonthUseCase(
     private val repository: WorkRepository
 ) {
-    suspend fun resetMonth(year: Int, month: Int) {
+    suspend fun resetMonth(year: Int, month: Int): Result<Unit> = runCatching {
         repository.resetMonthDays(year, month)
     }
 
-    suspend fun resetAll() {
+    suspend fun resetAll(): Result<Unit> = runCatching {
         repository.resetAllDays()
     }
 }
