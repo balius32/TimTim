@@ -1,8 +1,0 @@
-{
-  "name": "Remix Work Hours",
-  "description": "A 30-day work hours timesheet tracking entry \u0026 exit times, total company work hours, overtime, and work deficit.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
