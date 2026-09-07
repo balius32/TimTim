@@ -19,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class WorkViewModel(
     application: Application,
@@ -33,6 +34,7 @@ class WorkViewModel(
     private val getAppSettingsUseCase: GetAppSettingsUseCase,
     private val getWorkDaysUseCase: GetWorkDaysUseCase,
     private val getMonthTargetUseCase: GetMonthTargetUseCase,
+    private val getDayUseCase: GetDayUseCase,
     private val backupRestoreUseCase: BackupRestoreUseCase,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : AndroidViewModel(application) {
@@ -263,7 +265,19 @@ class WorkViewModel(
             }
             WorkUiIntent.DismissTodayPrompt -> _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
             is WorkUiIntent.OpenTodayTimePicker -> viewModelScope.launch(ioDispatcher) {
-                // Simplified, needs GetDayUseCase or similar
+                val settings = getAppSettingsUseCase.getDirect()
+                val calType = CalendarHelper.parseCalendarType(settings.calendarType)
+                val now = CalendarHelper.now(calType)
+                val todayDay = getDayUseCase(now.year, now.month, now.day)
+                if (todayDay != null) {
+                    _uiControlState.update {
+                        it.copy(
+                            selectedDayForTimePick = todayDay,
+                            isPickingEnterTime = intent.isEnter,
+                            showTimePickerDialog = true
+                        )
+                    }
+                }
             }
             is WorkUiIntent.UpdateUserName -> {
                 _uiControlState.update { it.copy(userName = intent.name) }
@@ -315,16 +329,42 @@ class WorkViewModel(
             is WorkUiIntent.ImportBackupData -> viewModelScope.launch(ioDispatcher) {
                 val result = backupRestoreUseCase.importData(intent.jsonString)
                 result.onSuccess { msg ->
-                    val currentSettings = getAppSettingsUseCase.getDirect()
-                    if (!currentSettings.hasCompletedOnboarding) {
-                        updateUserSettingsUseCase.setCompletedOnboarding(true)
-                        _uiControlState.update { it.copy(currentScreen = AppScreen.TIMESHEET) }
+                    try {
+                        val currentSettings = getAppSettingsUseCase.getDirect()
+                        val calType = CalendarHelper.parseCalendarType(currentSettings.calendarType)
+                        val now = CalendarHelper.now(calType)
+                        initializeMonthUseCase(now.year, now.month)
+                        _uiControlState.update {
+                            it.copy(
+                                selectedYear = now.year,
+                                selectedMonth = now.month,
+                                reportYear = now.year,
+                                reportMonth = now.month,
+                                userName = currentSettings.userName.ifBlank { it.userName },
+                                avatarId = currentSettings.avatarId.ifBlank { it.avatarId },
+                                currentScreen = if (!currentSettings.hasCompletedOnboarding) AppScreen.TIMESHEET else it.currentScreen
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Keep going if state refresh encountered an issue
                     }
-                    intent.onComplete(true, msg)
+                    withContext(Dispatchers.Main) {
+                        try {
+                            intent.onComplete(true, msg)
+                        } catch (e: Exception) {
+                            // Suppress callback exception to avoid crashing
+                        }
+                    }
                     _effects.send(WorkUiEffect.ShowSnackbar(msg))
                 }.onFailure { err ->
                     val errMsg = err.message ?: "Failed to import backup data"
-                    intent.onComplete(false, errMsg)
+                    withContext(Dispatchers.Main) {
+                        try {
+                            intent.onComplete(false, errMsg)
+                        } catch (e: Exception) {
+                            // Suppress callback exception
+                        }
+                    }
                     _effects.send(WorkUiEffect.ShowSnackbar("Import failed: $errMsg"))
                 }
             }

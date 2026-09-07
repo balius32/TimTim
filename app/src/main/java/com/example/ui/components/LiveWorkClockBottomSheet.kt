@@ -37,11 +37,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.HourglassBottom
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material3.Button
@@ -542,7 +542,7 @@ fun LiveWorkClockBottomSheet(
             ) {
                 // Check In Metric Card
                 MetricInfoCard(
-                    icon = Icons.Default.Login,
+                    icon = Icons.AutoMirrored.Filled.Login,
                     title = "Check In",
                     value = day.formattedEnterTime(),
                     modifier = Modifier.weight(1f)
@@ -558,7 +558,7 @@ fun LiveWorkClockBottomSheet(
 
                 // Estimated Checkout Card
                 MetricInfoCard(
-                    icon = Icons.Default.Logout,
+                    icon = Icons.AutoMirrored.Filled.Logout,
                     title = "Est. Checkout",
                     value = String.format(Locale.getDefault(), "%02d:%02d", expectedExitHour, expectedExitMinute),
                     modifier = Modifier.weight(1f)
@@ -592,7 +592,7 @@ fun LiveWorkClockBottomSheet(
                             .testTag("live_clock_exit_now_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Logout,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )

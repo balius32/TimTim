@@ -111,14 +111,19 @@ object DataBackupHelper {
         val targetsArray = root.optJSONArray("monthTargets")
         if (targetsArray != null) {
             for (i in 0 until targetsArray.length()) {
-                val t = targetsArray.getJSONObject(i)
-                monthTargets.add(
-                    MonthTargetEntity(
-                        year = t.getInt("year"),
-                        month = t.getInt("month"),
-                        dailyRequiredMinutes = t.getInt("dailyRequiredMinutes")
+                val t = targetsArray.optJSONObject(i) ?: continue
+                val y = t.optInt("year")
+                val m = t.optInt("month")
+                val dailyReq = t.optInt("dailyRequiredMinutes", 0)
+                if (y > 0 && m in 1..12) {
+                    monthTargets.add(
+                        MonthTargetEntity(
+                            year = y,
+                            month = m,
+                            dailyRequiredMinutes = dailyReq
+                        )
                     )
-                )
+                }
             }
         }
 
@@ -126,20 +131,25 @@ object DataBackupHelper {
         val daysArray = root.optJSONArray("workDays")
         if (daysArray != null) {
             for (i in 0 until daysArray.length()) {
-                val d = daysArray.getJSONObject(i)
-                workDays.add(
-                    WorkDayEntity(
-                        year = d.getInt("year"),
-                        month = d.getInt("month"),
-                        dayNumber = d.getInt("dayNumber"),
-                        enterHour = if (d.has("enterHour") && !d.isNull("enterHour")) d.getInt("enterHour") else null,
-                        enterMinute = if (d.has("enterMinute") && !d.isNull("enterMinute")) d.getInt("enterMinute") else null,
-                        exitHour = if (d.has("exitHour") && !d.isNull("exitHour")) d.getInt("exitHour") else null,
-                        exitMinute = if (d.has("exitMinute") && !d.isNull("exitMinute")) d.getInt("exitMinute") else null,
-                        isDayOff = d.optBoolean("isDayOff", false),
-                        note = d.optString("note", "")
+                val d = daysArray.optJSONObject(i) ?: continue
+                val y = d.optInt("year")
+                val m = d.optInt("month")
+                val dayNum = d.optInt("dayNumber")
+                if (y > 0 && m in 1..12 && dayNum in 1..31) {
+                    workDays.add(
+                        WorkDayEntity(
+                            year = y,
+                            month = m,
+                            dayNumber = dayNum,
+                            enterHour = if (d.has("enterHour") && !d.isNull("enterHour")) d.optInt("enterHour") else null,
+                            enterMinute = if (d.has("enterMinute") && !d.isNull("enterMinute")) d.optInt("enterMinute") else null,
+                            exitHour = if (d.has("exitHour") && !d.isNull("exitHour")) d.optInt("exitHour") else null,
+                            exitMinute = if (d.has("exitMinute") && !d.isNull("exitMinute")) d.optInt("exitMinute") else null,
+                            isDayOff = d.optBoolean("isDayOff", false),
+                            note = d.optString("note", "")
+                        )
                     )
-                )
+                }
             }
         }
 

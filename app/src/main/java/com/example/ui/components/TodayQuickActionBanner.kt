@@ -23,9 +23,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -219,7 +219,7 @@ fun TodayQuickActionBanner(
                                     .testTag(if (isEnter) "btn_enter_now" else "btn_exit_now")
                             ) {
                                 Icon(
-                                    imageVector = if (isEnter) Icons.Default.Login else Icons.Default.Logout,
+                                    imageVector = if (isEnter) Icons.AutoMirrored.Filled.Login else Icons.AutoMirrored.Filled.Logout,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp)
                                 )

@@ -511,12 +511,17 @@ fun SettingsScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        val appContext = context.applicationContext
                         viewModel.importBackupData(rawJson) { success, msg ->
-                            Toast.makeText(
-                                context,
-                                if (success) "Backup restored successfully" else "Import failed: $msg",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            try {
+                                Toast.makeText(
+                                    appContext,
+                                    if (success) "Backup restored successfully" else "Import failed: $msg",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } catch (e: Exception) {
+                                // Ignore toast display failures
+                            }
                         }
                         showImportConfirmDialog = false
                         pendingImportData = null
