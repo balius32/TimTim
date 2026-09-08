@@ -44,10 +44,12 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Timelapse
@@ -96,6 +98,7 @@ import com.example.ui.mvi.WorkUiEffect
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.components.CustomAvatarDisplay
+import com.example.ui.components.DayItemReportBottomSheet
 import com.example.ui.components.LiveWorkClockBottomSheet
 import com.example.ui.components.MonthYearPickerBottomSheet
 import com.example.ui.components.TodayQuickActionBanner
@@ -145,6 +148,7 @@ fun TimesheetScreen(
     }
 
     var showMonthPickerSheet by remember { mutableStateOf(false) }
+    var reportDaySummary by remember { mutableStateOf<DaySummary?>(null) }
 
     if (showMonthPickerSheet) {
         MonthYearPickerBottomSheet(
@@ -154,6 +158,23 @@ fun TimesheetScreen(
             onDismissRequest = { showMonthPickerSheet = false },
             onMonthYearSelected = { year, month ->
                 viewModel.setYearMonth(year, month)
+            }
+        )
+    }
+
+    reportDaySummary?.let { selectedDaySummary ->
+        DayItemReportBottomSheet(
+            daySummary = selectedDaySummary,
+            formattedFullDate = uiState.formattedFullDate(selectedDaySummary.day.dayNumber),
+            dayOfWeek = uiState.getDayOfWeekLabel(selectedDaySummary.day.dayNumber),
+            onDismissRequest = { reportDaySummary = null },
+            onEditEnterTime = {
+                reportDaySummary = null
+                viewModel.openTimePicker(selectedDaySummary.day, isEnter = true)
+            },
+            onEditExitTime = {
+                reportDaySummary = null
+                viewModel.openTimePicker(selectedDaySummary.day, isEnter = false)
             }
         )
     }
@@ -310,6 +331,9 @@ fun TimesheetScreen(
                             onOpenRemainingTime = {
                                 onNavigateToRemainingTime(it)
                             },
+                            onOpenItemReport = {
+                                reportDaySummary = it
+                            },
                             modifier = Modifier.testTag("today_card")
                         )
                     }
@@ -373,6 +397,9 @@ fun TimesheetScreen(
                     },
                     onOpenRemainingTime = {
                         onNavigateToRemainingTime(it)
+                    },
+                    onOpenItemReport = {
+                        reportDaySummary = it
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -768,6 +795,7 @@ fun WireframeDailyLogRowCard(
     onToggleDayOff: () -> Unit,
     onClearDay: () -> Unit,
     onOpenRemainingTime: (WorkDay) -> Unit = {},
+    onOpenItemReport: (DaySummary) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val day = daySummary.day
@@ -920,13 +948,14 @@ fun WireframeDailyLogRowCard(
                         )
                     }
 
-                    // Dropdown Popup with "Remaining Time", "Set Off", and "Clear"
+                    // Dropdown Popup with "Remaining Time" (for today), "Item Report" (for other days), "Set Off", and "Clear"
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
-                        if (isInProgress) {
+                        if (isToday) {
+                            // For today: show Remaining Time if work is in progress or day has activity
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -951,6 +980,33 @@ fun WireframeDailyLogRowCard(
                                     )
                                 },
                                 modifier = Modifier.testTag("day_menu_remaining_time_${day.dayNumber}")
+                            )
+                        } else {
+                            // For other days: show Daily Summary opening the bottom sheet
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Daily Summary",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOpenItemReport(daySummary)
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Insights,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                modifier = Modifier.testTag("day_menu_item_report_${day.dayNumber}")
                             )
                         }
 

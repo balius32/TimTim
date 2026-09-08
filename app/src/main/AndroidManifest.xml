@@ -33,6 +33,23 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Work Remaining Time & Exit Countdown Widget -->
+        <receiver
+            android:name=".widget.WorkRemainingWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_remaining_time_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.widget.ACTION_REFRESH_WIDGET" />
+                <action android:name="com.example.widget.ACTION_CLOCK_IN" />
+                <action android:name="com.example.widget.ACTION_CLOCK_OUT" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_remaining_time_info" />
+        </receiver>
     </application>
 
 </manifest>

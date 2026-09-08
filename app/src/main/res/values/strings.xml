@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">TimTim</string>
+    <string name="widget_remaining_time_title">Work Time Left</string>
+    <string name="widget_remaining_time_description">Shows live time left until exit, worked progress line, and today\'s schedule at a glance.</string>
 </resources>

@@ -119,6 +119,10 @@ data class WorkUiState(
         return "$mm/$dd"
     }
 
+    fun formattedFullDate(dayNumber: Int): String {
+        return "$effectiveSelectedYear/$effectiveSelectedMonth/$dayNumber"
+    }
+
     fun getDayOfWeekLabel(dayNumber: Int): String {
         return CalendarHelper.getDayOfWeekLabel(effectiveSelectedYear, effectiveSelectedMonth, dayNumber, calendarType)
     }

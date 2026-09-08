@@ -13,6 +13,7 @@ import com.example.ui.mvi.WorkUiEffect
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.util.CalendarHelper
+import com.example.widget.WorkRemainingWidgetProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -251,6 +252,11 @@ class WorkViewModel(
                 val now = CalendarHelper.now(calType)
                 initializeMonthUseCase(now.year, now.month)
                 logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = true)
+                try {
+                    WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
+                } catch (e: Exception) {
+                    // Suppress
+                }
                 _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
                 _effects.send(WorkUiEffect.ShowSnackbar("Logged check-in time successfully"))
             }
@@ -260,6 +266,11 @@ class WorkViewModel(
                 val now = CalendarHelper.now(calType)
                 initializeMonthUseCase(now.year, now.month)
                 logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = false)
+                try {
+                    WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
+                } catch (e: Exception) {
+                    // Suppress
+                }
                 _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
                 _effects.send(WorkUiEffect.ShowSnackbar("Logged check-out time successfully"))
             }
@@ -393,6 +404,13 @@ class WorkViewModel(
                     val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                     val now = CalendarHelper.now(calType)
                     val isToday = (day.year == now.year && day.month == now.month && day.dayNumber == now.day)
+                    if (isToday) {
+                        try {
+                            WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
+                        } catch (e: Exception) {
+                            // Suppress widget notify errors
+                        }
+                    }
                     _uiControlState.update {
                         it.copy(
                             showTimePickerDialog = false,

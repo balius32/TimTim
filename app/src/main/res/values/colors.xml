@@ -7,4 +7,17 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- App Design Palette Colors for Widget -->
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_bg_dark">#1E293B</color>
+    <color name="widget_primary">#0066EE</color>
+    <color name="widget_primary_container">#E0EDFF</color>
+    <color name="widget_text_primary">#0F172A</color>
+    <color name="widget_text_secondary">#64748B</color>
+    <color name="widget_text_muted">#94A3B8</color>
+    <color name="widget_overtime_green">#10B981</color>
+    <color name="widget_deficit_amber">#F59E0B</color>
+    <color name="widget_progress_track">#E2E8F0</color>
+    <color name="widget_border">#E2E8F0</color>
 </resources>

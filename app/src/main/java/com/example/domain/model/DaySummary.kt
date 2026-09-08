@@ -35,4 +35,18 @@ data class DaySummary(
         val m = mins % 60
         return if (h > 0) "${h}h ${m}m" else "${m}m"
     }
+
+    /**
+     * Estimated checkout formatted string: based on day's enter time and the target minutes.
+     */
+    fun formattedEstimatedCheckout(): String {
+        val target = if (targetMinutes > 0) targetMinutes else 480
+        return day.formattedEstimatedCheckout(target)
+    }
+
+    val isOvertime: Boolean
+        get() = diffMinutes > 0
+
+    val isDeficit: Boolean
+        get() = diffMinutes < 0
 }

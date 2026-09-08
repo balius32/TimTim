@@ -72,4 +72,24 @@ data class WorkDay(
         val m = mins % 60
         return if (h > 0) "${h}h ${m}m" else "${m}m"
     }
+
+    /**
+     * Calculate estimated checkout total minutes from enter time plus required target minutes.
+     * Returns null if enter time is not set.
+     */
+    fun estimatedCheckoutMinutes(targetMinutes: Int): Int? {
+        if (!hasEnterTime) return null
+        val enterTotal = (enterHour ?: 0) * 60 + (enterMinute ?: 0)
+        return (enterTotal + targetMinutes) % (24 * 60)
+    }
+
+    /**
+     * Formats estimated checkout time as HH:mm string based on enter time and target minutes.
+     */
+    fun formattedEstimatedCheckout(targetMinutes: Int): String {
+        val est = estimatedCheckoutMinutes(targetMinutes) ?: return "_ _ : _ _"
+        val h = est / 60
+        val m = est % 60
+        return String.format(Locale.getDefault(), "%02d:%02d", h, m)
+    }
 }
