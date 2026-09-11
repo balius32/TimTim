@@ -109,6 +109,7 @@ import com.example.ui.components.AvatarStyle
 import com.example.ui.components.CustomAvatarDisplay
 import com.example.ui.components.LimitTimePickerDialog
 import com.example.ui.components.TargetTimePickerDialog
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.theme.ACCENT_COLOR_OPTIONS
 import com.example.ui.theme.buildThemeModeString
@@ -310,15 +311,18 @@ fun OnboardingScreen(
                 )
             }
 
+            val isRtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+            val rtlMultiplier = if (isRtl) -1 else 1
+
             AnimatedContent(
                 targetState = currentStep,
                 transitionSpec = {
                     if (slideDirection > 0) {
-                        (slideInHorizontally(animationSpec = tween(300)) { width -> width } + fadeIn(animationSpec = tween(300)))
-                            .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { width -> -width } + fadeOut(animationSpec = tween(300)))
+                        (slideInHorizontally(animationSpec = tween(300)) { width -> width * rtlMultiplier } + fadeIn(animationSpec = tween(300)))
+                            .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { width -> -width * rtlMultiplier } + fadeOut(animationSpec = tween(300)))
                     } else {
-                        (slideInHorizontally(animationSpec = tween(300)) { width -> -width } + fadeIn(animationSpec = tween(300)))
-                            .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { width -> width } + fadeOut(animationSpec = tween(300)))
+                        (slideInHorizontally(animationSpec = tween(300)) { width -> -width * rtlMultiplier } + fadeIn(animationSpec = tween(300)))
+                            .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { width -> width * rtlMultiplier } + fadeOut(animationSpec = tween(300)))
                     }
                 },
                 label = "onboarding_step_anim"
@@ -1119,27 +1123,28 @@ fun OnboardingTargetAndLimitsStep(
 // -------------------------------------------------------------
 data class OnboardingWeekdayItem(
     val dayOfWeekName: String,
-    val displayName: String
+    val displayName: String,
+    val farsiName: String
 )
 
 private val GREGORIAN_DAYS_LIST = listOf(
-    OnboardingWeekdayItem("MONDAY", "Monday"),
-    OnboardingWeekdayItem("TUESDAY", "Tuesday"),
-    OnboardingWeekdayItem("WEDNESDAY", "Wednesday"),
-    OnboardingWeekdayItem("THURSDAY", "Thursday"),
-    OnboardingWeekdayItem("FRIDAY", "Friday"),
-    OnboardingWeekdayItem("SATURDAY", "Saturday"),
-    OnboardingWeekdayItem("SUNDAY", "Sunday")
+    OnboardingWeekdayItem("MONDAY", "Monday", "دوشنبه"),
+    OnboardingWeekdayItem("TUESDAY", "Tuesday", "سه‌شنبه"),
+    OnboardingWeekdayItem("WEDNESDAY", "Wednesday", "چهارشنبه"),
+    OnboardingWeekdayItem("THURSDAY", "Thursday", "پنج‌شنبه"),
+    OnboardingWeekdayItem("FRIDAY", "Friday", "جمعه"),
+    OnboardingWeekdayItem("SATURDAY", "Saturday", "شنبه"),
+    OnboardingWeekdayItem("SUNDAY", "Sunday", "یکشنبه")
 )
 
 private val SHAMSI_DAYS_LIST = listOf(
-    OnboardingWeekdayItem("SATURDAY", "Shanbeh"),
-    OnboardingWeekdayItem("SUNDAY", "Yekshanbeh"),
-    OnboardingWeekdayItem("MONDAY", "Doshanbeh"),
-    OnboardingWeekdayItem("TUESDAY", "Seshanbeh"),
-    OnboardingWeekdayItem("WEDNESDAY", "Chaharshanbeh"),
-    OnboardingWeekdayItem("THURSDAY", "Panjshanbeh"),
-    OnboardingWeekdayItem("FRIDAY", "Jomeh")
+    OnboardingWeekdayItem("SATURDAY", "Saturday", "شنبه"),
+    OnboardingWeekdayItem("SUNDAY", "Sunday", "یکشنبه"),
+    OnboardingWeekdayItem("MONDAY", "Monday", "دوشنبه"),
+    OnboardingWeekdayItem("TUESDAY", "Tuesday", "سه‌شنبه"),
+    OnboardingWeekdayItem("WEDNESDAY", "Wednesday", "چهارشنبه"),
+    OnboardingWeekdayItem("THURSDAY", "Thursday", "پنج‌شنبه"),
+    OnboardingWeekdayItem("FRIDAY", "Friday", "جمعه")
 )
 
 @Composable
@@ -1147,6 +1152,7 @@ fun OnboardingOffDaysStep(
     uiState: WorkUiState,
     viewModel: WorkViewModel
 ) {
+    val strings = LocalAppStrings.current
     val offDaysString = uiState.settings.offDaysOfWeek
     val currentSelected = remember(offDaysString) {
         if (offDaysString.isBlank()) emptySet()
@@ -1156,13 +1162,13 @@ fun OnboardingOffDaysStep(
     val daysList = if (uiState.calendarType == CalendarType.GREGORIAN) GREGORIAN_DAYS_LIST else SHAMSI_DAYS_LIST
 
     SettingsStyleCard(
-        title = "Off Days",
+        title = strings.offDaysSetting,
         icon = Icons.Default.CalendarMonth,
-        trailingBadge = "${currentSelected.size} days"
+        trailingBadge = strings.formatDaysCount(currentSelected.size)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Select days off",
+                text = strings.offDaysSetting,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
@@ -1170,7 +1176,7 @@ fun OnboardingOffDaysStep(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Selected days will be automatically designated OFF in daily logs",
+                text = strings.offDaysSubtitle,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1183,6 +1189,7 @@ fun OnboardingOffDaysStep(
         ) {
             daysList.forEachIndexed { index, item ->
                 val isChecked = currentSelected.contains(item.dayOfWeekName)
+                val dayTitle = if (uiState.calendarType == CalendarType.HIJRI_SHAMSI || (strings.isRtl && uiState.calendarType != CalendarType.GREGORIAN)) item.farsiName else item.displayName
 
                 Row(
                     modifier = Modifier
@@ -1223,7 +1230,7 @@ fun OnboardingOffDaysStep(
                         )
 
                         Text(
-                            text = item.displayName,
+                            text = dayTitle,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = if (isChecked) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 15.sp
@@ -1238,7 +1245,7 @@ fun OnboardingOffDaysStep(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "OFF",
+                                text = strings.off,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.sp

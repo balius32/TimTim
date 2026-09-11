@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.theme.DeficitRed
 import com.example.ui.theme.DeficitRedContainer
 import com.example.ui.theme.OnDeficitRedContainer
@@ -93,6 +94,7 @@ fun AppTimePickerDialog(
         skipPartiallyExpanded = true
     )
     val coroutineScope = rememberCoroutineScope()
+    val strings = LocalAppStrings.current
 
     var selectedHour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
     var selectedMinute by remember { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
@@ -126,8 +128,8 @@ fun AppTimePickerDialog(
     val hasValidationError = isExitBeforeEnter || isEnterAfterExit
 
     val validationErrorMessage = when {
-        isExitBeforeEnter -> "Exit time cannot be earlier than enter time (${String.format("%02d:%02d", existingEnterHour, existingEnterMinute)})"
-        isEnterAfterExit -> "Enter time cannot be later than exit time (${String.format("%02d:%02d", existingExitHour, existingExitMinute)})"
+        isExitBeforeEnter -> "${strings.exitTimeCannotBeEarlier} (${strings.formatTime(existingEnterHour ?: 0, existingEnterMinute ?: 0)})"
+        isEnterAfterExit -> "${strings.enterTimeCannotBeLater} (${strings.formatTime(existingExitHour ?: 0, existingExitMinute ?: 0)})"
         else -> null
     }
 
@@ -192,7 +194,7 @@ fun AppTimePickerDialog(
         ) {
             // Top Context Sub-label
             Text(
-                text = "${if (isEnterTime) "Enter Time" else "Exit Time"} • Day $dayNumber",
+                text = "${if (isEnterTime) strings.enterTime else strings.exitTime} • $dayNumber",
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
@@ -353,7 +355,7 @@ fun AppTimePickerDialog(
                     modifier = Modifier.testTag("now_time_button")
                 ) {
                     Text(
-                        text = "Now",
+                        text = strings.now,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 17.sp,
@@ -372,7 +374,7 @@ fun AppTimePickerDialog(
                         modifier = Modifier.testTag("cancel_time_button")
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = strings.cancel,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -398,7 +400,7 @@ fun AppTimePickerDialog(
                         modifier = Modifier.testTag("confirm_time_button")
                     ) {
                         Text(
-                            text = "Save",
+                            text = strings.save,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 16.sp,
@@ -420,14 +422,17 @@ fun AppTimePickerDialog(
 fun TargetTimePickerDialog(
     initialHour: Int,
     initialMinute: Int,
-    title: String = "Daily Work Target",
-    subtitle: String = "Scroll to select required hours and minutes per day",
+    title: String? = null,
+    subtitle: String? = null,
     onConfirm: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+    val strings = LocalAppStrings.current
+    val effectiveTitle = title ?: strings.dailyTarget
+    val effectiveSubtitle = subtitle ?: strings.dailyTargetDesc
     val coroutineScope = rememberCoroutineScope()
 
     var selectedHour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
@@ -504,7 +509,7 @@ fun TargetTimePickerDialog(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = title,
+                text = effectiveTitle,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -513,7 +518,7 @@ fun TargetTimePickerDialog(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = subtitle,
+                text = effectiveSubtitle,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -611,7 +616,7 @@ fun TargetTimePickerDialog(
                     modifier = Modifier.testTag("cancel_target_button")
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = strings.cancel,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -635,7 +640,7 @@ fun TargetTimePickerDialog(
                     modifier = Modifier.testTag("confirm_target_button")
                 ) {
                     Text(
-                        text = "Save",
+                        text = strings.save,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp
@@ -655,8 +660,8 @@ fun TargetTimePickerDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LimitTimePickerDialog(
-    title: String = "Work Limits",
-    subtitle: String,
+    title: String? = null,
+    subtitle: String? = null,
     initialHour: Int,
     initialMinute: Int,
     onConfirm: (hour: Int, minute: Int) -> Unit,
@@ -666,6 +671,9 @@ fun LimitTimePickerDialog(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+    val strings = LocalAppStrings.current
+    val effectiveTitle = title ?: strings.workLimits
+    val effectiveSubtitle = subtitle ?: ""
     val coroutineScope = rememberCoroutineScope()
 
     var selectedHour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
@@ -742,19 +750,21 @@ fun LimitTimePickerDialog(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = title,
+                text = effectiveTitle,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (effectiveSubtitle.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = effectiveSubtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -851,7 +861,7 @@ fun LimitTimePickerDialog(
                     modifier = Modifier.testTag("limit_off_button")
                 ) {
                     Text(
-                        text = "Off",
+                        text = strings.off,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp
@@ -869,7 +879,7 @@ fun LimitTimePickerDialog(
                         modifier = Modifier.testTag("cancel_limit_button")
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = strings.cancel,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -891,7 +901,7 @@ fun LimitTimePickerDialog(
                         modifier = Modifier.testTag("confirm_limit_button")
                     ) {
                         Text(
-                            text = "Save",
+                            text = strings.save,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 16.sp
@@ -918,6 +928,7 @@ fun SoftWheelColumn(
     testTag: String,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     LazyColumn(
         state = listState,
         flingBehavior = snapFlingBehavior,
@@ -933,7 +944,7 @@ fun SoftWheelColumn(
             key = { it }
         ) { index ->
             val value = index % totalItems
-            val valueString = String.format("%02d", value)
+            val valueString = strings.formatDigits(String.format(java.util.Locale.getDefault(), "%02d", value))
 
             val distanceFraction by remember(listState) {
                 derivedStateOf {

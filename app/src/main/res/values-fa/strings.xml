@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">تیم‌تیم</string>
+    <string name="widget_remaining_time_title">زمان باقیمانده کارکرد</string>
+    <string name="widget_remaining_time_description">نمایش زنده زمان باقیمانده تا پایان کارکرد، نوار پیشرفت و وضعیت روز کاری.</string>
+</resources>

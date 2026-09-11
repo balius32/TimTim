@@ -25,9 +25,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.ButtonDefaults
@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.localization.LocalAppStrings
 import com.example.util.CalendarHelper
 import com.example.util.CalendarType
 
@@ -73,6 +74,7 @@ fun MonthYearPickerBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = LocalAppStrings.current
     var displayedYear by remember(currentSelectedYear) { mutableIntStateOf(currentSelectedYear) }
 
     val actualNow = remember(calendarType) { CalendarHelper.now(calendarType) }
@@ -120,7 +122,7 @@ fun MonthYearPickerBottomSheet(
                     }
                     Column {
                         Text(
-                            text = "Select Month & Year",
+                            text = strings.selectMonthYear,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
@@ -128,7 +130,7 @@ fun MonthYearPickerBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Quickly jump to any period",
+                            text = strings.selectMonthYearDesc,
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -146,7 +148,7 @@ fun MonthYearPickerBottomSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = strings.close,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
@@ -174,8 +176,8 @@ fun MonthYearPickerBottomSheet(
                             .testTag("prev_year_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ChevronLeft,
-                            contentDescription = "Previous Year",
+                            imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
+                            contentDescription = strings.previousMonth,
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(24.dp)
                         )
@@ -187,7 +189,7 @@ fun MonthYearPickerBottomSheet(
                         label = "year_transition"
                     ) { year ->
                         Text(
-                            text = "$year",
+                            text = strings.formatYear(year),
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 1.sp
@@ -204,8 +206,8 @@ fun MonthYearPickerBottomSheet(
                             .testTag("next_year_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Next Year",
+                            imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                            contentDescription = strings.nextMonth,
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(24.dp)
                         )
@@ -224,7 +226,7 @@ fun MonthYearPickerBottomSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(monthIndices, key = { it }) { monthNum ->
-                    val monthName = CalendarHelper.getMonthName(monthNum, calendarType)
+                    val monthName = CalendarHelper.getMonthName(monthNum, calendarType, isFarsi = strings.isRtl)
                     val isSelected = (displayedYear == currentSelectedYear && monthNum == currentSelectedMonth)
                     val isCurrentMonth = (displayedYear == currentActualYear && monthNum == currentActualMonth)
 
@@ -270,7 +272,7 @@ fun MonthYearPickerBottomSheet(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Jump to Current Month (${CalendarHelper.getMonthName(currentActualMonth, calendarType)} $currentActualYear)",
+                        text = "${strings.jumpToCurrentMonth} (${CalendarHelper.getMonthName(currentActualMonth, calendarType, isFarsi = strings.isRtl)} ${strings.formatYear(currentActualYear)})",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
@@ -288,6 +290,7 @@ private fun MonthPickerItemCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     val containerColor = when {
         isSelected -> MaterialTheme.colorScheme.primary
         isCurrentMonth -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
@@ -324,7 +327,7 @@ private fun MonthPickerItemCard(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = monthNumber.toString().padStart(2, '0'),
+                text = strings.formatMonthNumber(monthNumber),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     fontSize = 11.sp

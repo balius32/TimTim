@@ -132,6 +132,11 @@ class WorkRepository(
         }
     }
 
+    override suspend fun updateLanguage(language: String) = withContext(ioDispatcher) {
+        val currentSettings = workDao.getSettingsDirect() ?: AppSettingsEntity()
+        workDao.saveSettings(currentSettings.copy(language = language))
+    }
+
     override suspend fun updateOffDaysOfWeek(offDaysString: String, currentYear: Int, currentMonth: Int) = withContext(ioDispatcher) {
         val currentSettings = workDao.getSettingsDirect() ?: AppSettingsEntity()
         workDao.saveSettings(currentSettings.copy(offDaysOfWeek = offDaysString))

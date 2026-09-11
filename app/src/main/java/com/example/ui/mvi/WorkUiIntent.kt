@@ -39,6 +39,7 @@ sealed interface WorkUiIntent {
     data class UpdateAvatar(val avatarId: String) : WorkUiIntent
     data class UpdateThemeMode(val themeMode: String) : WorkUiIntent
     data class UpdateCalendarType(val calendarType: String) : WorkUiIntent
+    data class UpdateLanguage(val language: String) : WorkUiIntent
     data class UpdateOffDaysOfWeek(val offDaysString: String) : WorkUiIntent
     data class UpdateDailyRequiredTime(val hours: Int, val minutes: Int) : WorkUiIntent
     data class UpdateDailyLimits(val minMinutes: Int?, val maxMinutes: Int?) : WorkUiIntent

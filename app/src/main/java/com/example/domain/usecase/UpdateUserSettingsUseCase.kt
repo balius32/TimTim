@@ -21,6 +21,10 @@ class UpdateUserSettingsUseCase(
         repository.updateCalendarType(calendarType)
     }
 
+    suspend fun updateLanguage(language: String): Result<Unit> = runCatching {
+        repository.updateLanguage(language)
+    }
+
     suspend fun updateOffDaysOfWeek(offDaysString: String, currentYear: Int, currentMonth: Int): Result<Unit> = runCatching {
         repository.updateOffDaysOfWeek(offDaysString, currentYear, currentMonth)
     }

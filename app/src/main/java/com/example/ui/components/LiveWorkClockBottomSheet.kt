@@ -35,10 +35,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.HourglassBottom
@@ -83,6 +83,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.WorkDay
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.theme.DeficitAmber
 import com.example.ui.theme.DeficitAmberContainer
 import com.example.ui.theme.DeficitRed
@@ -111,6 +112,7 @@ fun LiveWorkClockBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = LocalAppStrings.current
 
     // Real-time ticking state updated every 50ms for smooth 60fps animations
     var currentTimeMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -232,7 +234,7 @@ fun LiveWorkClockBottomSheet(
                                     )
                             )
                             Text(
-                                text = if (isTargetReached) "TARGET REACHED" else "ACTIVE SHIFT",
+                                text = if (isTargetReached) strings.overtime.uppercase() else strings.activeShift,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 11.sp,
@@ -244,7 +246,7 @@ fun LiveWorkClockBottomSheet(
                     }
 
                     Text(
-                        text = "Live Clock",
+                        text = strings.liveClock,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -264,7 +266,7 @@ fun LiveWorkClockBottomSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = strings.close,
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(18.dp)
                     )
@@ -416,7 +418,7 @@ fun LiveWorkClockBottomSheet(
                 modifier = Modifier.testTag("digital_elapsed_time_container")
             ) {
                 Text(
-                    text = "ELAPSED WORK TIME",
+                    text = strings.elapsedWorkTime,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp,
@@ -429,13 +431,14 @@ fun LiveWorkClockBottomSheet(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    val formattedElapsed = String.format(
+                    val rawElapsed = String.format(
                         Locale.getDefault(),
                         "%02d:%02d:%02d",
                         elapsedHours,
                         elapsedMinutes,
                         elapsedSeconds
                     )
+                    val formattedElapsed = strings.formatDigits(rawElapsed)
 
                     Text(
                         text = formattedElapsed,
@@ -493,7 +496,7 @@ fun LiveWorkClockBottomSheet(
 
                         Column {
                             Text(
-                                text = if (isTargetReached) "Overtime Accumulated" else "Time Remaining",
+                                text = if (isTargetReached) strings.overtimeAccumulated else strings.timeRemaining,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
@@ -502,15 +505,12 @@ fun LiveWorkClockBottomSheet(
                             )
                             Text(
                                 text = if (isTargetReached) {
-                                    "Target reached! Earning overtime"
+                                    strings.targetReached
                                 } else {
-                                    String.format(
-                                        Locale.getDefault(),
-                                        "%.1f%% of %dh %02dm daily target",
-                                        progressFraction * 100f,
-                                        dailyTargetMinutes / 60,
-                                        dailyTargetMinutes % 60
-                                    )
+                                    val percentStr = strings.formatDigits(String.format(Locale.getDefault(), "%.1f", progressFraction * 100f))
+                                    val targetH = strings.formatDigits((dailyTargetMinutes / 60).toString())
+                                    val targetM = strings.formatDigits(String.format(Locale.getDefault(), "%02d", dailyTargetMinutes % 60))
+                                    "$percentStr% ${strings.ofTarget} $targetH ${strings.hourShort} $targetM ${strings.minuteShort}"
                                 },
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -518,12 +518,11 @@ fun LiveWorkClockBottomSheet(
                         }
                     }
 
+                    val rawRem = String.format(Locale.getDefault(), "%02d:%02d:%02d", remHours, remMinutes, remSeconds)
+                    val remFormatted = if (isTargetReached) "+${strings.formatDigits(rawRem)}" else strings.formatDigits(rawRem)
+
                     Text(
-                        text = if (isTargetReached) {
-                            String.format(Locale.getDefault(), "+%02d:%02d:%02d", remHours, remMinutes, remSeconds)
-                        } else {
-                            String.format(Locale.getDefault(), "%02d:%02d:%02d", remHours, remMinutes, remSeconds)
-                        },
+                        text = remFormatted,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontFamily = FontFamily.Monospace,
@@ -543,24 +542,26 @@ fun LiveWorkClockBottomSheet(
                 // Check In Metric Card
                 MetricInfoCard(
                     icon = Icons.AutoMirrored.Filled.Login,
-                    title = "Check In",
-                    value = day.formattedEnterTime(),
+                    title = strings.checkIn,
+                    value = day.formattedEnterTime(isFarsi = strings.isRtl),
                     modifier = Modifier.weight(1f)
                 )
 
                 // Daily Target Metric Card
+                val tHours = strings.formatDigits((dailyTargetMinutes / 60).toString())
+                val tMins = strings.formatDigits(if (dailyTargetMinutes % 60 > 0) "${dailyTargetMinutes % 60}" else "00")
                 MetricInfoCard(
                     icon = Icons.Default.Flag,
-                    title = "Daily Target",
-                    value = "${dailyTargetMinutes / 60}h ${if (dailyTargetMinutes % 60 > 0) "${dailyTargetMinutes % 60}m" else "00m"}",
+                    title = strings.dailyTarget,
+                    value = "$tHours ${strings.hourShort} $tMins ${strings.minuteShort}",
                     modifier = Modifier.weight(1f)
                 )
 
                 // Estimated Checkout Card
                 MetricInfoCard(
                     icon = Icons.AutoMirrored.Filled.Logout,
-                    title = "Est. Checkout",
-                    value = String.format(Locale.getDefault(), "%02d:%02d", expectedExitHour, expectedExitMinute),
+                    title = strings.estCheckOut,
+                    value = strings.formatTime(expectedExitHour, expectedExitMinute),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -598,7 +599,7 @@ fun LiveWorkClockBottomSheet(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = String.format(Locale.getDefault(), "Exit Now (%02d:%02d)", currentHour, currentMinute),
+                            text = "${strings.exitNow} (${strings.formatTime(currentHour, currentMinute)})",
                             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     }
@@ -625,7 +626,7 @@ fun LiveWorkClockBottomSheet(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Pick Exit Time",
+                            text = strings.pickExitTime,
                             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )

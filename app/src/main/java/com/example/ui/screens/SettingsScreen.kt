@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.ImportExport
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Remove
@@ -97,6 +98,10 @@ import com.example.ui.WorkViewModel
 import com.example.ui.mvi.AppScreen
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
+import com.example.ui.localization.AppLanguage
+import com.example.ui.localization.LocalAppLanguage
+import com.example.ui.localization.LocalAppStrings
+import com.example.ui.localization.AppStrings
 import com.example.ui.components.LimitTimePickerDialog
 import com.example.ui.components.TargetTimePickerDialog
 import com.example.ui.theme.ACCENT_COLOR_OPTIONS
@@ -113,11 +118,14 @@ import kotlinx.coroutines.launch
 
 /**
  * Settings Screen:
- * 1. Daily Target Card
- * 2. Daily Limits Card (Min / Max)
- * 3. Theme Card
- * 4. Off Days Card
- * 5. Reset / Clear All Data Item
+ * 1. Language Card
+ * 2. Theme Card
+ * 3. Calendar Type Card
+ * 4. Daily Target Card
+ * 5. Off Days Card
+ * 6. Daily Limits Card (Min / Max)
+ * 7. Import / Export Card
+ * 8. Reset / Clear All Data Item
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,10 +135,13 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
+    val appLanguage = LocalAppLanguage.current
     val settings = uiState.settings
     val calendarType = uiState.calendarType
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var showLanguageBottomSheet by remember { mutableStateOf(false) }
     var showTargetTimePicker by remember { mutableStateOf(false) }
     var showMinEnterLimitPicker by remember { mutableStateOf(false) }
     var showMaxExitLimitPicker by remember { mutableStateOf(false) }
@@ -150,10 +161,10 @@ fun SettingsScreen(
         if (uri != null && pendingExportJson != null) {
             try {
                 DataBackupHelper.writeTextToUri(context, uri, pendingExportJson!!)
-                Toast.makeText(context, "Backup exported successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, strings.success, Toast.LENGTH_SHORT).show()
                 pendingExportJson = null
             } catch (e: Exception) {
-                Toast.makeText(context, "Failed to save file: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${strings.error}: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -169,7 +180,7 @@ fun SettingsScreen(
                 pendingImportData = Pair(backupData, jsonString)
                 showImportConfirmDialog = true
             } catch (e: Exception) {
-                Toast.makeText(context, "Invalid backup file: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "${strings.error}: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -185,7 +196,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        text = strings.settingsTitle,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         color = MaterialTheme.colorScheme.onBackground
@@ -198,7 +209,7 @@ fun SettingsScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = strings.back,
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -217,32 +228,38 @@ fun SettingsScreen(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Theme Card
+            // 1. Language Card
+            WireframeLanguageCard(
+                languageCode = settings.language,
+                onClick = { showLanguageBottomSheet = true }
+            )
+
+            // 2. Theme Card
             WireframeThemeCard(
                 themeSettingString = settings.themeMode,
                 onClick = { showThemeBottomSheet = true }
             )
 
-            // 2. Calendar Type Card
+            // 3. Calendar Type Card
             WireframeCalendarTypeCard(
                 calendarType = calendarType,
                 onClick = { showCalendarTypeBottomSheet = true }
             )
 
-            // 3. Daily Target Card
+            // 4. Daily Target Card
             WireframeDailyTargetCard(
                 dailyMinutes = settings.dailyRequiredMinutes,
                 onClick = { showTargetTimePicker = true }
             )
 
-            // 4. Off Days Card
+            // 5. Off Days Card
             WireframeOffDaysCard(
                 offDaysString = settings.offDaysOfWeek,
                 calendarType = calendarType,
                 onClick = { showOffDaysBottomSheet = true }
             )
 
-            // 5. Daily Limits Card (Min Enter / Max Exit Limit)
+            // 6. Daily Limits Card (Min Enter / Max Exit Limit)
             WireframeDailyLimitsCard(
                 minMinutes = settings.minEnterMinutes,
                 maxMinutes = settings.maxExitMinutes,
@@ -250,18 +267,30 @@ fun SettingsScreen(
                 onMaxExitClick = { showMaxExitLimitPicker = true }
             )
 
-            // 6. Import and Export Card
+            // 7. Import and Export Card
             WireframeImportExportCard(
                 onClick = { showImportExportBottomSheet = true }
             )
 
-            // 7. Reset All Recorded Data Card
+            // 8. Reset All Recorded Data Card
             WireframeResetAllDataCard(
                 onClick = { showClearAllConfirmDialog = true }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    // Language Selection Modal BottomSheet
+    if (showLanguageBottomSheet) {
+        LanguageSelectionBottomSheet(
+            currentLanguageCode = settings.language,
+            onLanguageSelected = { newLang ->
+                viewModel.updateLanguage(newLang.code)
+                showLanguageBottomSheet = false
+            },
+            onDismiss = { showLanguageBottomSheet = false }
+        )
     }
 
     // 1. Daily Target Time Picker Sheet
@@ -388,14 +417,14 @@ fun SettingsScreen(
             },
             title = {
                 Text(
-                    text = "Clear All Data?",
+                    text = strings.resetAllConfirmTitle,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge
                 )
             },
             text = {
                 Text(
-                    text = "This will permanently clear all recorded work hours, shift entries, and notes across all months. This action cannot be undone.",
+                    text = strings.resetAllConfirmMessage,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -409,12 +438,12 @@ fun SettingsScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = DeficitRed),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Yes, Clear All", fontWeight = FontWeight.Bold)
+                    Text(strings.clearAllDataAction, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearAllConfirmDialog = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(strings.cancel, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -547,6 +576,215 @@ fun SettingsScreen(
 }
 
 /**
+ * 0. Language Card
+ */
+@Composable
+private fun WireframeLanguageCard(
+    languageCode: String,
+    onClick: () -> Unit
+) {
+    val currentLang = AppLanguage.fromCode(languageCode)
+    val strings = LocalAppStrings.current
+
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .testTag("language_card")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Text(
+                        text = strings.languageSetting,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Open language selector",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${currentLang.nativeTitle} (${currentLang.title})",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Language Selection Modal BottomSheet
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LanguageSelectionBottomSheet(
+    currentLanguageCode: String,
+    onLanguageSelected: (AppLanguage) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = LocalAppStrings.current
+    var selectedLanguage by remember {
+        mutableStateOf(AppLanguage.fromCode(currentLanguageCode))
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        modifier = Modifier.testTag("language_selection_bottom_sheet")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(top = 8.dp, bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = strings.selectLanguageTitle,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                AppLanguage.values().forEach { lang ->
+                    val isSelected = selectedLanguage == lang
+                    Card(
+                        onClick = {
+                            selectedLanguage = lang
+                            onLanguageSelected(lang)
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        ),
+                        border = BorderStroke(
+                            width = if (isSelected) 2.dp else 1.dp,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("language_option_${lang.code}")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = lang.nativeTitle,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 17.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = lang.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedLanguage = lang
+                                    onLanguageSelected(lang)
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(strings.done, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+/**
  * 1. Daily Target Card
  */
 @Composable
@@ -554,9 +792,10 @@ private fun WireframeDailyTargetCard(
     dailyMinutes: Int,
     onClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val hours = dailyMinutes / 60
     val minutes = dailyMinutes % 60
-    val formattedTime = if (dailyMinutes > 0) String.format("%02d:%02d", hours, minutes) else "_ _ : _ _"
+    val formattedTime = if (dailyMinutes > 0) strings.formatTime(hours, minutes) else "_ _ : _ _"
 
     Card(
         onClick = onClick,
@@ -573,7 +812,7 @@ private fun WireframeDailyTargetCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -599,7 +838,7 @@ private fun WireframeDailyTargetCard(
                         )
                     }
                     Text(
-                        text = "Daily target",
+                        text = strings.dailyRequiredHours,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -622,19 +861,19 @@ private fun WireframeDailyTargetCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "target time",
-                    style = MaterialTheme.typography.bodyLarge.copy(
+                    text = strings.dailyRequiredSubtitle,
+                    style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Normal,
-                        fontSize = 16.sp
+                        fontSize = 14.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
                     text = formattedTime,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 16.sp,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
                         fontFamily = FontFamily.Monospace
                     ),
                     color = if (dailyMinutes > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -652,11 +891,12 @@ private fun WireframeThemeCard(
     themeSettingString: String,
     onClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val (mode, colorId) = parseThemeSettings(themeSettingString)
     val modeName = when (mode) {
-        "LIGHT" -> "Light"
-        "DARK" -> "Dark"
-        else -> "System"
+        "LIGHT" -> strings.themeLight
+        "DARK" -> strings.themeDark
+        else -> strings.themeSystem
     }
     val colorOption = ACCENT_COLOR_OPTIONS.firstOrNull { it.id.equals(colorId, ignoreCase = true) }
         ?: ACCENT_COLOR_OPTIONS[0]
@@ -678,7 +918,7 @@ private fun WireframeThemeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -704,7 +944,7 @@ private fun WireframeThemeCard(
                         )
                     }
                     Text(
-                        text = "Theme",
+                        text = strings.themeMode,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -723,9 +963,9 @@ private fun WireframeThemeCard(
 
             Text(
                 text = displayText,
-                style = MaterialTheme.typography.bodyLarge.copy(
+                style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
+                    fontSize = 14.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -734,13 +974,15 @@ private fun WireframeThemeCard(
 }
 
 /**
- * 2. Calendar Type Card
+ * 3. Calendar Type Card
  */
 @Composable
 private fun WireframeCalendarTypeCard(
     calendarType: CalendarType,
     onClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
+    val calName = if (calendarType == CalendarType.HIJRI_SHAMSI) strings.shamsiCalendar else strings.gregorianCalendar
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
@@ -756,7 +998,7 @@ private fun WireframeCalendarTypeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -782,7 +1024,7 @@ private fun WireframeCalendarTypeCard(
                         )
                     }
                     Text(
-                        text = "Calendar Type",
+                        text = strings.calendarSystem,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -800,10 +1042,10 @@ private fun WireframeCalendarTypeCard(
             }
 
             Text(
-                text = calendarType.title,
-                style = MaterialTheme.typography.bodyLarge.copy(
+                text = calName,
+                style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
+                    fontSize = 14.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -820,6 +1062,7 @@ private fun WireframeOffDaysCard(
     calendarType: CalendarType = CalendarType.GREGORIAN,
     onClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val selectedSet = remember(offDaysString) {
         if (offDaysString.isBlank()) emptySet()
         else offDaysString.split(",").map { it.trim() }.toSet()
@@ -842,6 +1085,16 @@ private fun WireframeOffDaysCard(
             "SATURDAY" to "Sat",
             "SUNDAY" to "Sun"
         )
+    } else if (strings.isRtl) {
+        mapOf(
+            "SATURDAY" to strings.saturday,
+            "SUNDAY" to strings.sunday,
+            "MONDAY" to strings.monday,
+            "TUESDAY" to strings.tuesday,
+            "WEDNESDAY" to strings.wednesday,
+            "THURSDAY" to strings.thursday,
+            "FRIDAY" to strings.friday
+        )
     } else {
         mapOf(
             "SATURDAY" to "Shanbeh",
@@ -859,11 +1112,11 @@ private fun WireframeOffDaysCard(
         .mapNotNull { shortNameMap[it] }
 
     val daysDisplayText = when {
-        formattedDaysList.isEmpty() -> "None"
+        formattedDaysList.isEmpty() -> strings.none
         else -> formattedDaysList.joinToString(" - ")
     }
 
-    val countText = "${selectedSet.size} day"
+    val countText = strings.formatDaysCount(selectedSet.size)
 
     Card(
         onClick = onClick,
@@ -880,7 +1133,7 @@ private fun WireframeOffDaysCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -906,7 +1159,7 @@ private fun WireframeOffDaysCard(
                         )
                     }
                     Text(
-                        text = "Off Days",
+                        text = strings.offDaysSetting,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -930,18 +1183,18 @@ private fun WireframeOffDaysCard(
             ) {
                 Text(
                     text = daysDisplayText,
-                    style = MaterialTheme.typography.bodyLarge.copy(
+                    style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp
+                        fontSize = 14.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
                     text = countText,
-                    style = MaterialTheme.typography.bodyLarge.copy(
+                    style = MaterialTheme.typography.bodySmall.copy(
                         fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp
+                        fontSize = 13.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
@@ -957,6 +1210,7 @@ private fun WireframeOffDaysCard(
 private fun WireframeImportExportCard(
     onClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
@@ -995,7 +1249,7 @@ private fun WireframeImportExportCard(
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "Import & Export",
+                        text = strings.importExport,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -1003,7 +1257,7 @@ private fun WireframeImportExportCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Backup or restore all saved data",
+                        text = strings.importExportSubtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 13.sp
                         ),
@@ -1033,6 +1287,7 @@ private fun ImportExportBottomSheet(
     onImportFile: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -1061,7 +1316,7 @@ private fun ImportExportBottomSheet(
             // Header
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Import & Export Data",
+                    text = strings.importExportDialogTitle,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp
@@ -1069,7 +1324,7 @@ private fun ImportExportBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Backup your recorded attendance data or restore from a JSON backup file.",
+                    text = strings.importExportDialogSubtitle,
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1108,7 +1363,7 @@ private fun ImportExportBottomSheet(
                         }
                         Column {
                             Text(
-                                text = "Export All Data",
+                                text = strings.exportAllDataTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
@@ -1116,7 +1371,7 @@ private fun ImportExportBottomSheet(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Save all recorded days, shift times & settings",
+                                text = strings.exportAllDataDesc,
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1142,7 +1397,7 @@ private fun ImportExportBottomSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Share",
+                                text = strings.shareText,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
@@ -1165,7 +1420,7 @@ private fun ImportExportBottomSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Save File",
+                                text = strings.saveFileText,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.primary
@@ -1208,7 +1463,7 @@ private fun ImportExportBottomSheet(
                         }
                         Column {
                             Text(
-                                text = "Import Saved Data",
+                                text = strings.importSavedDataTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
@@ -1216,7 +1471,7 @@ private fun ImportExportBottomSheet(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Restore from an existing JSON backup file",
+                                text = strings.importSavedDataDesc,
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1240,7 +1495,7 @@ private fun ImportExportBottomSheet(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Select JSON Backup File",
+                            text = strings.selectJsonFileText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSecondary
@@ -1262,6 +1517,7 @@ private fun ImportExportBottomSheet(
 private fun WireframeResetAllDataCard(
     onClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
@@ -1299,7 +1555,7 @@ private fun WireframeResetAllDataCard(
                     )
                 }
                 Text(
-                    text = "Clear all recorded data",
+                    text = strings.resetAllData,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp
@@ -1332,6 +1588,7 @@ private fun ThemeSelectionBottomSheet(
     onThemeSaved: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val (initialMode, initialColor) = parseThemeSettings(currentTheme)
 
@@ -1367,7 +1624,7 @@ private fun ThemeSelectionBottomSheet(
             // Header
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Select Theme",
+                    text = strings.selectThemeTitle,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp
@@ -1375,7 +1632,7 @@ private fun ThemeSelectionBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Choose your mode and primary color",
+                    text = strings.selectThemeSubtitle,
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1389,7 +1646,7 @@ private fun ThemeSelectionBottomSheet(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Mode",
+                    text = strings.themeModeLabel,
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
@@ -1404,7 +1661,7 @@ private fun ThemeSelectionBottomSheet(
                 ) {
                     // System Option
                     ThemeModeRowTile(
-                        label = "System",
+                        label = strings.themeSystem,
                         icon = Icons.Default.SettingsBrightness,
                         isSelected = selectedMode == "SYSTEM",
                         accentColor = activeAccent.color,
@@ -1414,7 +1671,7 @@ private fun ThemeSelectionBottomSheet(
 
                     // Light Option
                     ThemeModeRowTile(
-                        label = "Light",
+                        label = strings.themeLight,
                         icon = Icons.Default.LightMode,
                         isSelected = selectedMode == "LIGHT",
                         accentColor = activeAccent.color,
@@ -1424,7 +1681,7 @@ private fun ThemeSelectionBottomSheet(
 
                     // Dark Option
                     ThemeModeRowTile(
-                        label = "Dark",
+                        label = strings.themeDark,
                         icon = Icons.Default.DarkMode,
                         isSelected = selectedMode == "DARK",
                         accentColor = activeAccent.color,
@@ -1442,7 +1699,7 @@ private fun ThemeSelectionBottomSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Primary Color",
+                    text = strings.primaryColorLabel,
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
@@ -1460,6 +1717,7 @@ private fun ThemeSelectionBottomSheet(
                 ) {
                     ACCENT_COLOR_OPTIONS.forEach { option ->
                         val isColorSelected = selectedColorId.equals(option.id, ignoreCase = true)
+                        val colorNameLocalized = strings.getAccentColorName(option.id)
 
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1491,7 +1749,7 @@ private fun ThemeSelectionBottomSheet(
                             }
 
                             Text(
-                                text = option.name.split(" ").firstOrNull() ?: option.name,
+                                text = colorNameLocalized.split(" ").firstOrNull() ?: colorNameLocalized,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = if (isColorSelected) FontWeight.Bold else FontWeight.Normal
@@ -1518,7 +1776,7 @@ private fun ThemeSelectionBottomSheet(
                     modifier = Modifier.testTag("cancel_theme_button")
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = strings.cancel,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -1543,7 +1801,7 @@ private fun ThemeSelectionBottomSheet(
                     modifier = Modifier.testTag("save_theme_button")
                 ) {
                     Text(
-                        text = "Save",
+                        text = strings.save,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp,
@@ -1617,6 +1875,7 @@ private fun CalendarTypeBottomSheet(
     onCalendarTypeSelected: (CalendarType) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedType by remember(currentCalendarType) { mutableStateOf(currentCalendarType) }
 
@@ -1649,7 +1908,7 @@ private fun CalendarTypeBottomSheet(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    text = "Select calendar type",
+                    text = strings.selectCalendarTypeTitle,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -1657,7 +1916,7 @@ private fun CalendarTypeBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Choose the calendar system used across the entire app",
+                    text = strings.selectCalendarTypeSubtitle,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1672,6 +1931,14 @@ private fun CalendarTypeBottomSheet(
                 calendarOptions.forEachIndexed { index, calOption ->
                     val isSelected = selectedType == calOption
                     val isDefault = calOption == CalendarType.GREGORIAN
+                    val calTitle = when (calOption) {
+                        CalendarType.GREGORIAN -> strings.gregorianCalendarTitle
+                        CalendarType.HIJRI_SHAMSI -> strings.persianCalendarTitle
+                    }
+                    val calSubtitle = when (calOption) {
+                        CalendarType.HIJRI_SHAMSI -> strings.shamsiDesc
+                        else -> strings.gregorianDesc
+                    }
 
                     Row(
                         modifier = Modifier
@@ -1702,7 +1969,7 @@ private fun CalendarTypeBottomSheet(
 
                             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                                 Text(
-                                    text = calOption.title,
+                                    text = calTitle,
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 15.sp
@@ -1711,7 +1978,7 @@ private fun CalendarTypeBottomSheet(
                                 )
 
                                 Text(
-                                    text = calOption.subtitle,
+                                    text = calSubtitle,
                                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1742,7 +2009,7 @@ private fun CalendarTypeBottomSheet(
                     modifier = Modifier.testTag("cancel_calendar_type_button")
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = strings.cancel,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -1767,7 +2034,7 @@ private fun CalendarTypeBottomSheet(
                     modifier = Modifier.testTag("save_calendar_type_button")
                 ) {
                     Text(
-                        text = "Done",
+                        text = strings.done,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp,
@@ -1789,27 +2056,29 @@ private fun CalendarTypeBottomSheet(
 data class WeekdayItem(
     val dayOfWeekName: String,
     val displayName: String,
-    val shortName: String
+    val shortName: String,
+    val farsiName: String,
+    val farsiShort: String
 )
 
 private val GREGORIAN_DAYS_OF_WEEK = listOf(
-    WeekdayItem("MONDAY", "Monday", "Mon"),
-    WeekdayItem("TUESDAY", "Tuesday", "Tue"),
-    WeekdayItem("WEDNESDAY", "Wednesday", "Wed"),
-    WeekdayItem("THURSDAY", "Thursday", "Thu"),
-    WeekdayItem("FRIDAY", "Friday", "Fri"),
-    WeekdayItem("SATURDAY", "Saturday", "Sat"),
-    WeekdayItem("SUNDAY", "Sunday", "Sun")
+    WeekdayItem("MONDAY", "Monday", "Mon", "دوشنبه", "د"),
+    WeekdayItem("TUESDAY", "Tuesday", "Tue", "سه‌شنبه", "س"),
+    WeekdayItem("WEDNESDAY", "Wednesday", "Wed", "چهارشنبه", "چ"),
+    WeekdayItem("THURSDAY", "Thursday", "Thu", "پنج‌شنبه", "پ"),
+    WeekdayItem("FRIDAY", "Friday", "Fri", "جمعه", "ج"),
+    WeekdayItem("SATURDAY", "Saturday", "Sat", "شنبه", "ش"),
+    WeekdayItem("SUNDAY", "Sunday", "Sun", "یکشنبه", "ی")
 )
 
 private val SHAMSI_DAYS_OF_WEEK = listOf(
-    WeekdayItem("SATURDAY", "Shanbeh", "Shanbeh"),
-    WeekdayItem("SUNDAY", "Yekshanbeh", "Yekshanbeh"),
-    WeekdayItem("MONDAY", "Doshanbeh", "Doshanbeh"),
-    WeekdayItem("TUESDAY", "Seshanbeh", "Seshanbeh"),
-    WeekdayItem("WEDNESDAY", "Chaharshanbeh", "Chaharshanbeh"),
-    WeekdayItem("THURSDAY", "Panjshanbeh", "Panjshanbeh"),
-    WeekdayItem("FRIDAY", "Jomeh", "Jomeh")
+    WeekdayItem("SATURDAY", "Saturday", "Sat", "شنبه", "ش"),
+    WeekdayItem("SUNDAY", "Sunday", "Sun", "یکشنبه", "ی"),
+    WeekdayItem("MONDAY", "Monday", "Mon", "دوشنبه", "د"),
+    WeekdayItem("TUESDAY", "Tuesday", "Tue", "سه‌شنبه", "س"),
+    WeekdayItem("WEDNESDAY", "Wednesday", "Wed", "چهارشنبه", "چ"),
+    WeekdayItem("THURSDAY", "Thursday", "Thu", "پنج‌شنبه", "پ"),
+    WeekdayItem("FRIDAY", "Friday", "Fri", "جمعه", "ج")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1820,6 +2089,7 @@ private fun OffDaysBottomSheet(
     onOffDaysChanged: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentSelected by remember(offDaysString) {
         mutableStateOf(
@@ -1859,7 +2129,7 @@ private fun OffDaysBottomSheet(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    text = "Select days off",
+                    text = strings.offDaysSetting,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -1867,7 +2137,7 @@ private fun OffDaysBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Selected days will be automatically designated OFF in daily logs",
+                    text = strings.offDaysSubtitle,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1880,6 +2150,7 @@ private fun OffDaysBottomSheet(
             ) {
                 daysList.forEachIndexed { index, item ->
                     val isChecked = currentSelected.contains(item.dayOfWeekName)
+                    val dayTitle = if (calendarType == CalendarType.HIJRI_SHAMSI || (strings.isRtl && calendarType != CalendarType.GREGORIAN)) item.farsiName else item.displayName
 
                     Row(
                         modifier = Modifier
@@ -1917,7 +2188,7 @@ private fun OffDaysBottomSheet(
                             )
 
                             Text(
-                                text = item.displayName,
+                                text = dayTitle,
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = if (isChecked) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 15.sp
@@ -1932,7 +2203,7 @@ private fun OffDaysBottomSheet(
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Text(
-                                    text = "OFF",
+                                    text = strings.off,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 11.sp
@@ -1967,7 +2238,7 @@ private fun OffDaysBottomSheet(
                     modifier = Modifier.testTag("cancel_off_days_button")
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = strings.cancel,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -1992,7 +2263,7 @@ private fun OffDaysBottomSheet(
                     modifier = Modifier.testTag("save_off_days_button")
                 ) {
                     Text(
-                        text = "Done",
+                        text = strings.done,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp,
@@ -2017,16 +2288,17 @@ private fun WireframeDailyLimitsCard(
     onMaxExitClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     val minText = if (minMinutes != null && minMinutes > 0) {
         val h = minMinutes / 60
         val m = minMinutes % 60
-        String.format("%02d:%02d", h, m)
+        strings.formatTime(h, m)
     } else "_ _ : _ _"
 
     val maxText = if (maxMinutes != null && maxMinutes > 0) {
         val h = maxMinutes / 60
         val m = maxMinutes % 60
-        String.format("%02d:%02d", h, m)
+        strings.formatTime(h, m)
     } else "_ _ : _ _"
 
     Card(
@@ -2065,7 +2337,7 @@ private fun WireframeDailyLimitsCard(
                 }
                 Column(horizontalAlignment = Alignment.Start) {
                     Text(
-                        text = "Work Limits",
+                        text = strings.workLimits,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -2073,7 +2345,7 @@ private fun WireframeDailyLimitsCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Tap Min Enter or Max Exit to set limits",
+                        text = strings.workHourLimitsSubtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp
                         ),
@@ -2091,7 +2363,7 @@ private fun WireframeDailyLimitsCard(
                 horizontalArrangement = Arrangement.Center
             ) {
                 WireframeTimeBox(
-                    label = "Min Enter",
+                    label = strings.minEnterTime,
                     timeText = minText,
                     isSet = minMinutes != null && minMinutes > 0,
                     enabled = true,
@@ -2110,7 +2382,7 @@ private fun WireframeDailyLimitsCard(
                 )
 
                 WireframeTimeBox(
-                    label = "Max Exit",
+                    label = strings.maxExitTime,
                     timeText = maxText,
                     isSet = maxMinutes != null && maxMinutes > 0,
                     enabled = true,

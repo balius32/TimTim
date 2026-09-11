@@ -40,8 +40,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Description
@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,6 +83,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.util.toPersianDigits
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.DayStatus
 import com.example.domain.model.DaySummary
@@ -97,6 +99,8 @@ import com.example.ui.WorkViewModel
 import com.example.ui.mvi.WorkUiEffect
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
+import com.example.ui.localization.LocalAppLanguage
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.components.CustomAvatarDisplay
 import com.example.ui.components.DayItemReportBottomSheet
 import com.example.ui.components.LiveWorkClockBottomSheet
@@ -179,6 +183,8 @@ fun TimesheetScreen(
         )
     }
 
+    val strings = LocalAppStrings.current
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -193,7 +199,7 @@ fun TimesheetScreen(
                     ) {
                         // Left: App Title (tapping scrolls to top / today)
                         Text(
-                            text = "TimTim",
+                            text = strings.appName,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 20.sp
@@ -252,7 +258,7 @@ fun TimesheetScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = if (uiState.isCurrentMonth) "Today's Check In" else "Back to Top"
+                        contentDescription = if (uiState.isCurrentMonth) strings.today else strings.backToToday
                     )
                 }
             }
@@ -427,6 +433,7 @@ fun WireframeHeroSummaryCard(
     modifier: Modifier = Modifier
 ) {
     val summary = uiState.summary
+    val strings = LocalAppStrings.current
 
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -473,8 +480,8 @@ fun WireframeHeroSummaryCard(
                                 .testTag("prev_month_btn")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ChevronLeft,
-                                contentDescription = "Previous Month",
+                                imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
+                                contentDescription = strings.back,
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -511,8 +518,8 @@ fun WireframeHeroSummaryCard(
                                 .testTag("next_month_btn")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = "Next Month",
+                                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                                contentDescription = strings.done,
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -535,7 +542,7 @@ fun WireframeHeroSummaryCard(
                             .padding(horizontal = 10.dp)
                     ) {
                         Text(
-                            text = "${uiState.totalDaysInCurrentMonth} DAYS",
+                            text = "${uiState.totalDaysInCurrentMonth} ${strings.totalDaysSuffix}",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -552,7 +559,7 @@ fun WireframeHeroSummaryCard(
             // Middle: Total Hours (matches wireframe)
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Total Hours",
+                    text = strings.totalHours,
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -562,7 +569,7 @@ fun WireframeHeroSummaryCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = summary.formattedTotalWorked(),
+                    text = summary.formattedTotalWorked(isFarsi = uiState.isFarsi),
                     style = MaterialTheme.typography.displayMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = (-0.5).sp
@@ -584,16 +591,16 @@ fun WireframeHeroSummaryCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Bottom Row: Overtime (Left) and Deficit Time (Right)
+            // Bottom Row: Overtime (Start) and Deficit Time (End)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Overtime (Left)
+                // Overtime
                 Column {
                     Text(
-                        text = "Overtime",
+                        text = strings.overtime,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -603,7 +610,7 @@ fun WireframeHeroSummaryCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = summary.formattedOvertime(),
+                        text = summary.formattedOvertime(isFarsi = uiState.isFarsi),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
@@ -613,7 +620,7 @@ fun WireframeHeroSummaryCard(
                         modifier = Modifier.testTag("overtime_value")
                     )
                     Text(
-                        text = "${summary.overtimeDaysCount} days",
+                        text = strings.formatDaysCount(summary.overtimeDaysCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -622,10 +629,10 @@ fun WireframeHeroSummaryCard(
                     )
                 }
 
-                // Deficit Time (Right)
+                // Deficit Time
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Deficit Time",
+                        text = strings.deficitTime,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -635,7 +642,7 @@ fun WireframeHeroSummaryCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = summary.formattedDeficit(),
+                        text = summary.formattedDeficit(isFarsi = uiState.isFarsi),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
@@ -645,7 +652,7 @@ fun WireframeHeroSummaryCard(
                         modifier = Modifier.testTag("defect_time_value")
                     )
                     Text(
-                        text = "${summary.deficitDaysCount} days",
+                        text = strings.formatDaysCount(summary.deficitDaysCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -665,6 +672,7 @@ fun WireframeHeroSummaryCard(
 fun TodaySectionHeader(
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -673,7 +681,7 @@ fun TodaySectionHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Today",
+            text = strings.today,
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 22.sp
@@ -689,10 +697,12 @@ fun TodaySectionHeader(
  */
 @Composable
 fun ReturnToCurrentMonthBanner(
-    title: String = "Back to Today",
+    title: String = "",
     onReturnClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
+    val effectiveTitle = title.ifBlank { strings.backToToday }
     Surface(
         onClick = onReturnClick,
         shape = RoundedCornerShape(16.dp),
@@ -710,13 +720,13 @@ fun ReturnToCurrentMonthBanner(
         ) {
             Icon(
                 imageVector = Icons.Default.Today,
-                contentDescription = "Return to current month",
+                contentDescription = effectiveTitle,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = title,
+                text = effectiveTitle,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
@@ -737,6 +747,7 @@ fun DailyLogSectionHeader(
     totalCount: Int,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -746,7 +757,7 @@ fun DailyLogSectionHeader(
     ) {
         Column {
             Text(
-                text = "Daily Log",
+                text = strings.dailyLog,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 22.sp
@@ -755,7 +766,7 @@ fun DailyLogSectionHeader(
                 modifier = Modifier.testTag("daily_log_header")
             )
             Text(
-                text = "Tap ENTER or EXIT to select time",
+                text = strings.tapEnterExitHint,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -769,7 +780,7 @@ fun DailyLogSectionHeader(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = "$completedCount/$totalCount logged",
+                text = strings.formatDaysLogged(completedCount, totalCount),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -802,6 +813,8 @@ fun WireframeDailyLogRowCard(
     val isDayOff = day.isDayOff
     val isComplete = day.isComplete
     val isInProgress = !isDayOff && day.hasEnterTime && !day.hasExitTime
+    val strings = LocalAppStrings.current
+    val isFarsi = strings.isRtl
     var menuExpanded by remember { mutableStateOf(false) }
 
     Card(
@@ -838,7 +851,7 @@ fun WireframeDailyLogRowCard(
                 // Left Column: Day of week + MM/dd date
                 Column(horizontalAlignment = Alignment.Start) {
                     Text(
-                        text = if (dayOfWeek.isNotBlank()) dayOfWeek else "Day ${day.dayNumber}",
+                        text = if (dayOfWeek.isNotBlank()) dayOfWeek else "${strings.day} ${if (isFarsi) day.dayNumber.toPersianDigits() else day.dayNumber.toString()}",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp
@@ -871,7 +884,7 @@ fun WireframeDailyLogRowCard(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "Day Off",
+                                text = strings.dayOff,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 11.sp
@@ -881,7 +894,7 @@ fun WireframeDailyLogRowCard(
                             )
                         }
                     } else if (isComplete) {
-                        val workedText = daySummary.formattedWorkedDuration()
+                        val workedText = daySummary.formattedWorkedDuration(isFarsi = isFarsi)
                         val diffMins = daySummary.diffMinutes
                         val diffColor = when {
                             diffMins > 0 -> OvertimeGreen
@@ -889,7 +902,7 @@ fun WireframeDailyLogRowCard(
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                         }
                         val diffSign = if (diffMins > 0) "+" else if (diffMins < 0) "-" else ""
-                        val diffFormatted = "$diffSign${WorkCalculationSummary.formatMinutes(if (diffMins < 0) -diffMins else diffMins)}"
+                        val diffFormatted = "$diffSign${WorkCalculationSummary.formatMinutes(if (diffMins < 0) -diffMins else diffMins, isFarsi = isFarsi)}"
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
@@ -918,7 +931,7 @@ fun WireframeDailyLogRowCard(
                             } else Modifier
                         ) {
                             Text(
-                                text = "In Progress",
+                                text = strings.inProgress,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 10.sp
@@ -942,7 +955,7 @@ fun WireframeDailyLogRowCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Day Options",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
@@ -959,7 +972,7 @@ fun WireframeDailyLogRowCard(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Remaining Time",
+                                        text = strings.remainingTime,
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.sp
@@ -986,7 +999,7 @@ fun WireframeDailyLogRowCard(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Daily Summary",
+                                        text = strings.dailySummary,
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.sp
@@ -1013,7 +1026,7 @@ fun WireframeDailyLogRowCard(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = if (isDayOff) "Cancel Day Off" else "Set Off",
+                                    text = if (isDayOff) strings.cancelDayOff else strings.setOff,
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
@@ -1039,7 +1052,7 @@ fun WireframeDailyLogRowCard(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "Clear",
+                                    text = strings.clear,
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
@@ -1092,8 +1105,8 @@ fun WireframeDailyLogRowCard(
                     ) {
                         // Enter Time Box
                         WireframeTimeBox(
-                            label = "Enter Time",
-                            timeText = if (day.hasEnterTime) day.formattedEnterTime() else "_ _ : _ _",
+                            label = strings.enterTime,
+                            timeText = if (day.hasEnterTime) day.formattedEnterTime(isFarsi = isFarsi) else "_ _ : _ _",
                             isSet = day.hasEnterTime,
                             enabled = true,
                             onClick = onEnterClick,
@@ -1113,8 +1126,8 @@ fun WireframeDailyLogRowCard(
 
                         // Exit Time Box
                         WireframeTimeBox(
-                            label = "Exit Time",
-                            timeText = if (day.hasExitTime) day.formattedExitTime() else "_ _ : _ _",
+                            label = strings.exitTime,
+                            timeText = if (day.hasExitTime) day.formattedExitTime(isFarsi = isFarsi) else "_ _ : _ _",
                             isSet = day.hasExitTime,
                             enabled = true,
                             onClick = onExitClick,

@@ -31,8 +31,25 @@ object PersianDateHelper {
         "Esfand" // 12 (29/30 days)
     )
 
-    fun getMonthName(month: Int): String {
-        return if (month in 1..12) MONTH_NAMES[month - 1] else "Month $month"
+    val MONTH_NAMES_FA = listOf(
+        "فروردین",
+        "اردیبهشت",
+        "خرداد",
+        "تیر",
+        "مرداد",
+        "شهریور",
+        "مهر",
+        "آبان",
+        "آذر",
+        "دی",
+        "بهمن",
+        "اسفند"
+    )
+
+    fun getMonthName(month: Int, isFarsi: Boolean = false): String {
+        return if (month in 1..12) {
+            if (isFarsi) MONTH_NAMES_FA[month - 1] else MONTH_NAMES[month - 1]
+        } else "Month $month"
     }
 
     /**
@@ -104,53 +121,68 @@ object PersianDateHelper {
      * Returns the Shamsi day of week label for a given Shamsi date:
      * Shanbeh, Yekshanbeh, Doshanbeh, Seshanbeh, Chaharshanbeh, Panjshanbeh, Jomeh.
      */
-    fun getDayOfWeekLabel(persianYear: Int, persianMonth: Int, persianDay: Int): String {
+    fun getDayOfWeekLabel(persianYear: Int, persianMonth: Int, persianDay: Int, isFarsi: Boolean = false): String {
         return try {
             val daysInM = getDaysInMonth(persianYear, persianMonth)
             val safeDay = persianDay.coerceIn(1, daysInM)
             val gDate = toGregorianDate(persianYear, persianMonth, safeDay)
-            // Gregorian DayOfWeek: MONDAY(1) .. SUNDAY(7)
-            // Persian week starts Saturday:
-            // Saturday -> Shanbeh
-            // Sunday -> Yekshanbeh
-            // Monday -> Doshanbeh
-            // Tuesday -> Seshanbeh
-            // Wednesday -> Chaharshanbeh
-            // Thursday -> Panjshanbeh
-            // Friday -> Jomeh
-            when (gDate.dayOfWeek) {
-                java.time.DayOfWeek.SATURDAY -> "Shanbeh"
-                java.time.DayOfWeek.SUNDAY -> "Yekshanbeh"
-                java.time.DayOfWeek.MONDAY -> "Doshanbeh"
-                java.time.DayOfWeek.TUESDAY -> "Seshanbeh"
-                java.time.DayOfWeek.WEDNESDAY -> "Chaharshanbeh"
-                java.time.DayOfWeek.THURSDAY -> "Panjshanbeh"
-                java.time.DayOfWeek.FRIDAY -> "Jomeh"
+            if (isFarsi) {
+                when (gDate.dayOfWeek) {
+                    java.time.DayOfWeek.SATURDAY -> "شنبه"
+                    java.time.DayOfWeek.SUNDAY -> "یکشنبه"
+                    java.time.DayOfWeek.MONDAY -> "دوشنبه"
+                    java.time.DayOfWeek.TUESDAY -> "سه‌شنبه"
+                    java.time.DayOfWeek.WEDNESDAY -> "چهارشنبه"
+                    java.time.DayOfWeek.THURSDAY -> "پنج‌شنبه"
+                    java.time.DayOfWeek.FRIDAY -> "جمعه"
+                }
+            } else {
+                when (gDate.dayOfWeek) {
+                    java.time.DayOfWeek.SATURDAY -> "Shanbeh"
+                    java.time.DayOfWeek.SUNDAY -> "Yekshanbeh"
+                    java.time.DayOfWeek.MONDAY -> "Doshanbeh"
+                    java.time.DayOfWeek.TUESDAY -> "Seshanbeh"
+                    java.time.DayOfWeek.WEDNESDAY -> "Chaharshanbeh"
+                    java.time.DayOfWeek.THURSDAY -> "Panjshanbeh"
+                    java.time.DayOfWeek.FRIDAY -> "Jomeh"
+                }
             }
         } catch (e: Exception) {
-            "Day"
+            if (isFarsi) "روز" else "Day"
         }
     }
 
     /**
      * Short Shamsi Day name for compact displays.
      */
-    fun getShortDayOfWeekLabel(persianYear: Int, persianMonth: Int, persianDay: Int): String {
+    fun getShortDayOfWeekLabel(persianYear: Int, persianMonth: Int, persianDay: Int, isFarsi: Boolean = false): String {
         return try {
             val daysInM = getDaysInMonth(persianYear, persianMonth)
             val safeDay = persianDay.coerceIn(1, daysInM)
             val gDate = toGregorianDate(persianYear, persianMonth, safeDay)
-            when (gDate.dayOfWeek) {
-                java.time.DayOfWeek.SATURDAY -> "Shanbeh"
-                java.time.DayOfWeek.SUNDAY -> "1-Shanbeh"
-                java.time.DayOfWeek.MONDAY -> "2-Shanbeh"
-                java.time.DayOfWeek.TUESDAY -> "3-Shanbeh"
-                java.time.DayOfWeek.WEDNESDAY -> "4-Shanbeh"
-                java.time.DayOfWeek.THURSDAY -> "5-Shanbeh"
-                java.time.DayOfWeek.FRIDAY -> "Jomeh"
+            if (isFarsi) {
+                when (gDate.dayOfWeek) {
+                    java.time.DayOfWeek.SATURDAY -> "شنبه"
+                    java.time.DayOfWeek.SUNDAY -> "۱ش"
+                    java.time.DayOfWeek.MONDAY -> "۲ش"
+                    java.time.DayOfWeek.TUESDAY -> "۳ش"
+                    java.time.DayOfWeek.WEDNESDAY -> "۴ش"
+                    java.time.DayOfWeek.THURSDAY -> "۵ش"
+                    java.time.DayOfWeek.FRIDAY -> "جمعه"
+                }
+            } else {
+                when (gDate.dayOfWeek) {
+                    java.time.DayOfWeek.SATURDAY -> "Shanbeh"
+                    java.time.DayOfWeek.SUNDAY -> "1-Shanbeh"
+                    java.time.DayOfWeek.MONDAY -> "2-Shanbeh"
+                    java.time.DayOfWeek.TUESDAY -> "3-Shanbeh"
+                    java.time.DayOfWeek.WEDNESDAY -> "4-Shanbeh"
+                    java.time.DayOfWeek.THURSDAY -> "5-Shanbeh"
+                    java.time.DayOfWeek.FRIDAY -> "Jomeh"
+                }
             }
         } catch (e: Exception) {
-            "Day"
+            if (isFarsi) "روز" else "Day"
         }
     }
 
@@ -266,3 +298,31 @@ object PersianDateHelper {
         return Triple(gy, gm, gd)
     }
 }
+
+/**
+ * Converts English ASCII digits (0-9) to Persian digits (۰-۹).
+ */
+fun String.toPersianDigits(): String {
+    val builder = StringBuilder(this.length)
+    for (char in this) {
+        when (char) {
+            '0' -> builder.append('۰')
+            '1' -> builder.append('۱')
+            '2' -> builder.append('۲')
+            '3' -> builder.append('۳')
+            '4' -> builder.append('۴')
+            '5' -> builder.append('۵')
+            '6' -> builder.append('۶')
+            '7' -> builder.append('۷')
+            '8' -> builder.append('۸')
+            '9' -> builder.append('۹')
+            else -> builder.append(char)
+        }
+    }
+    return builder.toString()
+}
+
+fun Int.toPersianDigits(): String = this.toString().toPersianDigits()
+fun Long.toPersianDigits(): String = this.toString().toPersianDigits()
+fun Double.toPersianDigits(): String = this.toString().toPersianDigits()
+

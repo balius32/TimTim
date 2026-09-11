@@ -23,10 +23,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
@@ -73,6 +73,7 @@ import com.example.domain.model.DayStatus
 import com.example.domain.model.DaySummary
 import com.example.domain.model.WorkCalculationSummary
 import com.example.ui.components.MonthYearPickerBottomSheet
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.WorkViewModel
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
@@ -98,6 +99,7 @@ fun ReportScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     val summary = uiState.reportSummary
     val settings = uiState.settings
     var showExportSheet by remember { mutableStateOf(false) }
@@ -130,7 +132,7 @@ fun ReportScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Monthly Report",
+                        text = strings.monthlyReport,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         color = MaterialTheme.colorScheme.onBackground
@@ -143,7 +145,7 @@ fun ReportScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = strings.back,
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -205,7 +207,7 @@ fun ReportScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Share & Export Report",
+                    text = strings.shareExportReport,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -238,7 +240,7 @@ fun ReportScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Export Report",
+                            text = strings.exportReport,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
@@ -246,7 +248,7 @@ fun ReportScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Select format for ${uiState.formattedReportMonthHeader}",
+                            text = "${strings.selectFormatFor} ${uiState.formattedReportMonthHeader}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -257,7 +259,7 @@ fun ReportScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = strings.close,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -265,8 +267,8 @@ fun ReportScreen(
 
                 // Format Options
                 ExportFormatOptionCard(
-                    title = "PDF Document",
-                    subtitle = "Clean printable document with table & summary",
+                    title = strings.pdfDocument,
+                    subtitle = strings.pdfDocumentDesc,
                     icon = Icons.Default.PictureAsPdf,
                     iconBgColor = Color(0xFFEF4444).copy(alpha = 0.15f),
                     iconTintColor = Color(0xFFDC2626),
@@ -278,8 +280,8 @@ fun ReportScreen(
                 )
 
                 ExportFormatOptionCard(
-                    title = "Excel / CSV Spreadsheet",
-                    subtitle = "Detailed raw table data compatible with Excel & Sheets",
+                    title = strings.excelCsvSpreadsheet,
+                    subtitle = strings.excelCsvDesc,
                     icon = Icons.Default.TableChart,
                     iconBgColor = Color(0xFF10B981).copy(alpha = 0.15f),
                     iconTintColor = Color(0xFF059669),
@@ -291,8 +293,8 @@ fun ReportScreen(
                 )
 
                 ExportFormatOptionCard(
-                    title = "Text Summary",
-                    subtitle = "Quick readable text message for chat or notes",
+                    title = strings.textSummary,
+                    subtitle = strings.textSummaryDesc,
                     icon = Icons.Default.Description,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer,
                     iconTintColor = MaterialTheme.colorScheme.primary,
@@ -390,6 +392,7 @@ private fun ReportHeaderSection(
     onNextMonth: () -> Unit,
     onMonthClick: () -> Unit = {}
 ) {
+    val strings = LocalAppStrings.current
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
@@ -414,8 +417,8 @@ private fun ReportHeaderSection(
                     .testTag("report_prev_month_button")
             ) {
                 Icon(
-                    imageVector = Icons.Default.ChevronLeft,
-                    contentDescription = "Previous Month",
+                    imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
+                    contentDescription = strings.previousMonth,
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp)
                 )
@@ -456,8 +459,8 @@ private fun ReportHeaderSection(
                     .testTag("report_next_month_button")
             ) {
                 Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Next Month",
+                    imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                    contentDescription = strings.nextMonth,
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp)
                 )
@@ -471,9 +474,10 @@ private fun ReportHeaderSection(
  */
 @Composable
 private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
+    val strings = LocalAppStrings.current
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = "Work Overview",
+            text = strings.workOverview,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
@@ -487,7 +491,7 @@ private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
         ) {
             // Worked
             MetricCard(
-                title = "Total Worked",
+                title = strings.totalWorked,
                 value = summary.formattedTotalWorked(),
                 accentColor = MaterialTheme.colorScheme.onSurface,
                 backgroundColor = MaterialTheme.colorScheme.surface,
@@ -496,7 +500,7 @@ private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
 
             // Target
             MetricCard(
-                title = "Required Target",
+                title = strings.requiredTarget,
                 value = summary.formattedRequiredTotal(),
                 accentColor = MaterialTheme.colorScheme.onSurface,
                 backgroundColor = MaterialTheme.colorScheme.surface,
@@ -510,7 +514,7 @@ private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
         ) {
             // Overtime
             MetricCard(
-                title = "Total Overtime",
+                title = strings.totalOvertime,
                 value = summary.formattedOvertime(),
                 accentColor = OvertimeGreen,
                 backgroundColor = MaterialTheme.colorScheme.surface,
@@ -519,7 +523,7 @@ private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
 
             // Deficit
             MetricCard(
-                title = "Total Deficit",
+                title = strings.totalDeficit,
                 value = summary.formattedDeficit(),
                 accentColor = DeficitRed,
                 backgroundColor = MaterialTheme.colorScheme.surface,
@@ -576,6 +580,7 @@ private fun MonthlyWorkDistributionSection(
     daySummaries: List<DaySummary>,
     targetMinutes: Int
 ) {
+    val strings = LocalAppStrings.current
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -609,7 +614,7 @@ private fun MonthlyWorkDistributionSection(
                     )
                 }
                 Text(
-                    text = "Monthly Work Distribution",
+                    text = strings.monthlyWorkDistribution,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
@@ -623,10 +628,10 @@ private fun MonthlyWorkDistributionSection(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                DistributionLegendItem(color = MaterialTheme.colorScheme.primary, label = "Completed")
-                DistributionLegendItem(color = OvertimeGreen, label = "Overtime")
-                DistributionLegendItem(color = DeficitAmber, label = "Under Target")
-                DistributionLegendItem(color = MaterialTheme.colorScheme.outlineVariant, label = "Off")
+                DistributionLegendItem(color = MaterialTheme.colorScheme.primary, label = strings.completed)
+                DistributionLegendItem(color = OvertimeGreen, label = strings.overtime)
+                DistributionLegendItem(color = DeficitAmber, label = strings.underTarget)
+                DistributionLegendItem(color = MaterialTheme.colorScheme.outlineVariant, label = strings.dayOff)
             }
 
             // Horizontal Scrollable Bar Chart
@@ -727,6 +732,7 @@ private fun AttendanceMetricsSection(
     summary: WorkCalculationSummary,
     totalDaysInMonth: Int
 ) {
+    val strings = LocalAppStrings.current
     val completedDays = summary.completedDaysCount
     val offDays = summary.offDaysCount
     val workingDays = summary.workingDaysCount
@@ -746,7 +752,7 @@ private fun AttendanceMetricsSection(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Attendance & Progress",
+                text = strings.attendanceProgress,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
@@ -762,7 +768,7 @@ private fun AttendanceMetricsSection(
             ) {
                 AttendanceBadge(
                     icon = Icons.Default.CheckCircle,
-                    label = "Worked",
+                    label = strings.worked,
                     count = "$completedDays",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
@@ -770,7 +776,7 @@ private fun AttendanceMetricsSection(
 
                 AttendanceBadge(
                     icon = Icons.Default.EventBusy,
-                    label = "Off Days",
+                    label = strings.offDaysCount,
                     count = "$offDays",
                     tint = Color(0xFFD97706),
                     modifier = Modifier.weight(1f)
@@ -778,7 +784,7 @@ private fun AttendanceMetricsSection(
 
                 AttendanceBadge(
                     icon = Icons.Default.PendingActions,
-                    label = "Remaining",
+                    label = strings.remainingDays,
                     count = "$remainingDays",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)

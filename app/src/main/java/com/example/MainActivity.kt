@@ -87,6 +87,15 @@ import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.TextPrimary
 import kotlinx.coroutines.launch
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.example.ui.localization.AppLanguage
+import com.example.ui.localization.EnStrings
+import com.example.ui.localization.FaStrings
+import com.example.ui.localization.LocalAppLanguage
+import com.example.ui.localization.LocalAppStrings
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: WorkViewModel by viewModel()
@@ -103,8 +112,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            MyApplicationTheme(themeMode = uiState.settings.themeMode) {
-                WorkHoursApp(viewModel = viewModel)
+            val appLanguage = AppLanguage.fromCode(uiState.settings.language)
+            val appStrings = if (appLanguage == AppLanguage.FA) FaStrings else EnStrings
+            val layoutDirection = if (appLanguage.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+
+            CompositionLocalProvider(
+                LocalLayoutDirection provides layoutDirection,
+                LocalAppLanguage provides appLanguage,
+                LocalAppStrings provides appStrings
+            ) {
+                MyApplicationTheme(themeMode = uiState.settings.themeMode) {
+                    WorkHoursApp(viewModel = viewModel)
+                }
             }
         }
     }
@@ -117,6 +136,8 @@ fun WorkHoursApp(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
+    val appLanguage = LocalAppLanguage.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -167,15 +188,16 @@ fun WorkHoursApp(
                 targetState = uiState.currentScreen,
                 transitionSpec = {
                     val isForward = (screenOrder[targetState] ?: 0) > (screenOrder[initialState] ?: 0)
+                    val rtlMultiplier = if (appLanguage.isRtl) -1 else 1
                     if (isForward) {
-                        (slideInHorizontally(animationSpec = tween(340, easing = FastOutSlowInEasing)) { fullWidth -> (fullWidth * 0.35f).toInt() } +
+                        (slideInHorizontally(animationSpec = tween(340, easing = FastOutSlowInEasing)) { fullWidth -> (fullWidth * 0.35f * rtlMultiplier).toInt() } +
                          fadeIn(animationSpec = tween(280, easing = FastOutSlowInEasing))) togetherWith
-                        (slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { fullWidth -> -(fullWidth * 0.25f).toInt() } +
+                        (slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { fullWidth -> -(fullWidth * 0.25f * rtlMultiplier).toInt() } +
                          fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing)))
                     } else {
-                        (slideInHorizontally(animationSpec = tween(340, easing = FastOutSlowInEasing)) { fullWidth -> -(fullWidth * 0.35f).toInt() } +
+                        (slideInHorizontally(animationSpec = tween(340, easing = FastOutSlowInEasing)) { fullWidth -> -(fullWidth * 0.35f * rtlMultiplier).toInt() } +
                          fadeIn(animationSpec = tween(280, easing = FastOutSlowInEasing))) togetherWith
-                        (slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { fullWidth -> (fullWidth * 0.25f).toInt() } +
+                        (slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { fullWidth -> (fullWidth * 0.25f * rtlMultiplier).toInt() } +
                          fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing)))
                     }
                 },
@@ -250,8 +272,14 @@ fun WorkHoursApp(
             val initialH = if (isEnter) day.enterHour ?: 8 else day.exitHour ?: 17
             val initialM = if (isEnter) day.enterMinute ?: 0 else day.exitMinute ?: 0
 
+            val dialogTitle = if (isEnter) {
+                "${strings.setEntryTimeTitle} (${strings.dayCol} ${day.dayNumber})"
+            } else {
+                "${strings.setExitTimeTitle} (${strings.dayCol} ${day.dayNumber})"
+            }
+
             AppTimePickerDialog(
-                title = if (isEnter) "Set Company Entry Time (Day ${day.dayNumber})" else "Set Company Exit Time (Day ${day.dayNumber})",
+                title = dialogTitle,
                 initialHour = initialH,
                 initialMinute = initialM,
                 isEnterTime = isEnter,
@@ -295,12 +323,12 @@ fun WorkHoursApp(
                 },
                 title = {
                     Text(
-                        text = "Reset All Days?",
+                        text = strings.resetAllConfirmTitle,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
-                    Text("This will clear all entered entry and exit times across all days in this month. This action cannot be undone.")
+                    Text(strings.resetAllConfirmMessage)
                 },
                 confirmButton = {
                     Button(
@@ -310,7 +338,7 @@ fun WorkHoursApp(
                         ),
                         modifier = Modifier.testTag("confirm_reset_button")
                     ) {
-                        Text("Reset All")
+                        Text(strings.reset)
                     }
                 },
                 dismissButton = {
@@ -318,7 +346,7 @@ fun WorkHoursApp(
                         onClick = { viewModel.showResetConfirmation(false) },
                         modifier = Modifier.testTag("cancel_reset_button")
                     ) {
-                        Text("Cancel")
+                        Text(strings.cancel)
                     }
                 },
                 modifier = Modifier.testTag("reset_confirmation_dialog")

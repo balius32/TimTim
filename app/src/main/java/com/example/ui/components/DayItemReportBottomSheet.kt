@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.DaySummary
 import com.example.domain.model.WorkCalculationSummary
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.theme.DeficitRed
 import com.example.ui.theme.OvertimeGreen
 
@@ -77,6 +78,8 @@ fun DayItemReportBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = LocalAppStrings.current
+    val isFarsi = strings.isRtl
     val day = daySummary.day
 
     val isComplete = day.isComplete
@@ -85,17 +88,17 @@ fun DayItemReportBottomSheet(
 
     // Determine Overtime/Deficit item title, value, and specific time text color
     val overtimeDeficitTitle = when {
-        !isComplete -> "Overtime / Deficit"
-        diffMins > 0 -> "Overtime"
-        diffMins < 0 -> "Deficit"
-        else -> "On Target"
+        !isComplete -> "${strings.overtime} / ${strings.deficit}"
+        diffMins > 0 -> strings.overtime
+        diffMins < 0 -> strings.deficit
+        else -> strings.onTarget
     }
 
     val overtimeDeficitValue = when {
         !isComplete -> "_ _ : _ _"
-        diffMins > 0 -> "+${WorkCalculationSummary.formatMinutes(diffMins)}"
-        diffMins < 0 -> "-${WorkCalculationSummary.formatMinutes(-diffMins)}"
-        else -> "0h 00m"
+        diffMins > 0 -> "+${WorkCalculationSummary.formatMinutes(diffMins, isFarsi = isFarsi)}"
+        diffMins < 0 -> "-${WorkCalculationSummary.formatMinutes(-diffMins, isFarsi = isFarsi)}"
+        else -> if (isFarsi) "۰h ۰۰m" else "0h 00m"
     }
 
     val overtimeDeficitColor = when {
@@ -206,12 +209,12 @@ fun DayItemReportBottomSheet(
                         )
                         Column {
                             Text(
-                                text = "Day Off",
+                                text = strings.dayOff,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "No work hours required for this day.",
+                                text = strings.noWorkRequired,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -254,7 +257,7 @@ fun DayItemReportBottomSheet(
                                 }
                             }
                             Text(
-                                text = "Total Worked",
+                                text = strings.totalWorked,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp
@@ -283,7 +286,7 @@ fun DayItemReportBottomSheet(
                 ) {
                     CompactDetailTile(
                         icon = Icons.AutoMirrored.Filled.Login,
-                        title = "Enter Time",
+                        title = strings.enterTime,
                         value = if (day.hasEnterTime) day.formattedEnterTime() else "_ _ : _ _",
                         modifier = Modifier
                             .weight(1f)
@@ -292,7 +295,7 @@ fun DayItemReportBottomSheet(
 
                     CompactDetailTile(
                         icon = Icons.AutoMirrored.Filled.Logout,
-                        title = "Exit Time",
+                        title = strings.exitTime,
                         value = if (day.hasExitTime) day.formattedExitTime() else "_ _ : _ _",
                         modifier = Modifier
                             .weight(1f)
@@ -307,7 +310,7 @@ fun DayItemReportBottomSheet(
                 ) {
                     CompactDetailTile(
                         icon = Icons.Default.MoreTime,
-                        title = "Est. Checkout",
+                        title = strings.estCheckOut,
                         value = if (day.hasEnterTime) daySummary.formattedEstimatedCheckout() else "_ _ : _ _",
                         modifier = Modifier
                             .weight(1f)
@@ -340,7 +343,7 @@ fun DayItemReportBottomSheet(
                     .testTag("dismiss_item_report_sheet_btn")
             ) {
                 Text(
-                    text = "Close",
+                    text = strings.close,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                 )
             }

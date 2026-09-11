@@ -26,6 +26,7 @@ interface WorkRepository {
     suspend fun toggleDayOff(year: Int, month: Int, dayNumber: Int)
     suspend fun updateThemeMode(themeMode: String)
     suspend fun updateCalendarType(calendarType: String)
+    suspend fun updateLanguage(language: String)
     suspend fun updateOffDaysOfWeek(offDaysString: String, currentYear: Int, currentMonth: Int)
     suspend fun updateMonthDailyTarget(year: Int, month: Int, dailyRequiredMinutes: Int)
     suspend fun updateDailyRequiredMinutes(minutes: Int)

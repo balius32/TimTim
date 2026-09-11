@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.mvi.TodayPromptType
 import com.example.ui.mvi.TodayQuickPrompt
 import kotlinx.coroutines.delay
@@ -75,6 +76,7 @@ fun TodayQuickActionBanner(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     // Current time formatted
     var currentTimeString by remember {
         mutableStateOf(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()))
@@ -156,7 +158,7 @@ fun TodayQuickActionBanner(
                                 verticalArrangement = Arrangement.spacedBy(1.dp)
                             ) {
                                 Text(
-                                    text = if (isEnter) "Today's Check-In" else "Today's Check-Out",
+                                    text = if (isEnter) strings.logEntryNow else strings.logExitNow,
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.5.sp
@@ -167,9 +169,9 @@ fun TodayQuickActionBanner(
                                 )
                                 Text(
                                     text = if (isEnter) {
-                                        "Arrival time not logged yet"
+                                        strings.quickActionEntryPrompt
                                     } else {
-                                        "Arrival logged at ${prompt.enterTimeFormatted}"
+                                        "${strings.quickActionCheckedIn} ${strings.formatDigits(prompt.enterTimeFormatted)}"
                                     },
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 12.sp,
@@ -190,7 +192,7 @@ fun TodayQuickActionBanner(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Dismiss",
+                                    contentDescription = strings.close,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -225,9 +227,9 @@ fun TodayQuickActionBanner(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = if (isEnter) "Log Now ($currentTimeString)" else "Exit Now ($currentTimeString)",
+                                    text = if (isEnter) "${strings.logEntryNow} (${strings.formatDigits(currentTimeString)})" else "${strings.logExitNow} (${strings.formatDigits(currentTimeString)})",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.5.sp,
+                                    fontSize = 12.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -254,9 +256,9 @@ fun TodayQuickActionBanner(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Pick Time",
+                                    text = strings.tapToLog,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.5.sp,
+                                    fontSize = 12.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )

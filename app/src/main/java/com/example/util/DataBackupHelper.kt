@@ -44,6 +44,7 @@ object DataBackupHelper {
             sObj.put("themeMode", s.themeMode)
             sObj.put("offDaysOfWeek", s.offDaysOfWeek)
             sObj.put("calendarType", s.calendarType)
+            sObj.put("language", s.language)
             s.minDailyMinutes?.let { sObj.put("minDailyMinutes", it) }
             s.maxDailyMinutes?.let { sObj.put("maxDailyMinutes", it) }
             s.minEnterMinutes?.let { sObj.put("minEnterMinutes", it) }
@@ -99,6 +100,7 @@ object DataBackupHelper {
                 themeMode = s.optString("themeMode", "SYSTEM"),
                 offDaysOfWeek = s.optString("offDaysOfWeek", "FRIDAY"),
                 calendarType = s.optString("calendarType", "GREGORIAN"),
+                language = s.optString("language", "en"),
                 minDailyMinutes = if (s.has("minDailyMinutes") && !s.isNull("minDailyMinutes")) s.optInt("minDailyMinutes") else null,
                 maxDailyMinutes = if (s.has("maxDailyMinutes") && !s.isNull("maxDailyMinutes")) s.optInt("maxDailyMinutes") else null,
                 minEnterMinutes = if (s.has("minEnterMinutes") && !s.isNull("minEnterMinutes")) s.optInt("minEnterMinutes") else null,

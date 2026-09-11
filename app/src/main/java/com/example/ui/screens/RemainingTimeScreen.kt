@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.WorkCalculationSummary
 import com.example.domain.model.WorkDay
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.theme.DeficitAmber
 import com.example.ui.theme.DeficitAmberContainer
@@ -112,6 +113,7 @@ fun RemainingTimeScreen(
         onBackClick()
     }
 
+    val strings = LocalAppStrings.current
     val appColors = LocalAppColors.current
 
     // Real-time ticking state updated every 100ms
@@ -204,7 +206,7 @@ fun RemainingTimeScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Remaining Time",
+                        text = strings.remainingTime,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         color = MaterialTheme.colorScheme.onBackground
@@ -217,7 +219,7 @@ fun RemainingTimeScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = strings.back,
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -263,7 +265,7 @@ fun RemainingTimeScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                             Text(
-                                text = "Exit Now",
+                                text = strings.exitNow,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 17.sp,
@@ -346,7 +348,7 @@ fun RemainingTimeScreen(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = if (isOvertime) "Overtime" else "Remaining",
+                                text = if (isOvertime) strings.overtime else strings.remainingTime,
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
@@ -435,7 +437,7 @@ fun RemainingTimeScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "Target: ${dailyTargetMinutes / 60}h ${dailyTargetMinutes % 60}m",
+                                text = "${strings.requiredTarget}: ${dailyTargetMinutes / 60}h ${dailyTargetMinutes % 60}m",
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 11.sp
@@ -487,7 +489,7 @@ fun RemainingTimeScreen(
                             }
 
                             Text(
-                                text = "Check In",
+                                text = strings.checkIn,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
@@ -544,7 +546,7 @@ fun RemainingTimeScreen(
                             }
 
                             Text(
-                                text = "Est. Check Out",
+                                text = strings.estCheckOut,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp

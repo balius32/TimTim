@@ -299,6 +299,7 @@ class WorkViewModel(
                 viewModelScope.launch { updateUserSettingsUseCase.updateAvatar(intent.avatarId) }
             }
             is WorkUiIntent.UpdateThemeMode -> viewModelScope.launch { updateUserSettingsUseCase.updateThemeMode(intent.themeMode) }
+            is WorkUiIntent.UpdateLanguage -> viewModelScope.launch { updateUserSettingsUseCase.updateLanguage(intent.language) }
             is WorkUiIntent.UpdateCalendarType -> viewModelScope.launch(ioDispatcher) {
                 updateUserSettingsUseCase.updateCalendarType(intent.calendarType)
                 val calType = CalendarHelper.parseCalendarType(intent.calendarType)
@@ -449,6 +450,7 @@ class WorkViewModel(
     fun updateUserName(name: String) = onIntent(WorkUiIntent.UpdateUserName(name))
     fun updateAvatar(avatarId: String) = onIntent(WorkUiIntent.UpdateAvatar(avatarId))
     fun updateThemeMode(themeMode: String) = onIntent(WorkUiIntent.UpdateThemeMode(themeMode))
+    fun updateLanguage(language: String) = onIntent(WorkUiIntent.UpdateLanguage(language))
     fun updateCalendarType(calendarType: String) = onIntent(WorkUiIntent.UpdateCalendarType(calendarType))
     fun updateOffDaysOfWeek(offDaysString: String) = onIntent(WorkUiIntent.UpdateOffDaysOfWeek(offDaysString))
     fun updateDailyRequiredTime(hours: Int, minutes: Int) = onIntent(WorkUiIntent.UpdateDailyRequiredTime(hours, minutes))

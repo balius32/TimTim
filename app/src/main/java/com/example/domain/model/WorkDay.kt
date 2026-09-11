@@ -37,31 +37,34 @@ data class WorkDay(
             return exitTotal - enterTotal
         }
 
-    fun formattedEnterTime(): String {
+    fun formattedEnterTime(isFarsi: Boolean = false): String {
         return if (hasEnterTime) {
-            String.format(Locale.getDefault(), "%02d:%02d", enterHour, enterMinute)
+            val res = String.format(Locale.getDefault(), "%02d:%02d", enterHour, enterMinute)
+            if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
         } else {
             "_ _ : _ _"
         }
     }
 
-    fun formattedExitTime(): String {
+    fun formattedExitTime(isFarsi: Boolean = false): String {
         return if (hasExitTime) {
-            String.format(Locale.getDefault(), "%02d:%02d", exitHour, exitMinute)
+            val res = String.format(Locale.getDefault(), "%02d:%02d", exitHour, exitMinute)
+            if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
         } else {
             "_ _ : _ _"
         }
     }
 
-    fun formattedWorkedDuration(): String {
-        if (isDayOff) return "Day Off"
+    fun formattedWorkedDuration(isFarsi: Boolean = false): String {
+        if (isDayOff) return if (isFarsi) "تعطیل" else "Day Off"
         if (!isComplete) {
-            return if (hasEnterTime || hasExitTime) "In Progress" else "Not Logged"
+            return if (hasEnterTime || hasExitTime) (if (isFarsi) "در حال کار" else "In Progress") else (if (isFarsi) "ثبت‌نشده" else "Not Logged")
         }
         val mins = workedMinutes
         val hours = mins / 60
         val remainingMins = mins % 60
-        return "${hours}h ${remainingMins}m"
+        val res = "${hours}h ${remainingMins}m"
+        return if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
     }
 
     fun formattedWorkedHours(): String {

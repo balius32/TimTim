@@ -6,6 +6,7 @@ data class AppSettings(
     val offDaysOfWeek: String = "5",
     val themeMode: String = "dark_teal",
     val calendarType: String = "GREGORIAN",
+    val language: String = "en",
     val userName: String = "username",
     val avatarId: String = "minimal_avatar",
     val minEnterMinutes: Int? = null,

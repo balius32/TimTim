@@ -72,6 +72,7 @@ import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.components.AvatarSelectionBottomSheet
 import com.example.ui.components.CustomAvatarDisplay
+import com.example.ui.localization.LocalAppStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +85,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showEditNameDialog by remember { mutableStateOf(false) }
     var showAvatarDialog by remember { mutableStateOf(false) }
@@ -99,7 +101,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Profile",
+                        text = strings.profile,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         color = MaterialTheme.colorScheme.onBackground
@@ -112,7 +114,7 @@ fun ProfileScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = strings.back,
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -165,8 +167,8 @@ fun ProfileScreen(
                         icon = Icons.Default.Settings,
                         iconTint = MaterialTheme.colorScheme.primary,
                         iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        title = "Settings",
-                        subtitle = "Daily target, theme & off days",
+                        title = strings.settings,
+                        subtitle = strings.settingsSubtitle,
                         onClick = onNavigateToSettings,
                         testTag = "profile_menu_setting"
                     )
@@ -182,8 +184,8 @@ fun ProfileScreen(
                         icon = Icons.Default.Assessment,
                         iconTint = MaterialTheme.colorScheme.primary,
                         iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        title = "Report",
-                        subtitle = "Distribution chart & attendance metrics",
+                        title = strings.monthlyReport,
+                        subtitle = strings.reportSubtitle,
                         onClick = onNavigateToReport,
                         testTag = "profile_menu_report"
                     )
@@ -199,8 +201,8 @@ fun ProfileScreen(
                         icon = Icons.Default.Shield,
                         iconTint = MaterialTheme.colorScheme.primary,
                         iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        title = "Privacy",
-                        subtitle = "Offline Room storage & data safety",
+                        title = strings.privacy,
+                        subtitle = strings.privacySubtitle,
                         onClick = { showPrivacyDialog = true },
                         testTag = "profile_menu_privacy"
                     )
@@ -211,7 +213,7 @@ fun ProfileScreen(
 
             // App Version at bottom of page
             Text(
-                text = "Version 1.0.0",
+                text = "${strings.version} 1.0.0",
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -395,6 +397,7 @@ private fun ProfilePrivacyBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val strings = LocalAppStrings.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -436,7 +439,7 @@ private fun ProfilePrivacyBottomSheet(
                     }
                     Column {
                         Text(
-                            text = "Privacy & Data Policy",
+                            text = strings.privacyPolicyTitle,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
@@ -444,7 +447,7 @@ private fun ProfilePrivacyBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Your data stays on your device",
+                            text = strings.privacyPolicySubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -458,18 +461,18 @@ private fun ProfilePrivacyBottomSheet(
             ) {
                 PrivacyItem(
                     icon = Icons.Default.Storage,
-                    title = "100% Offline Local Storage",
-                    description = "All timesheet data, work hours, and settings are saved strictly inside your local Android Room database."
+                    title = strings.privacyPoint1Title,
+                    description = strings.privacyPoint1Desc
                 )
                 PrivacyItem(
                     icon = Icons.Default.Lock,
-                    title = "Zero Cloud Tracking",
-                    description = "No personal telemetry or work schedules are transmitted to external servers or third-party analytical tools."
+                    title = strings.privacyPoint2Title,
+                    description = strings.privacyPoint2Desc
                 )
                 PrivacyItem(
                     icon = Icons.Default.CheckCircle,
-                    title = "You Own Your Data",
-                    description = "You can reset, modify, or export your monthly reports anytime from within the app without account dependencies."
+                    title = strings.privacyPoint3Title,
+                    description = strings.privacyPoint3Desc
                 )
             }
 
@@ -487,7 +490,7 @@ private fun ProfilePrivacyBottomSheet(
                     .height(48.dp)
             ) {
                 Text(
-                    text = "Got It",
+                    text = strings.gotIt,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
@@ -553,6 +556,7 @@ private fun EditUsernameDialog(
     onDismiss: () -> Unit
 ) {
     var textValue by remember { mutableStateOf(currentName) }
+    val strings = LocalAppStrings.current
 
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -566,7 +570,7 @@ private fun EditUsernameDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Edit Profile Name",
+                    text = strings.editProfileName,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
@@ -577,7 +581,7 @@ private fun EditUsernameDialog(
                 OutlinedTextField(
                     value = textValue,
                     onValueChange = { textValue = it },
-                    label = { Text("Username") },
+                    label = { Text(strings.username) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -595,7 +599,7 @@ private fun EditUsernameDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(strings.cancel, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -610,7 +614,7 @@ private fun EditUsernameDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Save")
+                        Text(strings.save)
                     }
                 }
             }

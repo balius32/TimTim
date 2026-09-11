@@ -7,6 +7,7 @@ import com.example.domain.model.WorkDay
 import com.example.util.CalendarHelper
 import com.example.util.CalendarType
 import com.example.util.CurrentDate
+import com.example.util.toPersianDigits
 import java.time.LocalDate
 
 enum class TodayPromptType {
@@ -79,14 +80,19 @@ data class WorkUiState(
     val totalDaysInCurrentMonth: Int
         get() = CalendarHelper.getDaysInMonth(effectiveSelectedYear, effectiveSelectedMonth, calendarType)
 
+    val isFarsi: Boolean
+        get() = settings.language.lowercase().trim() == "fa" ||
+                settings.language.lowercase().trim() == "farsi" ||
+                settings.language.lowercase().trim() == "persian"
+
     val monthName: String
-        get() = CalendarHelper.getMonthName(effectiveSelectedMonth, calendarType)
+        get() = CalendarHelper.getMonthName(effectiveSelectedMonth, calendarType, isFarsi = isFarsi)
 
     val reportMonthName: String
-        get() = CalendarHelper.getMonthName(if (reportMonth != 0) reportMonth else currentCalendarNow.month, calendarType)
+        get() = CalendarHelper.getMonthName(if (reportMonth != 0) reportMonth else currentCalendarNow.month, calendarType, isFarsi = isFarsi)
 
     val currentCalendarMonthName: String
-        get() = CalendarHelper.getMonthName(currentCalendarNow.month, calendarType)
+        get() = CalendarHelper.getMonthName(currentCalendarNow.month, calendarType, isFarsi = isFarsi)
 
     val totalDaysInReportMonth: Int
         get() = CalendarHelper.getDaysInMonth(if (reportYear != 0) reportYear else currentCalendarNow.year, if (reportMonth != 0) reportMonth else currentCalendarNow.month, calendarType)
@@ -95,40 +101,54 @@ data class WorkUiState(
         get() {
             val yy = (effectiveSelectedYear % 100).toString().padStart(2, '0')
             val mm = effectiveSelectedMonth.toString().padStart(2, '0')
-            return "$yy/$mm"
+            val res = "$yy/$mm"
+            return if (isFarsi) res.toPersianDigits() else res
         }
 
     val formattedFullYearMonth: String
         get() {
             val mm = effectiveSelectedMonth.toString().padStart(2, '0')
-            return "$effectiveSelectedYear/$mm"
+            val res = "$effectiveSelectedYear/$mm"
+            return if (isFarsi) res.toPersianDigits() else res
         }
 
     val formattedMonthHeader: String
-        get() = "$monthName $effectiveSelectedYear"
+        get() {
+            val yStr = if (isFarsi) effectiveSelectedYear.toString().toPersianDigits() else effectiveSelectedYear.toString()
+            return "$monthName $yStr"
+        }
 
     val formattedReportMonthHeader: String
-        get() = "$reportMonthName ${if (reportYear != 0) reportYear else currentCalendarNow.year}"
+        get() {
+            val y = if (reportYear != 0) reportYear else currentCalendarNow.year
+            val yStr = if (isFarsi) y.toString().toPersianDigits() else y.toString()
+            return "$reportMonthName $yStr"
+        }
 
     val backToTodayLabel: String
-        get() = "Back to Today ($currentCalendarMonthName ${currentCalendarNow.year})"
+        get() {
+            val yStr = if (isFarsi) currentCalendarNow.year.toString().toPersianDigits() else currentCalendarNow.year.toString()
+            return if (isFarsi) "بازگشت به امروز ($currentCalendarMonthName $yStr)" else "Back to Today ($currentCalendarMonthName ${currentCalendarNow.year})"
+        }
 
     fun formattedMonthDay(dayNumber: Int): String {
         val mm = effectiveSelectedMonth.toString().padStart(2, '0')
         val dd = dayNumber.toString().padStart(2, '0')
-        return "$mm/$dd"
+        val res = "$mm/$dd"
+        return if (isFarsi) res.toPersianDigits() else res
     }
 
     fun formattedFullDate(dayNumber: Int): String {
-        return "$effectiveSelectedYear/$effectiveSelectedMonth/$dayNumber"
+        val res = "$effectiveSelectedYear/$effectiveSelectedMonth/$dayNumber"
+        return if (isFarsi) res.toPersianDigits() else res
     }
 
-    fun getDayOfWeekLabel(dayNumber: Int): String {
-        return CalendarHelper.getDayOfWeekLabel(effectiveSelectedYear, effectiveSelectedMonth, dayNumber, calendarType)
+    fun getDayOfWeekLabel(dayNumber: Int, isFarsi: Boolean = this.isFarsi): String {
+        return CalendarHelper.getDayOfWeekLabel(effectiveSelectedYear, effectiveSelectedMonth, dayNumber, calendarType, isFarsi = isFarsi)
     }
 
-    fun getShortDayOfWeekLabel(dayNumber: Int): String {
-        return CalendarHelper.getShortDayOfWeekLabel(effectiveSelectedYear, effectiveSelectedMonth, dayNumber, calendarType)
+    fun getShortDayOfWeekLabel(dayNumber: Int, isFarsi: Boolean = this.isFarsi): String {
+        return CalendarHelper.getShortDayOfWeekLabel(effectiveSelectedYear, effectiveSelectedMonth, dayNumber, calendarType, isFarsi = isFarsi)
     }
 
     val isCurrentMonth: Boolean

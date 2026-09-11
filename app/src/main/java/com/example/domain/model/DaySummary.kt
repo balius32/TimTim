@@ -16,32 +16,35 @@ data class DaySummary(
     val diffMinutes: Int, // workedMinutes - targetMinutes
     val status: DayStatus
 ) {
-    fun formattedWorkedDuration(): String {
-        if (day.isDayOff) return "Day Off"
+    fun formattedWorkedDuration(isFarsi: Boolean = false): String {
+        if (day.isDayOff) return if (isFarsi) "تعطیل" else "Day Off"
         if (!day.isComplete) {
-            return if (day.hasEnterTime || day.hasExitTime) "In Progress" else "Not Logged"
+            return if (day.hasEnterTime || day.hasExitTime) (if (isFarsi) "در حال کار" else "In Progress") else (if (isFarsi) "ثبت‌نشده" else "Not Logged")
         }
         val mins = workedMinutes
         val hours = mins / 60
         val remainingMins = mins % 60
-        return "${hours}h ${remainingMins}m"
+        val res = "${hours}h ${remainingMins}m"
+        return if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
     }
 
-    fun formattedWorkedHours(): String {
-        if (day.isDayOff) return "Off"
+    fun formattedWorkedHours(isFarsi: Boolean = false): String {
+        if (day.isDayOff) return if (isFarsi) "تعطیل" else "Off"
         if (!day.isComplete) return "--"
         val mins = workedMinutes
         val h = mins / 60
         val m = mins % 60
-        return if (h > 0) "${h}h ${m}m" else "${m}m"
+        val res = if (h > 0) "${h}h ${m}m" else "${m}m"
+        return if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
     }
 
     /**
      * Estimated checkout formatted string: based on day's enter time and the target minutes.
      */
-    fun formattedEstimatedCheckout(): String {
+    fun formattedEstimatedCheckout(isFarsi: Boolean = false): String {
         val target = if (targetMinutes > 0) targetMinutes else 480
-        return day.formattedEstimatedCheckout(target)
+        val res = day.formattedEstimatedCheckout(target)
+        return if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
     }
 
     val isOvertime: Boolean

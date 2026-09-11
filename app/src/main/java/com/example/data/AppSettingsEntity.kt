@@ -14,6 +14,7 @@ data class AppSettingsEntity(
     val themeMode: String = "SYSTEM", // "SYSTEM", "LIGHT", "DARK", "EMERALD", "PURPLE", "AMBER"
     val offDaysOfWeek: String = "FRIDAY", // Comma-separated Java DayOfWeek names e.g. "FRIDAY" or "THURSDAY,FRIDAY"
     val calendarType: String = "GREGORIAN", // "GREGORIAN" (default) or "HIJRI_SHAMSI"
+    val language: String = "en", // "en" (default) or "fa"
     val minEnterMinutes: Int? = null, // e.g. 7 * 60 = 420 for 07:00 (if picked earlier like 06:00, sets to 07:00)
     val maxExitMinutes: Int? = null, // e.g. 19 * 60 = 1140 for 19:00 (if picked later like 20:00, sets to 19:00)
     val minDailyMinutes: Int? = null,

@@ -42,24 +42,29 @@ object CalendarHelper {
         "July", "August", "September", "October", "November", "December"
     )
 
+    val GREGORIAN_MONTHS_FA = listOf(
+        "ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوئن",
+        "ژوئیه", "اوت", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"
+    )
+
     val GREGORIAN_WEEKDAYS = listOf(
-        WeekdayDefinition(DayOfWeek.MONDAY, "Monday", "Mon", "Doshanbeh", "2-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.TUESDAY, "Tuesday", "Tue", "Seshanbeh", "3-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.WEDNESDAY, "Wednesday", "Wed", "Chaharshanbeh", "4-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.THURSDAY, "Thursday", "Thu", "Panjshanbeh", "5-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.FRIDAY, "Friday", "Fri", "Jomeh", "Jomeh"),
-        WeekdayDefinition(DayOfWeek.SATURDAY, "Saturday", "Sat", "Shanbeh", "Shanbeh"),
-        WeekdayDefinition(DayOfWeek.SUNDAY, "Sunday", "Sun", "Yekshanbeh", "1-Shanbeh")
+        WeekdayDefinition(DayOfWeek.MONDAY, "Monday", "Mon", "دوشنبه", "د"),
+        WeekdayDefinition(DayOfWeek.TUESDAY, "Tuesday", "Tue", "سه‌شنبه", "س"),
+        WeekdayDefinition(DayOfWeek.WEDNESDAY, "Wednesday", "Wed", "چهارشنبه", "چ"),
+        WeekdayDefinition(DayOfWeek.THURSDAY, "Thursday", "Thu", "پنج‌شنبه", "پ"),
+        WeekdayDefinition(DayOfWeek.FRIDAY, "Friday", "Fri", "جمعه", "ج"),
+        WeekdayDefinition(DayOfWeek.SATURDAY, "Saturday", "Sat", "شنبه", "ش"),
+        WeekdayDefinition(DayOfWeek.SUNDAY, "Sunday", "Sun", "یکشنبه", "ی")
     )
 
     val SHAMSI_WEEKDAYS = listOf(
-        WeekdayDefinition(DayOfWeek.SATURDAY, "Saturday", "Sat", "Shanbeh", "Shanbeh"),
-        WeekdayDefinition(DayOfWeek.SUNDAY, "Sunday", "Sun", "Yekshanbeh", "1-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.MONDAY, "Monday", "Mon", "Doshanbeh", "2-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.TUESDAY, "Tuesday", "Tue", "Seshanbeh", "3-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.WEDNESDAY, "Wednesday", "Wed", "Chaharshanbeh", "4-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.THURSDAY, "Thursday", "Thu", "Panjshanbeh", "5-Shanbeh"),
-        WeekdayDefinition(DayOfWeek.FRIDAY, "Friday", "Fri", "Jomeh", "Jomeh")
+        WeekdayDefinition(DayOfWeek.SATURDAY, "Saturday", "Sat", "شنبه", "ش"),
+        WeekdayDefinition(DayOfWeek.SUNDAY, "Sunday", "Sun", "یکشنبه", "ی"),
+        WeekdayDefinition(DayOfWeek.MONDAY, "Monday", "Mon", "دوشنبه", "د"),
+        WeekdayDefinition(DayOfWeek.TUESDAY, "Tuesday", "Tue", "سه‌شنبه", "س"),
+        WeekdayDefinition(DayOfWeek.WEDNESDAY, "Wednesday", "Wed", "چهارشنبه", "چ"),
+        WeekdayDefinition(DayOfWeek.THURSDAY, "Thursday", "Thu", "پنج‌شنبه", "پ"),
+        WeekdayDefinition(DayOfWeek.FRIDAY, "Friday", "Fri", "جمعه", "ج")
     )
 
     fun parseCalendarType(typeString: String?): CalendarType {
@@ -98,13 +103,15 @@ object CalendarHelper {
         }
     }
 
-    fun getMonthName(month: Int, calendarType: CalendarType): String {
+    fun getMonthName(month: Int, calendarType: CalendarType, isFarsi: Boolean = false): String {
         return when (calendarType) {
             CalendarType.GREGORIAN -> {
-                if (month in 1..12) GREGORIAN_MONTHS[month - 1] else "Month $month"
+                if (month in 1..12) {
+                    if (isFarsi) GREGORIAN_MONTHS_FA[month - 1] else GREGORIAN_MONTHS[month - 1]
+                } else "Month $month"
             }
             CalendarType.HIJRI_SHAMSI -> {
-                PersianDateHelper.getMonthName(month)
+                PersianDateHelper.getMonthName(month, isFarsi = isFarsi)
             }
         }
     }
@@ -126,42 +133,66 @@ object CalendarHelper {
         }
     }
 
-    fun getDayOfWeekLabel(year: Int, month: Int, day: Int, calendarType: CalendarType): String {
+    fun getDayOfWeekLabel(year: Int, month: Int, day: Int, calendarType: CalendarType, isFarsi: Boolean = false): String {
         return when (calendarType) {
             CalendarType.GREGORIAN -> {
-                val dow = getDayOfWeek(year, month, day, calendarType) ?: return "Day"
-                when (dow) {
-                    DayOfWeek.MONDAY -> "Monday"
-                    DayOfWeek.TUESDAY -> "Tuesday"
-                    DayOfWeek.WEDNESDAY -> "Wednesday"
-                    DayOfWeek.THURSDAY -> "Thursday"
-                    DayOfWeek.FRIDAY -> "Friday"
-                    DayOfWeek.SATURDAY -> "Saturday"
-                    DayOfWeek.SUNDAY -> "Sunday"
+                val dow = getDayOfWeek(year, month, day, calendarType) ?: return if (isFarsi) "روز" else "Day"
+                if (isFarsi) {
+                    when (dow) {
+                        DayOfWeek.MONDAY -> "دوشنبه"
+                        DayOfWeek.TUESDAY -> "سه‌شنبه"
+                        DayOfWeek.WEDNESDAY -> "چهارشنبه"
+                        DayOfWeek.THURSDAY -> "پنج‌شنبه"
+                        DayOfWeek.FRIDAY -> "جمعه"
+                        DayOfWeek.SATURDAY -> "شنبه"
+                        DayOfWeek.SUNDAY -> "یکشنبه"
+                    }
+                } else {
+                    when (dow) {
+                        DayOfWeek.MONDAY -> "Monday"
+                        DayOfWeek.TUESDAY -> "Tuesday"
+                        DayOfWeek.WEDNESDAY -> "Wednesday"
+                        DayOfWeek.THURSDAY -> "Thursday"
+                        DayOfWeek.FRIDAY -> "Friday"
+                        DayOfWeek.SATURDAY -> "Saturday"
+                        DayOfWeek.SUNDAY -> "Sunday"
+                    }
                 }
             }
             CalendarType.HIJRI_SHAMSI -> {
-                PersianDateHelper.getDayOfWeekLabel(year, month, day)
+                PersianDateHelper.getDayOfWeekLabel(year, month, day, isFarsi = isFarsi)
             }
         }
     }
 
-    fun getShortDayOfWeekLabel(year: Int, month: Int, day: Int, calendarType: CalendarType): String {
+    fun getShortDayOfWeekLabel(year: Int, month: Int, day: Int, calendarType: CalendarType, isFarsi: Boolean = false): String {
         return when (calendarType) {
             CalendarType.GREGORIAN -> {
-                val dow = getDayOfWeek(year, month, day, calendarType) ?: return "Day"
-                when (dow) {
-                    DayOfWeek.MONDAY -> "Mon"
-                    DayOfWeek.TUESDAY -> "Tue"
-                    DayOfWeek.WEDNESDAY -> "Wed"
-                    DayOfWeek.THURSDAY -> "Thu"
-                    DayOfWeek.FRIDAY -> "Fri"
-                    DayOfWeek.SATURDAY -> "Sat"
-                    DayOfWeek.SUNDAY -> "Sun"
+                val dow = getDayOfWeek(year, month, day, calendarType) ?: return if (isFarsi) "روز" else "Day"
+                if (isFarsi) {
+                    when (dow) {
+                        DayOfWeek.MONDAY -> "د"
+                        DayOfWeek.TUESDAY -> "س"
+                        DayOfWeek.WEDNESDAY -> "چ"
+                        DayOfWeek.THURSDAY -> "پ"
+                        DayOfWeek.FRIDAY -> "ج"
+                        DayOfWeek.SATURDAY -> "ش"
+                        DayOfWeek.SUNDAY -> "ی"
+                    }
+                } else {
+                    when (dow) {
+                        DayOfWeek.MONDAY -> "Mon"
+                        DayOfWeek.TUESDAY -> "Tue"
+                        DayOfWeek.WEDNESDAY -> "Wed"
+                        DayOfWeek.THURSDAY -> "Thu"
+                        DayOfWeek.FRIDAY -> "Fri"
+                        DayOfWeek.SATURDAY -> "Sat"
+                        DayOfWeek.SUNDAY -> "Sun"
+                    }
                 }
             }
             CalendarType.HIJRI_SHAMSI -> {
-                PersianDateHelper.getShortDayOfWeekLabel(year, month, day)
+                PersianDateHelper.getShortDayOfWeekLabel(year, month, day, isFarsi = isFarsi)
             }
         }
     }
