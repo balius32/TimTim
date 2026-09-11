@@ -948,14 +948,14 @@ fun WireframeDailyLogRowCard(
                         )
                     }
 
-                    // Dropdown Popup with "Remaining Time" (for today), "Item Report" (for other days), "Set Off", and "Clear"
+                    // Dropdown Popup with "Remaining Time" / "Daily Summary", "Set Off", and "Clear"
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
-                        if (isToday) {
-                            // For today: show Remaining Time if work is in progress or day has activity
+                        if (isToday && !day.hasExitTime) {
+                            // For today without exit time: show Remaining Time
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -982,7 +982,7 @@ fun WireframeDailyLogRowCard(
                                 modifier = Modifier.testTag("day_menu_remaining_time_${day.dayNumber}")
                             )
                         } else {
-                            // For other days: show Daily Summary opening the bottom sheet
+                            // When exit time is set (or for any past/completed day): show Daily Summary opening the bottom sheet
                             DropdownMenuItem(
                                 text = {
                                     Text(
