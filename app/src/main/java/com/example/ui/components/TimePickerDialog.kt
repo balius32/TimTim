@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -48,16 +50,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.localization.LocalAppStrings
+import com.example.ui.localization.toPersianDigits
 import com.example.ui.theme.DeficitRed
 import com.example.ui.theme.DeficitRedContainer
 import com.example.ui.theme.OnDeficitRedContainer
@@ -68,8 +76,8 @@ import java.util.Calendar
 import kotlin.math.abs
 
 private const val REPEAT_COUNT = 500
-private val ITEM_HEIGHT = 74.dp
-private val VISIBLE_ITEMS_COUNT = 3
+private val ITEM_HEIGHT = 64.dp
+private const val VISIBLE_ITEMS_COUNT = 3
 private const val TOTAL_HOURS = 24
 private const val TOTAL_MINUTES = 60
 
@@ -96,18 +104,18 @@ fun AppTimePickerDialog(
     val coroutineScope = rememberCoroutineScope()
     val strings = LocalAppStrings.current
 
-    var selectedHour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
-    var selectedMinute by remember { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
+    var selectedHour by remember(initialHour) { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
+    var selectedMinute by remember(initialMinute) { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
 
-    val hourStartIndex = remember {
+    val hourStartIndex = remember(initialHour) {
         (REPEAT_COUNT / 2) * TOTAL_HOURS + initialHour.coerceIn(0, 23)
     }
-    val minuteStartIndex = remember {
+    val minuteStartIndex = remember(initialMinute) {
         (REPEAT_COUNT / 2) * TOTAL_MINUTES + initialMinute.coerceIn(0, 59)
     }
 
-    val hourListState = rememberLazyListState(initialFirstVisibleItemIndex = hourStartIndex)
-    val minuteListState = rememberLazyListState(initialFirstVisibleItemIndex = minuteStartIndex)
+    val hourListState = rememberLazyListState(initialFirstVisibleItemIndex = (hourStartIndex - 1).coerceAtLeast(0))
+    val minuteListState = rememberLazyListState(initialFirstVisibleItemIndex = (minuteStartIndex - 1).coerceAtLeast(0))
 
     val hourSnapFlingBehavior = rememberSnapFlingBehavior(lazyListState = hourListState)
     val minuteSnapFlingBehavior = rememberSnapFlingBehavior(lazyListState = minuteListState)
@@ -222,69 +230,76 @@ fun AppTimePickerDialog(
                         .height(ITEM_HEIGHT)
                 ) {}
 
-                // Dual Wheels + Colon Layout matching sketch
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.88f)
-                        .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Hour Wheel Column (00..23)
-                    Box(
+                // Dual Wheels + Colon Layout matching sketch (Always LTR for digital time: Hour on left, Minute on right)
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth(0.88f)
                             .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                        contentAlignment = Alignment.Center
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SoftWheelColumn(
-                            listState = hourListState,
-                            snapFlingBehavior = hourSnapFlingBehavior,
-                            totalItems = TOTAL_HOURS,
-                            itemHeight = ITEM_HEIGHT,
-                            onItemClick = { index ->
-                                coroutineScope.launch {
-                                    hourListState.animateScrollToItem(index)
-                                }
-                            },
-                            testTag = "hour_wheel"
-                        )
-                    }
+                        // Hour Wheel Column (00..23)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SoftWheelColumn(
+                                listState = hourListState,
+                                snapFlingBehavior = hourSnapFlingBehavior,
+                                totalItems = TOTAL_HOURS,
+                                itemHeight = ITEM_HEIGHT,
+                                onItemClick = { index ->
+                                    coroutineScope.launch {
+                                        hourListState.animateScrollToItem((index - 1).coerceAtLeast(0))
+                                    }
+                                },
+                                testTag = "hour_wheel"
+                            )
+                        }
 
-                    // Central Colon ":"
-                    Text(
-                        text = ":",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 44.sp,
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .width(32.dp)
-                            .padding(bottom = 6.dp)
-                    )
-
-                    // Minute Wheel Column (00..59)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        SoftWheelColumn(
-                            listState = minuteListState,
-                            snapFlingBehavior = minuteSnapFlingBehavior,
-                            totalItems = TOTAL_MINUTES,
-                            itemHeight = ITEM_HEIGHT,
-                            onItemClick = { index ->
-                                coroutineScope.launch {
-                                    minuteListState.animateScrollToItem(index)
-                                }
-                            },
-                            testTag = "minute_wheel"
+                        // Central Colon ":"
+                        Text(
+                            text = ":",
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 48.sp,
+                                lineHeight = 48.sp,
+                                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                lineHeightStyle = LineHeightStyle(
+                                    alignment = LineHeightStyle.Alignment.Center,
+                                    trim = LineHeightStyle.Trim.Both
+                                )
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .width(32.dp)
+                                .offset(y = (-1).dp)
                         )
+
+                        // Minute Wheel Column (00..59)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SoftWheelColumn(
+                                listState = minuteListState,
+                                snapFlingBehavior = minuteSnapFlingBehavior,
+                                totalItems = TOTAL_MINUTES,
+                                itemHeight = ITEM_HEIGHT,
+                                onItemClick = { index ->
+                                    coroutineScope.launch {
+                                        minuteListState.animateScrollToItem((index - 1).coerceAtLeast(0))
+                                    }
+                                },
+                                testTag = "minute_wheel"
+                            )
+                        }
                     }
                 }
             }
@@ -341,15 +356,15 @@ fun AppTimePickerDialog(
                         val currentH = cal.get(Calendar.HOUR_OF_DAY)
                         val currentM = cal.get(Calendar.MINUTE)
 
-                        val currentHourBase = (hourListState.firstVisibleItemIndex / TOTAL_HOURS) * TOTAL_HOURS
+                        val currentHourBase = (((hourListState.firstVisibleItemIndex + 1)) / TOTAL_HOURS) * TOTAL_HOURS
                         val targetHourIndex = currentHourBase + currentH
 
-                        val currentMinuteBase = (minuteListState.firstVisibleItemIndex / TOTAL_MINUTES) * TOTAL_MINUTES
+                        val currentMinuteBase = (((minuteListState.firstVisibleItemIndex + 1)) / TOTAL_MINUTES) * TOTAL_MINUTES
                         val targetMinuteIndex = currentMinuteBase + currentM
 
                         coroutineScope.launch {
-                            launch { hourListState.animateScrollToItem(targetHourIndex) }
-                            launch { minuteListState.animateScrollToItem(targetMinuteIndex) }
+                            launch { hourListState.animateScrollToItem((targetHourIndex - 1).coerceAtLeast(0)) }
+                            launch { minuteListState.animateScrollToItem((targetMinuteIndex - 1).coerceAtLeast(0)) }
                         }
                     },
                     modifier = Modifier.testTag("now_time_button")
@@ -385,16 +400,17 @@ fun AppTimePickerDialog(
 
                     Button(
                         onClick = {
-                            if (hasValidationError) {
-                                validationErrorMessage?.let { onShowSnackbar?.invoke(it) }
-                            } else {
+                            if (!hasValidationError) {
                                 onConfirm(selectedHour, selectedMinute)
                             }
                         },
+                        enabled = !hasValidationError,
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (hasValidationError) DeficitRed.copy(alpha = 0.7f) else MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         ),
                         contentPadding = PaddingValues(horizontal = 26.dp, vertical = 12.dp),
                         modifier = Modifier.testTag("confirm_time_button")
@@ -435,18 +451,18 @@ fun TargetTimePickerDialog(
     val effectiveSubtitle = subtitle ?: strings.dailyTargetDesc
     val coroutineScope = rememberCoroutineScope()
 
-    var selectedHour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
-    var selectedMinute by remember { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
+    var selectedHour by remember(initialHour) { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
+    var selectedMinute by remember(initialMinute) { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
 
-    val hourStartIndex = remember {
+    val hourStartIndex = remember(initialHour) {
         (REPEAT_COUNT / 2) * TOTAL_HOURS + initialHour.coerceIn(0, 23)
     }
-    val minuteStartIndex = remember {
+    val minuteStartIndex = remember(initialMinute) {
         (REPEAT_COUNT / 2) * TOTAL_MINUTES + initialMinute.coerceIn(0, 59)
     }
 
-    val hourListState = rememberLazyListState(initialFirstVisibleItemIndex = hourStartIndex)
-    val minuteListState = rememberLazyListState(initialFirstVisibleItemIndex = minuteStartIndex)
+    val hourListState = rememberLazyListState(initialFirstVisibleItemIndex = (hourStartIndex - 1).coerceAtLeast(0))
+    val minuteListState = rememberLazyListState(initialFirstVisibleItemIndex = (minuteStartIndex - 1).coerceAtLeast(0))
 
     val hourSnapFlingBehavior = rememberSnapFlingBehavior(lazyListState = hourListState)
     val minuteSnapFlingBehavior = rememberSnapFlingBehavior(lazyListState = minuteListState)
@@ -541,62 +557,71 @@ fun TargetTimePickerDialog(
                         .height(ITEM_HEIGHT)
                 ) {}
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.88f)
-                        .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth(0.88f)
                             .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                        contentAlignment = Alignment.Center
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SoftWheelColumn(
-                            listState = hourListState,
-                            snapFlingBehavior = hourSnapFlingBehavior,
-                            totalItems = TOTAL_HOURS,
-                            itemHeight = ITEM_HEIGHT,
-                            onItemClick = { index ->
-                                coroutineScope.launch {
-                                    hourListState.animateScrollToItem(index)
-                                }
-                            },
-                            testTag = "target_hour_wheel"
-                        )
-                    }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SoftWheelColumn(
+                                listState = hourListState,
+                                snapFlingBehavior = hourSnapFlingBehavior,
+                                totalItems = TOTAL_HOURS,
+                                itemHeight = ITEM_HEIGHT,
+                                onItemClick = { index ->
+                                    coroutineScope.launch {
+                                        hourListState.animateScrollToItem((index - 1).coerceAtLeast(0))
+                                    }
+                                },
+                                 testTag = "target_hour_wheel"
+                            )
+                        }
 
-                    Text(
-                        text = ":",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.Light,
-                            fontSize = 38.sp,
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        SoftWheelColumn(
-                            listState = minuteListState,
-                            snapFlingBehavior = minuteSnapFlingBehavior,
-                            totalItems = TOTAL_MINUTES,
-                            itemHeight = ITEM_HEIGHT,
-                            onItemClick = { index ->
-                                coroutineScope.launch {
-                                    minuteListState.animateScrollToItem(index)
-                                }
-                            },
-                            testTag = "target_minute_wheel"
+                        Text(
+                            text = ":",
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 48.sp,
+                                lineHeight = 48.sp,
+                                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                lineHeightStyle = LineHeightStyle(
+                                    alignment = LineHeightStyle.Alignment.Center,
+                                    trim = LineHeightStyle.Trim.Both
+                                )
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .offset(y = (-1).dp)
                         )
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SoftWheelColumn(
+                                listState = minuteListState,
+                                snapFlingBehavior = minuteSnapFlingBehavior,
+                                totalItems = TOTAL_MINUTES,
+                                itemHeight = ITEM_HEIGHT,
+                                onItemClick = { index ->
+                                    coroutineScope.launch {
+                                        minuteListState.animateScrollToItem((index - 1).coerceAtLeast(0))
+                                    }
+                                },
+                                testTag = "target_minute_wheel"
+                            )
+                        }
                     }
                 }
             }
@@ -676,18 +701,18 @@ fun LimitTimePickerDialog(
     val effectiveSubtitle = subtitle ?: ""
     val coroutineScope = rememberCoroutineScope()
 
-    var selectedHour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
-    var selectedMinute by remember { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
+    var selectedHour by remember(initialHour) { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
+    var selectedMinute by remember(initialMinute) { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
 
-    val hourStartIndex = remember {
+    val hourStartIndex = remember(initialHour) {
         (REPEAT_COUNT / 2) * TOTAL_HOURS + initialHour.coerceIn(0, 23)
     }
-    val minuteStartIndex = remember {
+    val minuteStartIndex = remember(initialMinute) {
         (REPEAT_COUNT / 2) * TOTAL_MINUTES + initialMinute.coerceIn(0, 59)
     }
 
-    val hourListState = rememberLazyListState(initialFirstVisibleItemIndex = hourStartIndex)
-    val minuteListState = rememberLazyListState(initialFirstVisibleItemIndex = minuteStartIndex)
+    val hourListState = rememberLazyListState(initialFirstVisibleItemIndex = (hourStartIndex - 1).coerceAtLeast(0))
+    val minuteListState = rememberLazyListState(initialFirstVisibleItemIndex = (minuteStartIndex - 1).coerceAtLeast(0))
 
     val hourSnapFlingBehavior = rememberSnapFlingBehavior(lazyListState = hourListState)
     val minuteSnapFlingBehavior = rememberSnapFlingBehavior(lazyListState = minuteListState)
@@ -784,62 +809,71 @@ fun LimitTimePickerDialog(
                         .height(ITEM_HEIGHT)
                 ) {}
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.88f)
-                        .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth(0.88f)
                             .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                        contentAlignment = Alignment.Center
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SoftWheelColumn(
-                            listState = hourListState,
-                            snapFlingBehavior = hourSnapFlingBehavior,
-                            totalItems = TOTAL_HOURS,
-                            itemHeight = ITEM_HEIGHT,
-                            onItemClick = { index ->
-                                coroutineScope.launch {
-                                    hourListState.animateScrollToItem(index)
-                                }
-                            },
-                            testTag = "limit_hour_wheel"
-                        )
-                    }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SoftWheelColumn(
+                                listState = hourListState,
+                                snapFlingBehavior = hourSnapFlingBehavior,
+                                totalItems = TOTAL_HOURS,
+                                itemHeight = ITEM_HEIGHT,
+                                onItemClick = { index ->
+                                    coroutineScope.launch {
+                                        hourListState.animateScrollToItem((index - 1).coerceAtLeast(0))
+                                    }
+                                },
+                                testTag = "limit_hour_wheel"
+                            )
+                        }
 
-                    Text(
-                        text = ":",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.Light,
-                            fontSize = 38.sp,
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        SoftWheelColumn(
-                            listState = minuteListState,
-                            snapFlingBehavior = minuteSnapFlingBehavior,
-                            totalItems = TOTAL_MINUTES,
-                            itemHeight = ITEM_HEIGHT,
-                            onItemClick = { index ->
-                                coroutineScope.launch {
-                                    minuteListState.animateScrollToItem(index)
-                                }
-                            },
-                            testTag = "limit_minute_wheel"
+                        Text(
+                            text = ":",
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 48.sp,
+                                lineHeight = 48.sp,
+                                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                lineHeightStyle = LineHeightStyle(
+                                    alignment = LineHeightStyle.Alignment.Center,
+                                    trim = LineHeightStyle.Trim.Both
+                                )
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .offset(y = (-1).dp)
                         )
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(ITEM_HEIGHT * VISIBLE_ITEMS_COUNT),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SoftWheelColumn(
+                                listState = minuteListState,
+                                snapFlingBehavior = minuteSnapFlingBehavior,
+                                totalItems = TOTAL_MINUTES,
+                                itemHeight = ITEM_HEIGHT,
+                                onItemClick = { index ->
+                                    coroutineScope.launch {
+                                        minuteListState.animateScrollToItem((index - 1).coerceAtLeast(0))
+                                    }
+                                },
+                                testTag = "limit_minute_wheel"
+                            )
+                        }
                     }
                 }
             }
@@ -932,11 +966,12 @@ fun SoftWheelColumn(
     LazyColumn(
         state = listState,
         flingBehavior = snapFlingBehavior,
-        contentPadding = PaddingValues(vertical = itemHeight),
+        contentPadding = PaddingValues(0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxWidth()
             .height(itemHeight * VISIBLE_ITEMS_COUNT)
+            .clipToBounds()
             .testTag(testTag)
     ) {
         items(
@@ -944,7 +979,8 @@ fun SoftWheelColumn(
             key = { it }
         ) { index ->
             val value = index % totalItems
-            val valueString = strings.formatDigits(String.format(java.util.Locale.getDefault(), "%02d", value))
+            val asciiFormatted = String.format(java.util.Locale.US, "%02d", value)
+            val valueString = if (strings.isRtl) asciiFormatted.toPersianDigits() else asciiFormatted
 
             val distanceFraction by remember(listState) {
                 derivedStateOf {
@@ -955,16 +991,16 @@ fun SoftWheelColumn(
                         val itemCenter = itemInfo.offset + itemInfo.size / 2f
                         val dist = abs(itemCenter - center)
                         val maxDist = itemInfo.size.toFloat().coerceAtLeast(1f)
-                        (dist / maxDist).coerceIn(0f, 1f)
+                        (dist / maxDist).coerceIn(0f, 3f)
                     } else {
-                        1f
+                        3f
                     }
                 }
             }
 
-            val scale = 1.0f - (distanceFraction * 0.22f)
-            val alpha = 1.0f - (distanceFraction * 0.68f)
-            val isPrimary = distanceFraction < 0.3f
+            val scale = (1.0f - (distanceFraction * 0.18f)).coerceIn(0.80f, 1.0f)
+            val alpha = (1.0f - (distanceFraction * 0.48f)).coerceIn(0.30f, 1.0f)
+            val isPrimary = distanceFraction < 0.45f
 
             Box(
                 modifier = Modifier
@@ -975,16 +1011,26 @@ fun SoftWheelColumn(
             ) {
                 Text(
                     text = valueString,
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = if (isPrimary) FontWeight.ExtraBold else FontWeight.Bold,
+                        fontWeight = if (isPrimary) FontWeight.ExtraBold else FontWeight.SemiBold,
                         fontSize = 48.sp,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = (-1).sp
+                        lineHeight = 48.sp,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                        lineHeightStyle = LineHeightStyle(
+                            alignment = LineHeightStyle.Alignment.Center,
+                            trim = LineHeightStyle.Trim.Both
+                        )
                     ),
-                    color = if (isPrimary) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    color = if (isPrimary) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     modifier = Modifier
                         .scale(scale)
                         .alpha(alpha)
+                        .offset(y = 2.dp)
                 )
             }
         }

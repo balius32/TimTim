@@ -428,8 +428,8 @@ object EnStrings : AppStrings {
     override val clear: String = "Clear"
     override val remainingTime: String = "Remaining Time"
     override val dailySummary: String = "Daily Summary"
-    override val logEntryNow: String = "Log Check-In Now"
-    override val logExitNow: String = "Log Check-Out Now"
+    override val logEntryNow: String = "Enter"
+    override val logExitNow: String = "Exit now"
     override val quickActionCheckedIn: String = "Checked in at"
     override val quickActionExitPrompt: String = "Tap to log check-out time"
     override val quickActionEntryPrompt: String = "You haven't logged check-in today"
@@ -1046,8 +1046,8 @@ object FaStrings : AppStrings {
     override val wednesdayShort: String = "۴ش"
     override val thursdayShort: String = "۵ش"
     override val fridayShort: String = "ج"
-    override val hourShort: String = "س"
-    override val minuteShort: String = "د"
+    override val hourShort: String = "ساعت"
+    override val minuteShort: String = "دقیقه"
 
     override fun getDayOfWeek(dayOfWeek: java.time.DayOfWeek): String = when (dayOfWeek) {
         java.time.DayOfWeek.SATURDAY -> saturday
@@ -1076,7 +1076,7 @@ object FaStrings : AppStrings {
     override fun formatDurationShort(minutes: Int): String {
         val h = minutes / 60
         val m = minutes % 60
-        return if (m == 0) "${h.toPersianDigits()} ساعت" else "${h.toPersianDigits()} س و ${m.toPersianDigits()} د"
+        return if (m == 0) "${h.toPersianDigits()} ساعت" else "${h.toPersianDigits()} ساعت و ${m.toPersianDigits()} دقیقه"
     }
 
     override fun formatMinutesSigned(minutes: Int): String {
@@ -1084,7 +1084,7 @@ object FaStrings : AppStrings {
         val absMin = kotlin.math.abs(minutes)
         val h = absMin / 60
         val m = absMin % 60
-        return "$sign${h.toPersianDigits()} س و ${m.toString().padStart(2, '0').toPersianDigits()} د"
+        return "$sign${h.toPersianDigits()} ساعت و ${m.toString().padStart(2, '0').toPersianDigits()} دقیقه"
     }
 
     override fun formatDayNumber(day: Int): String = day.toString().padStart(2, '0').toPersianDigits()

@@ -117,6 +117,25 @@ fun TodayQuickActionBanner(
         if (prompt != null) {
             val isEnter = prompt.type == TodayPromptType.ENTER_NOW
 
+            val currentMins = try {
+                val parts = currentTimeString.split(":")
+                val h = parts[0].toInt()
+                val m = parts[1].toInt()
+                h * 60 + m
+            } catch (e: Exception) {
+                0
+            }
+
+            val enterHour = prompt.todayEntity.enterHour
+            val enterMinute = prompt.todayEntity.enterMinute
+            val enterMins = if (enterHour != null && enterMinute != null) {
+                enterHour * 60 + enterMinute
+            } else {
+                null
+            }
+
+            val isExitTimeInvalid = !isEnter && enterMins != null && currentMins < enterMins
+
             val primaryColor = MaterialTheme.colorScheme.primary
             val cardBg = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
             val borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
@@ -170,12 +189,14 @@ fun TodayQuickActionBanner(
                                 Text(
                                     text = if (isEnter) {
                                         strings.quickActionEntryPrompt
+                                    } else if (isExitTimeInvalid) {
+                                        strings.exitTimeCannotBeEarlier
                                     } else {
                                         "${strings.quickActionCheckedIn} ${strings.formatDigits(prompt.enterTimeFormatted)}"
                                     },
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = if (isExitTimeInvalid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                     ),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -210,10 +231,13 @@ fun TodayQuickActionBanner(
                                 onClick = {
                                     if (isEnter) onEnterNow() else onExitNow()
                                 },
+                                enabled = if (isEnter) true else !isExitTimeInvalid,
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = primaryColor,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 ),
                                 modifier = Modifier
                                     .weight(1f)

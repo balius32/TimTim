@@ -82,6 +82,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.unit.dp
 import com.example.util.toPersianDigits
 import androidx.compose.ui.unit.sp
@@ -414,6 +420,60 @@ fun TimesheetScreen(
     }
 }
 
+@Composable
+fun FarsiAnnotatedDuration(
+    text: String,
+    isFarsi: Boolean,
+    baseFontSize: TextUnit,
+    color: Color = Color.White,
+    modifier: Modifier = Modifier
+) {
+    if (isFarsi) {
+        val annotated = remember(text, baseFontSize) {
+            buildAnnotatedString {
+                val parts = text.split(" ")
+                parts.forEachIndexed { index, part ->
+                    if (part == "ساعت" || part == "دقیقه" || part == "و") {
+                        withStyle(style = SpanStyle(fontSize = (baseFontSize.value * 0.55).sp, fontWeight = FontWeight.Normal)) {
+                            append(part)
+                        }
+                    } else {
+                        withStyle(style = SpanStyle(fontSize = baseFontSize, fontWeight = FontWeight.ExtraBold)) {
+                            append(part)
+                        }
+                    }
+                    if (index < parts.lastIndex) {
+                        append(" ")
+                    }
+                }
+            }
+        }
+        Text(
+            text = annotated,
+            style = LocalTextStyle.current.copy(
+                fontFamily = FontFamily.SansSerif,
+                letterSpacing = 0.sp
+            ),
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = modifier
+        )
+    } else {
+        Text(
+            text = text,
+            style = LocalTextStyle.current.copy(
+                fontSize = baseFontSize,
+                fontWeight = FontWeight.ExtraBold
+            ),
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = modifier
+        )
+    }
+}
+
 /**
  * Top Summary Card matching the wireframe:
  * ┌─────────────────────────────────────────┐
@@ -568,12 +628,10 @@ fun WireframeHeroSummaryCard(
                     color = Color.White.copy(alpha = 0.9f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
+                FarsiAnnotatedDuration(
                     text = summary.formattedTotalWorked(isFarsi = uiState.isFarsi),
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = (-0.5).sp
-                    ),
+                    isFarsi = uiState.isFarsi,
+                    baseFontSize = if (uiState.isFarsi) 26.sp else 38.sp,
                     color = Color.White,
                     modifier = Modifier.testTag("total_hour_value")
                 )
@@ -609,13 +667,10 @@ fun WireframeHeroSummaryCard(
                         color = Color.White.copy(alpha = 0.92f)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(
+                    FarsiAnnotatedDuration(
                         text = summary.formattedOvertime(isFarsi = uiState.isFarsi),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.3).sp
-                        ),
+                        isFarsi = uiState.isFarsi,
+                        baseFontSize = if (uiState.isFarsi) 15.sp else 22.sp,
                         color = Color.White,
                         modifier = Modifier.testTag("overtime_value")
                     )
@@ -641,13 +696,10 @@ fun WireframeHeroSummaryCard(
                         color = Color.White.copy(alpha = 0.92f)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(
+                    FarsiAnnotatedDuration(
                         text = summary.formattedDeficit(isFarsi = uiState.isFarsi),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.3).sp
-                        ),
+                        isFarsi = uiState.isFarsi,
+                        baseFontSize = if (uiState.isFarsi) 15.sp else 22.sp,
                         color = Color.White,
                         modifier = Modifier.testTag("defect_time_value")
                     )
@@ -967,60 +1019,62 @@ fun WireframeDailyLogRowCard(
                         onDismissRequest = { menuExpanded = false },
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
-                        if (isToday && !day.hasExitTime) {
-                            // For today without exit time: show Remaining Time
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = strings.remainingTime,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onOpenRemainingTime(day)
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Timelapse,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                },
-                                modifier = Modifier.testTag("day_menu_remaining_time_${day.dayNumber}")
-                            )
-                        } else {
-                            // When exit time is set (or for any past/completed day): show Daily Summary opening the bottom sheet
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = strings.dailySummary,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onOpenItemReport(daySummary)
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Insights,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                },
-                                modifier = Modifier.testTag("day_menu_item_report_${day.dayNumber}")
-                            )
+                        if (!isDayOff) {
+                            if (isToday && !day.hasExitTime) {
+                                // For today without exit time: show Remaining Time
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = strings.remainingTime,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onOpenRemainingTime(day)
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Timelapse,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    },
+                                    modifier = Modifier.testTag("day_menu_remaining_time_${day.dayNumber}")
+                                )
+                            } else {
+                                // When exit time is set (or for any past/completed day): show Daily Summary opening the bottom sheet
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = strings.dailySummary,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onOpenItemReport(daySummary)
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Insights,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    },
+                                    modifier = Modifier.testTag("day_menu_item_report_${day.dayNumber}")
+                                )
+                            }
                         }
 
                         DropdownMenuItem(

@@ -863,18 +863,24 @@ private fun WireframeDailyTargetCard(
             ) {
                 Text(
                     text = strings.dailyRequiredSubtitle,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp
+                        fontSize = 11.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
                     text = formattedTime,
+                    modifier = Modifier.padding(start = 4.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace
                     ),
                     color = if (dailyMinutes > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -1076,6 +1082,7 @@ private fun WireframeOffDaysCard(
         listOf("SATURDAY", "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
     }
 
+    val isFarsi = LocalAppLanguage.current == AppLanguage.FA
     val shortNameMap = if (isGregorian) {
         mapOf(
             "MONDAY" to "Mon",
@@ -1086,7 +1093,7 @@ private fun WireframeOffDaysCard(
             "SATURDAY" to "Sat",
             "SUNDAY" to "Sun"
         )
-    } else if (strings.isRtl) {
+    } else if (isFarsi) {
         mapOf(
             "SATURDAY" to strings.saturday,
             "SUNDAY" to strings.sunday,
@@ -1836,12 +1843,12 @@ private fun ThemeModeRowTile(
             width = if (isSelected) 2.dp else 1.dp,
             color = if (isSelected) accentColor else MaterialTheme.colorScheme.outlineVariant
         ),
-        modifier = modifier.height(76.dp)
+        modifier = modifier.height(84.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 10.dp, horizontal = 6.dp),
+                .padding(vertical = 8.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -1858,8 +1865,11 @@ private fun ThemeModeRowTile(
                 text = label,
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 13.sp
+                    fontSize = 12.sp
                 ),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 color = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurface
             )
         }
@@ -2149,9 +2159,25 @@ private fun OffDaysBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
+                val currentLang = LocalAppLanguage.current
+                val finglishNames = mapOf(
+                    "SATURDAY" to "Shanbeh",
+                    "SUNDAY" to "Yekshanbeh",
+                    "MONDAY" to "Doshanbeh",
+                    "TUESDAY" to "Seshanbeh",
+                    "WEDNESDAY" to "Chaharshanbeh",
+                    "THURSDAY" to "Panjshanbeh",
+                    "FRIDAY" to "Jomeh"
+                )
                 daysList.forEachIndexed { index, item ->
                     val isChecked = currentSelected.contains(item.dayOfWeekName)
-                    val dayTitle = if (calendarType == CalendarType.HIJRI_SHAMSI || (strings.isRtl && calendarType != CalendarType.GREGORIAN)) item.farsiName else item.displayName
+                    val dayTitle = if (currentLang == AppLanguage.FA) {
+                        item.farsiName
+                    } else if (calendarType == CalendarType.HIJRI_SHAMSI) {
+                        finglishNames[item.dayOfWeekName] ?: item.displayName
+                    } else {
+                        item.displayName
+                    }
 
                     Row(
                         modifier = Modifier

@@ -4,6 +4,7 @@ import com.example.data.WorkDayEntity
 import com.example.util.CalendarHelper
 import com.example.util.CalendarType
 import com.example.util.PersianDateHelper
+import com.example.ui.localization.toPersianDigits
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -128,6 +129,38 @@ class ExampleUnitTest {
         assertEquals(gregNow.year, convertedToGregorian.year)
         assertEquals(gregNow.month, convertedToGregorian.month)
         assertEquals(gregNow.day, convertedToGregorian.day)
+    }
+
+    @Test
+    fun testTimePickerFarsiDigitFormatting() {
+        // Test that 0..23 hours and 0..59 minutes format with leading zeros and correct Persian digits
+        for (h in 0..23) {
+            val formattedAscii = String.format(java.util.Locale.US, "%02d", h)
+            val persian = formattedAscii.toPersianDigits()
+            assertEquals(2, persian.length)
+            assertTrue(persian.all { char -> char in '۰'..'۹' })
+        }
+        assertEquals("۰۰", "00".toPersianDigits())
+        assertEquals("۰۸", "08".toPersianDigits())
+        assertEquals("۰۹", "09".toPersianDigits())
+        assertEquals("۱۷", "17".toPersianDigits())
+        assertEquals("۲۳", "23".toPersianDigits())
+        assertEquals("۵۹", "59".toPersianDigits())
+    }
+
+    @Test
+    fun testWheelCenteredIndexOffsets() {
+        // When visible items count is 3, the center item is offset by 1
+        val repeatCount = 500
+        val totalHours = 24
+        val initialHour = 8
+        val hourStartIndex = (repeatCount / 2) * totalHours + initialHour
+        val firstVisibleIndex = hourStartIndex - 1
+
+        // Center item (index at center slot) is firstVisibleIndex + 1 = hourStartIndex
+        val centerIndex = firstVisibleIndex + 1
+        assertEquals(hourStartIndex, centerIndex)
+        assertEquals(initialHour, centerIndex % totalHours)
     }
 }
 

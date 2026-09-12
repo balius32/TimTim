@@ -63,17 +63,28 @@ data class WorkDay(
         val mins = workedMinutes
         val hours = mins / 60
         val remainingMins = mins % 60
-        val res = "${hours}h ${remainingMins}m"
-        return if (isFarsi) WorkCalculationSummary.toPersianDigits(res) else res
+        return if (isFarsi) {
+            WorkCalculationSummary.toPersianDigits("${hours} ساعت و ${remainingMins} دقیقه")
+        } else {
+            "${hours}h ${remainingMins}m"
+        }
     }
 
-    fun formattedWorkedHours(): String {
-        if (isDayOff) return "Off"
+    fun formattedWorkedHours(isFarsi: Boolean = false): String {
+        if (isDayOff) return if (isFarsi) "تعطیل" else "Off"
         if (!isComplete) return "--"
         val mins = workedMinutes
         val h = mins / 60
         val m = mins % 60
-        return if (h > 0) "${h}h ${m}m" else "${m}m"
+        return if (isFarsi) {
+            if (h > 0) {
+                WorkCalculationSummary.toPersianDigits("${h} ساعت و ${m} دقیقه")
+            } else {
+                WorkCalculationSummary.toPersianDigits("${m} دقیقه")
+            }
+        } else {
+            if (h > 0) "${h}h ${m}m" else "${m}m"
+        }
     }
 
     /**

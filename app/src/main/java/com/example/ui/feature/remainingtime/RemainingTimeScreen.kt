@@ -154,6 +154,16 @@ fun RemainingTimeScreen(
             effectiveDay?.month == todayDate.month &&
             effectiveDay?.dayNumber == todayDate.day
 
+    val currentMins = currentHour * 60 + currentMinute
+    val enterMins = effectiveDay?.let { d ->
+        if (d.hasEnterTime) {
+            (d.enterHour ?: 0) * 60 + (d.enterMinute ?: 0)
+        } else {
+            null
+        }
+    }
+    val isExitTimeInvalid = enterMins != null && currentMins < enterMins
+
     val dailyTargetMinutes = if (uiState.settings.dailyRequiredMinutes > 0) {
         uiState.settings.dailyRequiredMinutes
     } else {
@@ -245,9 +255,12 @@ fun RemainingTimeScreen(
                 ) {
                     Button(
                         onClick = onExitNow,
+                        enabled = !isExitTimeInvalid,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         ),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
@@ -265,10 +278,10 @@ fun RemainingTimeScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                             Text(
-                                text = strings.exitNow,
+                                text = if (isExitTimeInvalid) strings.exitTimeCannotBeEarlier else strings.exitNow,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 17.sp,
+                                    fontSize = if (isExitTimeInvalid) 13.sp else 17.sp,
                                     letterSpacing = 0.3.sp
                                 )
                             )

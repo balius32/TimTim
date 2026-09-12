@@ -49,8 +49,11 @@ data class WorkCalculationSummary(
         fun formatMinutes(totalMins: Int, isFarsi: Boolean = false): String {
             val h = totalMins / 60
             val m = totalMins % 60
-            val res = "${h}h ${m}m"
-            return if (isFarsi) toPersianDigits(res) else res
+            return if (isFarsi) {
+                toPersianDigits("${h} ساعت و ${m} دقیقه")
+            } else {
+                "${h}h ${m}m"
+            }
         }
 
         fun toPersianDigits(input: String): String {

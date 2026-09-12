@@ -110,6 +110,8 @@ import com.example.ui.components.AvatarStyle
 import com.example.ui.components.CustomAvatarDisplay
 import com.example.ui.components.LimitTimePickerDialog
 import com.example.ui.components.TargetTimePickerDialog
+import com.example.ui.localization.LocalAppLanguage
+import com.example.ui.localization.AppLanguage
 import com.example.ui.localization.LocalAppStrings
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.theme.ACCENT_COLOR_OPTIONS
@@ -1188,9 +1190,25 @@ fun OnboardingOffDaysStep(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
+            val currentLang = LocalAppLanguage.current
+            val finglishNames = mapOf(
+                "SATURDAY" to "Shanbeh",
+                "SUNDAY" to "Yekshanbeh",
+                "MONDAY" to "Doshanbeh",
+                "TUESDAY" to "Seshanbeh",
+                "WEDNESDAY" to "Chaharshanbeh",
+                "THURSDAY" to "Panjshanbeh",
+                "FRIDAY" to "Jomeh"
+            )
             daysList.forEachIndexed { index, item ->
                 val isChecked = currentSelected.contains(item.dayOfWeekName)
-                val dayTitle = if (uiState.calendarType == CalendarType.HIJRI_SHAMSI || (strings.isRtl && uiState.calendarType != CalendarType.GREGORIAN)) item.farsiName else item.displayName
+                val dayTitle = if (currentLang == AppLanguage.FA) {
+                    item.farsiName
+                } else if (uiState.calendarType == CalendarType.HIJRI_SHAMSI) {
+                    finglishNames[item.dayOfWeekName] ?: item.displayName
+                } else {
+                    item.displayName
+                }
 
                 Row(
                     modifier = Modifier
