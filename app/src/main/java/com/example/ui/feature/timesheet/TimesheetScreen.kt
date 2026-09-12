@@ -1,4 +1,4 @@
-package com.example.ui.screens
+package com.example.ui.feature.timesheet
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
