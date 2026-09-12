@@ -5,8 +5,9 @@ import com.example.data.WorkRepository
 import com.example.domain.repository.WorkRepository as DomainWorkRepository
 import com.example.domain.usecase.*
 import com.example.ui.WorkViewModel
+import com.example.domain.util.WidgetUpdater
+import com.example.widget.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
-import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -18,7 +19,6 @@ val appModule = module {
     single<DomainWorkRepository> {
         WorkRepository(
             workDao = get(),
-            ioDispatcher = Dispatchers.IO
         )
     }
 
@@ -36,9 +36,11 @@ val appModule = module {
     single { GetDayUseCase(get()) }
     single { BackupRestoreUseCase(get()) }
 
+    single<WidgetUpdater> { AppWidgetUpdater(androidContext()) }
+
     viewModel {
         WorkViewModel(
-            application = androidApplication(),
+            widgetUpdater = get(),
             calculateMonthSummaryUseCase = get(),
             logWorkTimeUseCase = get(),
             toggleDayOffUseCase = get(),
@@ -52,7 +54,6 @@ val appModule = module {
             getMonthTargetUseCase = get(),
             getDayUseCase = get(),
             backupRestoreUseCase = get(),
-            ioDispatcher = Dispatchers.IO
         )
     }
 }
