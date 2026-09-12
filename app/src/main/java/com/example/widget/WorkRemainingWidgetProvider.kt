@@ -12,7 +12,10 @@ import androidx.core.app.ActivityOptionsCompat
 import com.example.MainActivity
 import com.example.R
 import com.example.domain.model.WorkDay
-import com.example.domain.repository.WorkRepository
+import com.example.domain.usecase.GetAppSettingsUseCase
+import com.example.domain.usecase.GetDayUseCase
+import com.example.domain.usecase.InitializeMonthUseCase
+import com.example.domain.usecase.LogWorkTimeUseCase
 import com.example.util.CalendarHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +28,11 @@ import java.util.Locale
 
 class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
 
-    private val repository: WorkRepository by inject()
+    private val logWorkTimeUseCase: LogWorkTimeUseCase by inject()
+    private val initializeMonthUseCase: InitializeMonthUseCase by inject()
+    private val getAppSettingsUseCase: GetAppSettingsUseCase by inject()
+    private val getDayUseCase: GetDayUseCase by inject()
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -52,22 +59,12 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
             ACTION_CLOCK_IN -> {
                 scope.launch {
                     try {
-                        val settings = repository.getSettingsDirect()
+                        val settings = getAppSettingsUseCase.getDirect()
                         val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                         val now = CalendarHelper.now(calType)
-                        repository.initializeMonthIfEmpty(now.year, now.month)
+                        initializeMonthUseCase(now.year, now.month)
                         
-                        val calendar = Calendar.getInstance()
-                        var hour = calendar.get(Calendar.HOUR_OF_DAY)
-                        var minute = calendar.get(Calendar.MINUTE)
-                        val currentMins = hour * 60 + minute
-                        
-                        val minEnter = settings.minEnterMinutes
-                        if (minEnter != null && minEnter > 0 && currentMins < minEnter) {
-                            hour = minEnter / 60
-                            minute = minEnter % 60
-                        }
-                        repository.setEnterTime(now.year, now.month, now.day, hour, minute)
+                        logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = true)
                         
                         // Update widget
                         notifyWidgetUpdate(context)
@@ -79,22 +76,12 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
             ACTION_CLOCK_OUT -> {
                 scope.launch {
                     try {
-                        val settings = repository.getSettingsDirect()
+                        val settings = getAppSettingsUseCase.getDirect()
                         val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                         val now = CalendarHelper.now(calType)
-                        repository.initializeMonthIfEmpty(now.year, now.month)
+                        initializeMonthUseCase(now.year, now.month)
                         
-                        val calendar = Calendar.getInstance()
-                        var hour = calendar.get(Calendar.HOUR_OF_DAY)
-                        var minute = calendar.get(Calendar.MINUTE)
-                        val currentMins = hour * 60 + minute
-                        
-                        val maxExit = settings.maxExitMinutes
-                        if (maxExit != null && maxExit > 0 && currentMins > maxExit) {
-                            hour = maxExit / 60
-                            minute = maxExit % 60
-                        }
-                        repository.setExitTime(now.year, now.month, now.day, hour, minute)
+                        logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = false)
                         
                         // Update widget
                         notifyWidgetUpdate(context)
@@ -142,10 +129,10 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                 views.setOnClickPendingIntent(R.id.widget_btn_refresh, pendingRefreshIntent)
 
                 // 3. Load today's work data
-                val settings = repository.getSettingsDirect()
+                val settings = getAppSettingsUseCase.getDirect()
                 val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                 val now = CalendarHelper.now(calType)
-                val today = repository.getDayDirect(now.year, now.month, now.day)
+                val today = getDayUseCase(now.year, now.month, now.day)
                 val targetMinutes = if (settings.dailyRequiredMinutes > 0) settings.dailyRequiredMinutes else 480
 
                 bindWidgetData(context, views, today, targetMinutes)

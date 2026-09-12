@@ -71,12 +71,12 @@ import com.example.ui.mvi.AppScreen
 import com.example.ui.mvi.WorkUiEffect
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.components.AppTimePickerDialog
-import com.example.ui.screens.OnboardingScreen
-import com.example.ui.screens.ProfileScreen
-import com.example.ui.screens.RemainingTimeScreen
-import com.example.ui.screens.ReportScreen
-import com.example.ui.screens.SettingsScreen
-import com.example.ui.screens.TimesheetScreen
+import com.example.ui.feature.onboarding.OnboardingScreen
+import com.example.ui.feature.profile.ProfileScreen
+import com.example.ui.feature.remainingtime.RemainingTimeScreen
+import com.example.ui.feature.report.ReportScreen
+import com.example.ui.feature.settings.SettingsScreen
+import com.example.ui.feature.timesheet.TimesheetScreen
 
 import com.example.ui.theme.BentoBackground
 import com.example.ui.theme.BentoPrimary

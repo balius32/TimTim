@@ -1,7 +1,6 @@
 package com.example.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.model.WorkCalculationSummary
 import com.example.domain.model.WorkDay
@@ -13,7 +12,7 @@ import com.example.ui.mvi.WorkUiEffect
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.util.CalendarHelper
-import com.example.widget.WorkRemainingWidgetProvider
+import com.example.domain.util.WidgetUpdater
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class WorkViewModel(
-    application: Application,
+    private val widgetUpdater: WidgetUpdater,
     private val calculateMonthSummaryUseCase: CalculateMonthSummaryUseCase,
     private val logWorkTimeUseCase: LogWorkTimeUseCase,
     private val toggleDayOffUseCase: ToggleDayOffUseCase,
@@ -37,15 +36,15 @@ class WorkViewModel(
     private val getMonthTargetUseCase: GetMonthTargetUseCase,
     private val getDayUseCase: GetDayUseCase,
     private val backupRestoreUseCase: BackupRestoreUseCase,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : AndroidViewModel(application) {
+
+) : ViewModel() {
 
     private val _uiControlState = MutableStateFlow(UiControlState())
     private val _effects = Channel<WorkUiEffect>(Channel.BUFFERED)
     val effects: Flow<WorkUiEffect> = _effects.receiveAsFlow()
 
     init {
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch {
             val settings = getAppSettingsUseCase.getDirect()
             val calType = CalendarHelper.parseCalendarType(settings.calendarType)
             val now = CalendarHelper.now(calType)
@@ -77,16 +76,6 @@ class WorkViewModel(
         targetAndSettingsFlow.flatMapLatest { (selectedMonthTarget, reportMonthTarget, settings) ->
             val calType = CalendarHelper.parseCalendarType(settings.calendarType)
             val now = CalendarHelper.now(calType)
-
-            viewModelScope.launch(ioDispatcher) {
-                initializeMonthUseCase(control.selectedYear, control.selectedMonth)
-                if (control.reportYear != control.selectedYear || control.reportMonth != control.selectedMonth) {
-                    initializeMonthUseCase(control.reportYear, control.reportMonth)
-                }
-                if (now.year != control.selectedYear || now.month != control.selectedMonth) {
-                    initializeMonthUseCase(now.year, now.month)
-                }
-            }
 
             combine(
                 getWorkDaysUseCase(control.selectedYear, control.selectedMonth),
@@ -180,52 +169,85 @@ class WorkViewModel(
             is WorkUiIntent.NavigateTo -> _uiControlState.update { it.copy(currentScreen = intent.screen) }
             is WorkUiIntent.SelectTab -> _uiControlState.update { it.copy(currentTab = intent.tab) }
             WorkUiIntent.PreviousMonth -> {
+                var newYear = _uiControlState.value.selectedYear
+                var newMonth = _uiControlState.value.selectedMonth
                 _uiControlState.update { current ->
                     if (current.selectedMonth == 1) {
+                        newYear = current.selectedYear - 1
+                        newMonth = 12
                         current.copy(selectedYear = current.selectedYear - 1, selectedMonth = 12)
                     } else {
+                        newMonth = current.selectedMonth - 1
                         current.copy(selectedMonth = current.selectedMonth - 1)
                     }
                 }
+                viewModelScope.launch { initializeMonthUseCase(newYear, newMonth) }
             }
             WorkUiIntent.NextMonth -> {
+                var newYear = _uiControlState.value.selectedYear
+                var newMonth = _uiControlState.value.selectedMonth
                 _uiControlState.update { current ->
                     if (current.selectedMonth == 12) {
+                        newYear = current.selectedYear + 1
+                        newMonth = 1
                         current.copy(selectedYear = current.selectedYear + 1, selectedMonth = 1)
                     } else {
+                        newMonth = current.selectedMonth + 1
                         current.copy(selectedMonth = current.selectedMonth + 1)
                     }
                 }
+                viewModelScope.launch { initializeMonthUseCase(newYear, newMonth) }
             }
-            is WorkUiIntent.SetSelectedYearMonth -> _uiControlState.update { it.copy(selectedYear = intent.year, selectedMonth = intent.month.coerceIn(1, 12)) }
+            is WorkUiIntent.SetSelectedYearMonth -> {
+                val month = intent.month.coerceIn(1, 12)
+                _uiControlState.update { it.copy(selectedYear = intent.year, selectedMonth = month) }
+                viewModelScope.launch { initializeMonthUseCase(intent.year, month) }
+            }
             WorkUiIntent.GoToCurrentMonth -> {
-                viewModelScope.launch(ioDispatcher) {
+                viewModelScope.launch {
                     val settings = getAppSettingsUseCase.getDirect()
                     val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                     val now = CalendarHelper.now(calType)
                     _uiControlState.update { it.copy(selectedYear = now.year, selectedMonth = now.month) }
+                    initializeMonthUseCase(now.year, now.month)
                     _effects.send(WorkUiEffect.ScrollToTop(animated = true))
                 }
             }
             WorkUiIntent.PreviousReportMonth -> {
+                var newYear = _uiControlState.value.reportYear
+                var newMonth = _uiControlState.value.reportMonth
                 _uiControlState.update { current ->
                     if (current.reportMonth == 1) {
+                        newYear = current.reportYear - 1
+                        newMonth = 12
                         current.copy(reportYear = current.reportYear - 1, reportMonth = 12)
                     } else {
+                        newMonth = current.reportMonth - 1
                         current.copy(reportMonth = current.reportMonth - 1)
                     }
                 }
+                viewModelScope.launch { initializeMonthUseCase(newYear, newMonth) }
             }
             WorkUiIntent.NextReportMonth -> {
+                var newYear = _uiControlState.value.reportYear
+                var newMonth = _uiControlState.value.reportMonth
                 _uiControlState.update { current ->
                     if (current.reportMonth == 12) {
+                        newYear = current.reportYear + 1
+                        newMonth = 1
                         current.copy(reportYear = current.reportYear + 1, reportMonth = 1)
                     } else {
+                        newMonth = current.reportMonth + 1
                         current.copy(reportMonth = current.reportMonth + 1)
                     }
                 }
+                viewModelScope.launch { initializeMonthUseCase(newYear, newMonth) }
             }
-            is WorkUiIntent.SetReportYearMonth -> _uiControlState.update { it.copy(reportYear = intent.year, reportMonth = intent.month.coerceIn(1, 12)) }
+            is WorkUiIntent.SetReportYearMonth -> {
+                val month = intent.month.coerceIn(1, 12)
+                _uiControlState.update { it.copy(reportYear = intent.year, reportMonth = month) }
+                viewModelScope.launch { initializeMonthUseCase(intent.year, month) }
+            }
             is WorkUiIntent.OpenTimePicker -> _uiControlState.update {
                 it.copy(selectedDayForTimePick = intent.day, isPickingEnterTime = intent.isEnter, showTimePickerDialog = true)
             }
@@ -246,36 +268,28 @@ class WorkViewModel(
             is WorkUiIntent.ToggleDayOff -> viewModelScope.launch {
                 toggleDayOffUseCase(_uiControlState.value.selectedYear, _uiControlState.value.selectedMonth, intent.dayNumber)
             }
-            WorkUiIntent.LogTodayEnterNow -> viewModelScope.launch(ioDispatcher) {
+            WorkUiIntent.LogTodayEnterNow -> viewModelScope.launch {
                 val settings = getAppSettingsUseCase.getDirect()
                 val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                 val now = CalendarHelper.now(calType)
                 initializeMonthUseCase(now.year, now.month)
                 logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = true)
-                try {
-                    WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
-                } catch (e: Exception) {
-                    // Suppress
-                }
+                widgetUpdater.updateWidget()
                 _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
                 _effects.send(WorkUiEffect.ShowSnackbar("Logged check-in time successfully"))
             }
-            WorkUiIntent.LogTodayExitNow -> viewModelScope.launch(ioDispatcher) {
+            WorkUiIntent.LogTodayExitNow -> viewModelScope.launch {
                 val settings = getAppSettingsUseCase.getDirect()
                 val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                 val now = CalendarHelper.now(calType)
                 initializeMonthUseCase(now.year, now.month)
                 logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = false)
-                try {
-                    WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
-                } catch (e: Exception) {
-                    // Suppress
-                }
+                widgetUpdater.updateWidget()
                 _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
                 _effects.send(WorkUiEffect.ShowSnackbar("Logged check-out time successfully"))
             }
             WorkUiIntent.DismissTodayPrompt -> _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
-            is WorkUiIntent.OpenTodayTimePicker -> viewModelScope.launch(ioDispatcher) {
+            is WorkUiIntent.OpenTodayTimePicker -> viewModelScope.launch {
                 val settings = getAppSettingsUseCase.getDirect()
                 val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                 val now = CalendarHelper.now(calType)
@@ -300,7 +314,7 @@ class WorkViewModel(
             }
             is WorkUiIntent.UpdateThemeMode -> viewModelScope.launch { updateUserSettingsUseCase.updateThemeMode(intent.themeMode) }
             is WorkUiIntent.UpdateLanguage -> viewModelScope.launch { updateUserSettingsUseCase.updateLanguage(intent.language) }
-            is WorkUiIntent.UpdateCalendarType -> viewModelScope.launch(ioDispatcher) {
+            is WorkUiIntent.UpdateCalendarType -> viewModelScope.launch {
                 updateUserSettingsUseCase.updateCalendarType(intent.calendarType)
                 val calType = CalendarHelper.parseCalendarType(intent.calendarType)
                 val now = CalendarHelper.now(calType)
@@ -338,7 +352,7 @@ class WorkViewModel(
                 _uiControlState.update { it.copy(showResetConfirmation = false) }
                 _effects.send(WorkUiEffect.ShowSnackbar("All application data cleared"))
             }
-            is WorkUiIntent.ImportBackupData -> viewModelScope.launch(ioDispatcher) {
+            is WorkUiIntent.ImportBackupData -> viewModelScope.launch {
                 val result = backupRestoreUseCase.importData(intent.jsonString)
                 result.onSuccess { msg ->
                     try {
@@ -406,11 +420,7 @@ class WorkViewModel(
                     val now = CalendarHelper.now(calType)
                     val isToday = (day.year == now.year && day.month == now.month && day.dayNumber == now.day)
                     if (isToday) {
-                        try {
-                            WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
-                        } catch (e: Exception) {
-                            // Suppress widget notify errors
-                        }
+                        widgetUpdater.updateWidget()
                     }
                     _uiControlState.update {
                         it.copy(

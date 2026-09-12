@@ -1,4 +1,4 @@
-package com.example.ui.screens
+package com.example.ui.feature.remainingtime
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility

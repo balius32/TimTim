@@ -5,7 +5,7 @@ import androidx.compose.ui.test.onRoot
 import com.example.domain.model.DayStatus
 import com.example.domain.model.DaySummary
 import com.example.domain.model.WorkDay
-import com.example.ui.screens.WireframeDailyLogRowCard
+import com.example.ui.feature.timesheet.WireframeDailyLogRowCard
 import com.example.ui.theme.MyApplicationTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
