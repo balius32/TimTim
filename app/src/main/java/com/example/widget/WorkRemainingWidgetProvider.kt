@@ -17,6 +17,8 @@ import com.example.domain.usecase.GetDayUseCase
 import com.example.domain.usecase.InitializeMonthUseCase
 import com.example.domain.usecase.LogWorkTimeUseCase
 import com.example.util.CalendarHelper
+import com.example.ui.localization.EnStrings
+import com.example.ui.localization.FaStrings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -157,15 +159,15 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
 
         if (today == null || (!today.hasEnterTime && !today.isDayOff)) {
             // Case 1: Not clocked in yet today
-            views.setTextViewText(R.id.widget_timer_value, "--h --m")
-            views.setTextViewText(R.id.widget_timer_subtitle, "Not clocked in yet today")
+            views.setTextViewText(R.id.widget_timer_value, strings.formatDigits("--:--"))
+            views.setTextViewText(R.id.widget_timer_subtitle, strings.widgetNotClockedIn)
             views.setProgressBar(R.id.widget_progress_bar, 100, 0, false)
-            views.setTextViewText(R.id.widget_info_left, "Daily Goal: ${targetMinutes / 60}h ${targetMinutes % 60}m")
-            views.setTextViewText(R.id.widget_info_right, "Ready to start work")
+            views.setTextViewText(R.id.widget_info_left, "${strings.widgetDailyGoal} ${strings.formatTime(targetMinutes / 60, targetMinutes % 60)}")
+            views.setTextViewText(R.id.widget_info_right, strings.widgetReadyToStart)
 
             // Show Clock-In Quick Action button
             views.setViewVisibility(R.id.widget_btn_action, View.VISIBLE)
-            views.setTextViewText(R.id.widget_btn_action, "Clock In")
+            views.setTextViewText(R.id.widget_btn_action, strings.widgetClockIn)
             val clockInIntent = Intent(context, WorkRemainingWidgetProvider::class.java).apply {
                 this.action = ACTION_CLOCK_IN
             }
@@ -181,10 +183,10 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
 
         if (today.isDayOff) {
             // Case 2: Day Off
-            views.setTextViewText(R.id.widget_timer_value, "Day Off")
-            views.setTextViewText(R.id.widget_timer_subtitle, "Scheduled day off")
+            views.setTextViewText(R.id.widget_timer_value, strings.dayOff)
+            views.setTextViewText(R.id.widget_timer_subtitle, strings.widgetScheduledDayOff)
             views.setProgressBar(R.id.widget_progress_bar, 100, 100, false)
-            views.setTextViewText(R.id.widget_info_left, "Enjoy your rest!")
+            views.setTextViewText(R.id.widget_info_left, strings.widgetEnjoyRest)
             views.setTextViewText(R.id.widget_info_right, "")
             views.setViewVisibility(R.id.widget_btn_action, View.GONE)
             return
@@ -208,12 +210,12 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
             val workedM = workedMinutes % 60
             val diff = workedMinutes - targetMinutes
 
-            views.setTextViewText(R.id.widget_timer_value, "${workedH}h ${workedM}m")
+            views.setTextViewText(R.id.widget_timer_value, strings.formatHourMinute(workedH, workedM))
             val statusText = if (diff >= 0) {
-                "Shift completed (+${diff / 60}h ${diff % 60}m overtime)"
+                "${strings.widgetShiftCompleted} (+${strings.formatHourMinute(diff / 60, diff % 60)})"
             } else {
                 val deficit = -diff
-                "Shift completed (-${deficit / 60}h ${deficit % 60}m deficit)"
+                "${strings.widgetShiftCompleted} (-${strings.formatHourMinute(deficit / 60, deficit % 60)})"
             }
             views.setTextViewText(R.id.widget_timer_subtitle, statusText)
 
@@ -223,8 +225,8 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
             val exitHour = today.exitHour ?: 0
             val exitMinute = today.exitMinute ?: 0
             val formattedExit = String.format(Locale.getDefault(), "%02d:%02d", exitHour, exitMinute)
-            views.setTextViewText(R.id.widget_info_left, "In: $formattedEnter  •  Out: $formattedExit")
-            views.setTextViewText(R.id.widget_info_right, "Target was $formattedExpectedExit")
+            views.setTextViewText(R.id.widget_info_left, "${strings.widgetIn} ${strings.formatDigits(formattedEnter)}  •  ${strings.widgetOut} ${strings.formatDigits(formattedExit)}")
+            views.setTextViewText(R.id.widget_info_right, "${strings.widgetTargetWas} ${strings.formatDigits(formattedExpectedExit)}")
             views.setViewVisibility(R.id.widget_btn_action, View.GONE)
             return
         }
@@ -243,23 +245,23 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
             val overtimeMinutes = elapsedMinutes - targetMinutes
             val otH = overtimeMinutes / 60
             val otM = overtimeMinutes % 60
-            views.setTextViewText(R.id.widget_timer_value, "+${otH}h ${otM}m")
-            views.setTextViewText(R.id.widget_timer_subtitle, "Daily target reached! (Overtime)")
+            views.setTextViewText(R.id.widget_timer_value, "+${strings.formatHourMinute(otH, otM)}")
+            views.setTextViewText(R.id.widget_timer_subtitle, strings.widgetTargetReachedOvertime)
         } else {
             // Remaining time left to exit
             val remainingMinutes = targetMinutes - elapsedMinutes
             val remH = remainingMinutes / 60
             val remM = remainingMinutes % 60
-            views.setTextViewText(R.id.widget_timer_value, "${remH}h ${remM}m")
-            views.setTextViewText(R.id.widget_timer_subtitle, "Time left to exit")
+            views.setTextViewText(R.id.widget_timer_value, strings.formatHourMinute(remH, remM))
+            views.setTextViewText(R.id.widget_timer_subtitle, strings.widgetTimeLeftToExit)
         }
 
-        views.setTextViewText(R.id.widget_info_left, "Check-in: $formattedEnter")
-        views.setTextViewText(R.id.widget_info_right, "Target Exit: $formattedExpectedExit")
+        views.setTextViewText(R.id.widget_info_left, "${strings.widgetCheckIn} ${strings.formatDigits(formattedEnter)}")
+        views.setTextViewText(R.id.widget_info_right, "${strings.targetExitTime}: ${strings.formatDigits(formattedExpectedExit)}")
 
         // Offer Quick Clock-Out action button
         views.setViewVisibility(R.id.widget_btn_action, View.VISIBLE)
-        views.setTextViewText(R.id.widget_btn_action, "Clock Out")
+        views.setTextViewText(R.id.widget_btn_action, strings.widgetClockOut)
         val clockOutIntent = Intent(context, WorkRemainingWidgetProvider::class.java).apply {
             this.action = ACTION_CLOCK_OUT
         }

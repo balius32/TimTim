@@ -69,6 +69,7 @@ import com.example.ui.WorkViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import com.example.ui.mvi.AppScreen
 import com.example.ui.mvi.WorkUiEffect
+import com.example.ui.localization.LocalAppStrings
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.components.AppTimePickerDialog
 import com.example.ui.feature.onboarding.OnboardingScreen
@@ -146,10 +147,11 @@ fun WorkHoursApp(
         viewModel.effects.collect { effect ->
             when (effect) {
                 is WorkUiEffect.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    val msg = effect.message.asString(strings) + (effect.extra?.let { " $it" } ?: "")
+                    snackbarHostState.showSnackbar(msg)
                 }
                 is WorkUiEffect.TimeValidationError -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    snackbarHostState.showSnackbar(effect.errorType.asString(strings))
                 }
                 is WorkUiEffect.ScrollToTop -> {
                     // Scroll effect handled at screen level if needed

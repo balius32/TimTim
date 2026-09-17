@@ -317,8 +317,8 @@ fun SettingsScreen(
         val initialH = if (currentMin != null && currentMin > 0) currentMin / 60 else 7
         val initialM = if (currentMin != null && currentMin > 0) currentMin % 60 else 0
         LimitTimePickerDialog(
-            title = "Work Limits",
-            subtitle = "Scroll to set Minimum Enter time limit",
+            title = strings.workLimits,
+            subtitle = strings.tapMinEnterMaxExit,
             initialHour = initialH,
             initialMinute = initialM,
             onConfirm = { hour, minute ->
@@ -342,8 +342,8 @@ fun SettingsScreen(
         val initialH = if (currentMax != null && currentMax > 0) currentMax / 60 else 19
         val initialM = if (currentMax != null && currentMax > 0) currentMax % 60 else 0
         LimitTimePickerDialog(
-            title = "Work Limits",
-            subtitle = "Scroll to set Maximum Exit time limit",
+            title = strings.workLimits,
+            subtitle = strings.tapMinEnterMaxExit,
             initialHour = initialH,
             initialMinute = initialM,
             onConfirm = { hour, minute ->
@@ -462,7 +462,7 @@ fun SettingsScreen(
                         DataBackupHelper.shareBackupFile(context, json)
                         showImportExportBottomSheet = false
                     } catch (e: Exception) {
-                        Toast.makeText(context, "Export error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "${strings.error}: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                 }
             },
@@ -475,7 +475,7 @@ fun SettingsScreen(
                         createDocumentLauncher.launch("timesheet_backup_$timestamp.json")
                         showImportExportBottomSheet = false
                     } catch (e: Exception) {
-                        Toast.makeText(context, "Export error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "${strings.error}: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
                 }
             },
@@ -512,7 +512,7 @@ fun SettingsScreen(
             },
             title = {
                 Text(
-                    text = "Restore Backup?",
+                    text = strings.restoreBackupAndSkip,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -520,18 +520,18 @@ fun SettingsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "This backup file contains:",
+                        text = strings.backupContains,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "• ${backupData.workDays.size} daily attendance records\n• ${backupData.monthTargets.size} monthly target settings\n• Saved preferences & configurations",
+                        text = "• ${backupData.workDays.size} ${strings.recordsRecords}\n• ${backupData.monthTargets.size} ${strings.monthlyTargetSettings}\n• ${strings.savedProfileConfig}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Would you like to import and restore all saved data now?",
+                        text = strings.restoreWillComplete,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -545,7 +545,7 @@ fun SettingsScreen(
                             try {
                                 Toast.makeText(
                                     appContext,
-                                    if (success) "Backup restored successfully" else "Import failed: $msg",
+                                    if (success) strings.backupRestoredSuccessfully else "${strings.importFailed}: $msg",
                                     Toast.LENGTH_LONG
                                 ).show()
                             } catch (e: Exception) {
@@ -559,7 +559,7 @@ fun SettingsScreen(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.testTag("confirm_restore_button")
                 ) {
-                    Text("Yes, Restore", fontWeight = FontWeight.Bold)
+                    Text(strings.yesRestore, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {

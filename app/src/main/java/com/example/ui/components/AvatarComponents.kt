@@ -38,6 +38,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.example.ui.localization.LocalAppStrings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -431,7 +432,7 @@ fun AvatarSelectionBottomSheet(
                     }
                     Column {
                         Text(
-                            text = "Choose Profile Picture",
+                            text = strings.chooseProfilePicture,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 18.sp
@@ -439,7 +440,7 @@ fun AvatarSelectionBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Pick a custom illustration or upload your photo",
+                            text = strings.pickCustomIllustration,
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -488,7 +489,7 @@ fun AvatarSelectionBottomSheet(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Upload from Your Phone",
+                            text = strings.uploadFromPhone,
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -496,7 +497,7 @@ fun AvatarSelectionBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Select any picture from your gallery or camera",
+                            text = strings.selectPictureGalleryCamera,
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -507,7 +508,7 @@ fun AvatarSelectionBottomSheet(
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                     ) {
                         Text(
-                            text = "Gallery",
+                            text = strings.galleryLabel,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.5.sp,
                             color = MaterialTheme.colorScheme.primary,
@@ -521,7 +522,7 @@ fun AvatarSelectionBottomSheet(
 
             // Subheading for Built-in Avatars
             Text(
-                text = "Default Avatar Collection",
+                text = strings.defaultAvatarCollection,
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,

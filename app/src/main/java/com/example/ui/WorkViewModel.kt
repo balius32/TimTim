@@ -9,6 +9,7 @@ import com.example.ui.mvi.AppScreen
 import com.example.ui.mvi.NavigationTab
 import com.example.ui.mvi.UiControlState
 import com.example.ui.mvi.WorkUiEffect
+import com.example.ui.mvi.AppMessage
 import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.util.CalendarHelper
@@ -276,7 +277,7 @@ class WorkViewModel(
                 logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = true)
                 widgetUpdater.updateWidget()
                 _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
-                _effects.send(WorkUiEffect.ShowSnackbar("Logged check-in time successfully"))
+                _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.LOGGED_CHECK_IN))
             }
             WorkUiIntent.LogTodayExitNow -> viewModelScope.launch {
                 val settings = getAppSettingsUseCase.getDirect()
@@ -286,7 +287,7 @@ class WorkViewModel(
                 logWorkTimeUseCase.setTimeToNow(now.year, now.month, now.day, isEnter = false)
                 widgetUpdater.updateWidget()
                 _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
-                _effects.send(WorkUiEffect.ShowSnackbar("Logged check-out time successfully"))
+                _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.LOGGED_CHECK_OUT))
             }
             WorkUiIntent.DismissTodayPrompt -> _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
             is WorkUiIntent.OpenTodayTimePicker -> viewModelScope.launch {
@@ -344,13 +345,13 @@ class WorkViewModel(
             WorkUiIntent.ConfirmResetAll -> viewModelScope.launch {
                 resetMonthUseCase.resetMonth(_uiControlState.value.selectedYear, _uiControlState.value.selectedMonth)
                 _uiControlState.update { it.copy(showResetConfirmation = false) }
-                _effects.send(WorkUiEffect.ShowSnackbar("Month records reset"))
+                _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.MONTH_RECORDS_RESET))
             }
             is WorkUiIntent.ToggleSettingsSheet -> _uiControlState.update { it.copy(showSettingsSheet = intent.show) }
             WorkUiIntent.ClearAllData -> viewModelScope.launch {
                 resetMonthUseCase.resetAll()
                 _uiControlState.update { it.copy(showResetConfirmation = false) }
-                _effects.send(WorkUiEffect.ShowSnackbar("All application data cleared"))
+                _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.ALL_APP_DATA_CLEARED))
             }
             is WorkUiIntent.ImportBackupData -> viewModelScope.launch {
                 val result = backupRestoreUseCase.importData(intent.jsonString)
@@ -381,7 +382,7 @@ class WorkViewModel(
                             // Suppress callback exception to avoid crashing
                         }
                     }
-                    _effects.send(WorkUiEffect.ShowSnackbar(msg))
+                    _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.FAILED_TO_IMPORT_BACKUP, msg))
                 }.onFailure { err ->
                     val errMsg = err.message ?: "Failed to import backup data"
                     withContext(Dispatchers.Main) {
@@ -391,13 +392,13 @@ class WorkViewModel(
                             // Suppress callback exception
                         }
                     }
-                    _effects.send(WorkUiEffect.ShowSnackbar("Import failed: $errMsg"))
+                    _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.IMPORT_FAILED, errMsg))
                 }
             }
             WorkUiIntent.CompleteOnboarding -> viewModelScope.launch {
                 updateUserSettingsUseCase.setCompletedOnboarding(true)
                 _uiControlState.update { it.copy(currentScreen = AppScreen.TIMESHEET) }
-                _effects.send(WorkUiEffect.ShowSnackbar("Welcome to TimTim!"))
+                _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.WELCOME_TO_TIMTIM))
             }
             WorkUiIntent.SkipOnboarding -> viewModelScope.launch {
                 updateUserSettingsUseCase.setCompletedOnboarding(true)
@@ -431,7 +432,7 @@ class WorkViewModel(
                     }
                 }
                 is TimeValidationResult.Error -> {
-                    _effects.send(WorkUiEffect.TimeValidationError(result.message))
+                    _effects.send(WorkUiEffect.TimeValidationError(result.errorType))
                 }
             }
         }
@@ -484,7 +485,7 @@ class WorkViewModel(
         viewModelScope.launch {
             logWorkTimeUseCase.setTimeToNow(day.year, day.month, day.dayNumber, isEnter = false)
             _uiControlState.update { it.copy(isTodayPromptDismissed = true) }
-            _effects.send(WorkUiEffect.ShowSnackbar("Logged check-out time successfully"))
+            _effects.send(WorkUiEffect.ShowSnackbar(AppMessage.LOGGED_CHECK_OUT))
         }
     }
 

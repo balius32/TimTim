@@ -66,6 +66,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.example.ui.localization.LocalAppStrings
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -132,6 +133,8 @@ fun OnboardingScreen(
     onSkip: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
+
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var currentStep by remember { mutableIntStateOf(0) }
@@ -161,7 +164,7 @@ fun OnboardingScreen(
                 } catch (e: Exception) {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         isReadingFile = false
-                        Toast.makeText(context, "Invalid backup file: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "${strings.invalidBackupFile}: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -175,7 +178,7 @@ fun OnboardingScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "TimTim",
+                        text = strings.appName,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
@@ -189,7 +192,7 @@ fun OnboardingScreen(
                         modifier = Modifier.testTag("onboarding_skip_button")
                     ) {
                         Text(
-                            text = "Skip to Defaults",
+                            text = strings.skipToDefaults,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -258,7 +261,7 @@ fun OnboardingScreen(
                         )
                     ) {
                         Text(
-                            text = if (currentStep == TOTAL_STEPS - 1) "Start Using TimTim" else "Continue",
+                            text = if (currentStep == TOTAL_STEPS - 1) strings.startUsingTimTim else strings.confirm,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
@@ -290,7 +293,7 @@ fun OnboardingScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Step ${currentStep + 1} of $TOTAL_STEPS",
+                        text = "${strings.step} ${currentStep + 1} ${strings.of} $TOTAL_STEPS",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -388,7 +391,7 @@ fun OnboardingScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Have a Backup?",
+                        text = strings.haveABackup,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
@@ -398,7 +401,7 @@ fun OnboardingScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "If you have a previously saved backup file (.json), you can restore it now and skip this setup process.",
+                        text = strings.ifYouHaveBackup,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -427,7 +430,7 @@ fun OnboardingScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Select Backup File (.json)",
+                            text = strings.restoreFromFile,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -451,7 +454,7 @@ fun OnboardingScreen(
                             .testTag("onboarding_dismiss_backup_button")
                     ) {
                         Text(
-                            text = "Continue Manual Setup",
+                            text = strings.continueManualSetup,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp
                         )
@@ -486,7 +489,7 @@ fun OnboardingScreen(
             },
             title = {
                 Text(
-                    text = "Restore Backup & Skip Setup?",
+                    text = strings.restoreBackupAndSkip,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -494,18 +497,18 @@ fun OnboardingScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "This backup file contains:",
+                        text = strings.backupContains,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "• ${backupData.workDays.size} daily attendance records\n• ${backupData.monthTargets.size} monthly target settings\n• Saved profile & configuration",
+                        text = "• ${backupData.workDays.size} ${strings.recordsRecords}\n• ${backupData.monthTargets.size} ${strings.monthlyTargetSettings}\n• ${strings.savedProfileConfig}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Restoring this data will complete onboarding and take you directly to your timesheet.",
+                        text = strings.restoreWillComplete,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -521,7 +524,7 @@ fun OnboardingScreen(
                             try {
                                 Toast.makeText(
                                     appContext,
-                                    if (success) "Backup restored successfully" else "Import failed: $msg",
+                                    if (success) strings.backupRestoredSuccessfully else "${strings.importFailed}: $msg",
                                     Toast.LENGTH_LONG
                                 ).show()
                             } catch (e: Exception) {
@@ -546,9 +549,9 @@ fun OnboardingScreen(
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Restoring...", fontWeight = FontWeight.Bold)
+                        Text(strings.restoring, fontWeight = FontWeight.Bold)
                     } else {
-                        Text("Yes, Restore & Skip", fontWeight = FontWeight.Bold)
+                        Text(strings.yesRestoreAndSkip, fontWeight = FontWeight.Bold)
                     }
                 }
             },
@@ -583,7 +586,7 @@ fun OnboardingScreen(
             },
             title = {
                 Text(
-                    text = "Reading Backup File...",
+                    text = strings.readingBackupFile,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center,
@@ -592,7 +595,7 @@ fun OnboardingScreen(
             },
             text = {
                 Text(
-                    text = "Please wait while your attendance and settings are being read.",
+                    text = strings.pleaseWaitAttendance,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -607,11 +610,11 @@ fun OnboardingScreen(
 }
 
 private fun getStepTitle(step: Int): String = when (step) {
-    0 -> "Profile & Avatar"
-    1 -> "Calendar System"
-    2 -> "Target & Limits"
-    3 -> "Off Days"
-    4 -> "Theme & Appearance"
+    0 -> strings.stepProfileAvatar
+    1 -> strings.stepCalendarSystem
+    2 -> strings.stepTargetLimits
+    3 -> strings.stepOffDays
+    4 -> strings.stepThemeAppearance
     else -> ""
 }
 
@@ -703,11 +706,11 @@ fun OnboardingProfileStep(
 
     // Name input card
     SettingsStyleCard(
-        title = "Display Name",
+        title = strings.displayNameTitle,
         icon = Icons.Default.Face
     ) {
         Text(
-            text = "Enter your preferred name or nickname for the profile card.",
+            text = strings.displayNameSubtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -718,7 +721,7 @@ fun OnboardingProfileStep(
                 userNameInput = it
                 viewModel.updateUserName(it)
             },
-            placeholder = { Text("Enter your name or nickname") },
+            placeholder = { Text(strings.enterNamePlaceholder) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Person,
@@ -740,11 +743,11 @@ fun OnboardingProfileStep(
 
     // Avatar card
     SettingsStyleCard(
-        title = "Avatar Style",
+        title = strings.avatarStyleTitle,
         icon = Icons.Default.Palette
     ) {
         Text(
-            text = "Pick an avatar that represents your workspace identity.",
+            text = strings.avatarStyleSubtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -826,12 +829,12 @@ fun OnboardingCalendarStep(
     val selectedType = uiState.calendarType
 
     SettingsStyleCard(
-        title = "Calendar Type",
+        title = strings.calendarTypeSetting,
         icon = Icons.Default.DateRange
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Select calendar type",
+                text = strings.selectCalendarTypeTitle,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
@@ -839,7 +842,7 @@ fun OnboardingCalendarStep(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Choose the calendar system used across the entire app",
+                text = strings.chooseCalendarSystem,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -960,7 +963,7 @@ fun OnboardingTargetAndLimitsStep(
         val initialH = if (minMinutes != null && minMinutes > 0) minMinutes / 60 else 7
         val initialM = if (minMinutes != null && minMinutes > 0) minMinutes % 60 else 0
         LimitTimePickerDialog(
-            title = "Work Limits",
+            title = strings.workLimits,
             subtitle = "Scroll to set Minimum Enter time limit",
             initialHour = initialH,
             initialMinute = initialM,
@@ -983,7 +986,7 @@ fun OnboardingTargetAndLimitsStep(
         val initialH = if (maxMinutes != null && maxMinutes > 0) maxMinutes / 60 else 19
         val initialM = if (maxMinutes != null && maxMinutes > 0) maxMinutes % 60 else 0
         LimitTimePickerDialog(
-            title = "Work Limits",
+            title = strings.workLimits,
             subtitle = "Scroll to set Maximum Exit time limit",
             initialHour = initialH,
             initialMinute = initialM,
@@ -1004,12 +1007,12 @@ fun OnboardingTargetAndLimitsStep(
 
     // 1. Daily Target Card (without mins badge and without quick adjust)
     SettingsStyleCard(
-        title = "Daily Target",
+        title = strings.dailyTargetTitle,
         icon = Icons.Default.Timer
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Daily target",
+                text = strings.dailyTarget,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
@@ -1017,7 +1020,7 @@ fun OnboardingTargetAndLimitsStep(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Set your standard required daily work hours",
+                text = strings.setStandardRequiredHours,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1039,7 +1042,7 @@ fun OnboardingTargetAndLimitsStep(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "target time",
+                    text = strings.targetTimeLabel,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Normal,
                         fontSize = 16.sp
@@ -1062,12 +1065,12 @@ fun OnboardingTargetAndLimitsStep(
 
     // 2. Work Limits Card (without preset chips)
     SettingsStyleCard(
-        title = "Work Limits",
+        title = strings.workLimits,
         icon = Icons.Default.Tune
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Work Limits",
+                text = strings.workLimits,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
@@ -1075,7 +1078,7 @@ fun OnboardingTargetAndLimitsStep(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Tap Min Enter or Max Exit to set limits",
+                text = strings.tapMinEnterMaxExit,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp
                 ),
@@ -1090,7 +1093,7 @@ fun OnboardingTargetAndLimitsStep(
             horizontalArrangement = Arrangement.Center
         ) {
             WireframeTimeBox(
-                label = "Min Enter",
+                label = strings.minEnterTime,
                 timeText = minText,
                 isSet = minMinutes != null && minMinutes > 0,
                 enabled = true,
@@ -1109,7 +1112,7 @@ fun OnboardingTargetAndLimitsStep(
             )
 
             WireframeTimeBox(
-                label = "Max Exit",
+                label = strings.maxExitTime,
                 timeText = maxText,
                 isSet = maxMinutes != null && maxMinutes > 0,
                 enabled = true,
@@ -1304,7 +1307,7 @@ fun OnboardingThemeStep(
         ?: ACCENT_COLOR_OPTIONS[0]
 
     SettingsStyleCard(
-        title = "Select Theme",
+        title = strings.selectThemeTitle,
         icon = Icons.Default.Palette
     ) {
         // Header matching ThemeSelectionBottomSheet
@@ -1313,7 +1316,7 @@ fun OnboardingThemeStep(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = "Select Theme",
+                text = strings.selectThemeTitle,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
@@ -1321,7 +1324,7 @@ fun OnboardingThemeStep(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Choose your mode and primary color",
+                text = strings.selectThemePrimaryColor,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1333,7 +1336,7 @@ fun OnboardingThemeStep(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Appearance Mode",
+                text = strings.appearanceMode,
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
@@ -1347,7 +1350,7 @@ fun OnboardingThemeStep(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ThemeModeRowTile(
-                    label = "System",
+                    label = strings.themeSystem,
                     icon = Icons.Default.SettingsBrightness,
                     isSelected = selectedMode == "SYSTEM",
                     accentColor = activeAccent.color,
@@ -1358,7 +1361,7 @@ fun OnboardingThemeStep(
                 )
 
                 ThemeModeRowTile(
-                    label = "Light",
+                    label = strings.themeLight,
                     icon = Icons.Default.LightMode,
                     isSelected = selectedMode == "LIGHT",
                     accentColor = activeAccent.color,
@@ -1369,7 +1372,7 @@ fun OnboardingThemeStep(
                 )
 
                 ThemeModeRowTile(
-                    label = "Dark",
+                    label = strings.themeDark,
                     icon = Icons.Default.DarkMode,
                     isSelected = selectedMode == "DARK",
                     accentColor = activeAccent.color,
@@ -1387,7 +1390,7 @@ fun OnboardingThemeStep(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Primary Color",
+                text = strings.primaryColorSelect,
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,

@@ -2,10 +2,11 @@ package com.example.domain.usecase
 
 import com.example.domain.model.WorkDay
 import com.example.domain.repository.WorkRepository
+import com.example.ui.mvi.AppMessage
 
 sealed interface TimeValidationResult {
     data object Success : TimeValidationResult
-    data class Error(val message: String) : TimeValidationResult
+    data class Error(val errorType: AppMessage) : TimeValidationResult
 }
 
 class LogWorkTimeUseCase(
@@ -42,12 +43,12 @@ class LogWorkTimeUseCase(
         if (!isEnter && day.hasEnterTime) {
             val enterMins = (day.enterHour ?: 0) * 60 + (day.enterMinute ?: 0)
             if (selectedMins < enterMins) {
-                return TimeValidationResult.Error("Exit time cannot be earlier than enter time")
+                return TimeValidationResult.Error(AppMessage.EXIT_TIME_CANNOT_BE_EARLIER)
             }
         } else if (isEnter && day.hasExitTime) {
             val exitMins = (day.exitHour ?: 0) * 60 + (day.exitMinute ?: 0)
             if (selectedMins > exitMins) {
-                return TimeValidationResult.Error("Enter time cannot be later than exit time")
+                return TimeValidationResult.Error(AppMessage.ENTER_TIME_CANNOT_BE_LATER)
             }
         }
 
