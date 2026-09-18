@@ -350,6 +350,7 @@ fun AvatarSelectionBottomSheet(
     onAvatarSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()

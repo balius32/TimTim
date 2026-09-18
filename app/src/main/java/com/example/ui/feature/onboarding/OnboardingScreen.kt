@@ -114,6 +114,7 @@ import com.example.ui.components.TargetTimePickerDialog
 import com.example.ui.localization.LocalAppLanguage
 import com.example.ui.localization.AppLanguage
 import com.example.ui.localization.LocalAppStrings
+import com.example.ui.localization.AppStrings
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.theme.ACCENT_COLOR_OPTIONS
 import com.example.ui.theme.buildThemeModeString
@@ -299,7 +300,7 @@ fun OnboardingScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = getStepTitle(currentStep),
+                        text = getStepTitle(currentStep, strings),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -609,7 +610,7 @@ fun OnboardingScreen(
     }
 }
 
-private fun getStepTitle(step: Int): String = when (step) {
+private fun getStepTitle(step: Int, strings: AppStrings): String = when (step) {
     0 -> strings.stepProfileAvatar
     1 -> strings.stepCalendarSystem
     2 -> strings.stepTargetLimits
@@ -702,6 +703,7 @@ fun OnboardingProfileStep(
     uiState: WorkUiState,
     viewModel: WorkViewModel
 ) {
+    val strings = LocalAppStrings.current
     var userNameInput by remember(uiState.userName) { mutableStateOf(uiState.userName) }
 
     // Name input card
@@ -826,6 +828,7 @@ fun OnboardingCalendarStep(
     uiState: WorkUiState,
     viewModel: WorkViewModel
 ) {
+    val strings = LocalAppStrings.current
     val selectedType = uiState.calendarType
 
     SettingsStyleCard(
@@ -923,6 +926,7 @@ fun OnboardingTargetAndLimitsStep(
     uiState: WorkUiState,
     viewModel: WorkViewModel
 ) {
+    val strings = LocalAppStrings.current
     val totalMins = uiState.settings.dailyRequiredMinutes
     val hours = totalMins / 60
     val minutes = totalMins % 60
@@ -1299,6 +1303,7 @@ fun OnboardingThemeStep(
     uiState: WorkUiState,
     viewModel: WorkViewModel
 ) {
+    val strings = LocalAppStrings.current
     val (selectedMode, selectedColorId) = remember(uiState.settings.themeMode) {
         parseThemeSettings(uiState.settings.themeMode)
     }

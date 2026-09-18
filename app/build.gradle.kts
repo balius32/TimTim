@@ -18,8 +18,8 @@ android {
     applicationId = "com.aistudio.worktracker.twuoys"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 2
+    versionName = "1.0.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -32,12 +32,6 @@ android {
       keyAlias = "upload"
       keyPassword = System.getenv("KEY_PASSWORD")
     }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
-    }
   }
 
   buildTypes {
@@ -48,7 +42,6 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
     debug {
-      signingConfig = signingConfigs.getByName("debugConfig")
     }
   }
 
@@ -124,7 +117,7 @@ dependencies {
     if (name == "release") {
       outputs.all {
         val output = this as ApkVariantOutput
-        output.outputFileName = "timtim-v1.apk"
+        output.outputFileName = "timtim-v1.0.1.apk"
       }
     }
   }

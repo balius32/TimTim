@@ -17,6 +17,8 @@ import com.example.domain.usecase.GetDayUseCase
 import com.example.domain.usecase.InitializeMonthUseCase
 import com.example.domain.usecase.LogWorkTimeUseCase
 import com.example.util.CalendarHelper
+import com.example.ui.localization.AppLanguage
+import com.example.ui.localization.AppStrings
 import com.example.ui.localization.EnStrings
 import com.example.ui.localization.FaStrings
 import kotlinx.coroutines.CoroutineScope
@@ -136,8 +138,10 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                 val now = CalendarHelper.now(calType)
                 val today = getDayUseCase(now.year, now.month, now.day)
                 val targetMinutes = if (settings.dailyRequiredMinutes > 0) settings.dailyRequiredMinutes else 480
+                val appLanguage = AppLanguage.fromCode(settings.language)
+                val strings = if (appLanguage == AppLanguage.FA) FaStrings else EnStrings
 
-                bindWidgetData(context, views, today, targetMinutes)
+                bindWidgetData(context, views, today, targetMinutes, strings)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
@@ -150,7 +154,8 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         context: Context,
         views: RemoteViews,
         today: WorkDay?,
-        targetMinutes: Int
+        targetMinutes: Int,
+        strings: AppStrings
     ) {
         val calendar = Calendar.getInstance()
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
