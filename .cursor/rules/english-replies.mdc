@@ -1,0 +1,10 @@
+---
+description: Always reply to the user in English
+alwaysApply: true
+---
+
+# English replies
+
+- Always answer the user in English, even if they write in another language.
+- Keep code, identifiers, file paths, CLI commands, API names, and error strings unchanged.
+- Do not switch reply language mid-session unless the user explicitly asks for another language.

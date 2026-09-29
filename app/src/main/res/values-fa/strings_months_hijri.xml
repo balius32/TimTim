@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Solar Hijri Month Names in Persian/Farsi -->
+    <string name="month_farvardin">فروردین</string>
+    <string name="month_ordibehesht">اردیبهشت</string>
+    <string name="month_khordad">خرداد</string>
+    <string name="month_tir">تیر</string>
+    <string name="month_mordad">مرداد</string>
+    <string name="month_shahrivar">شهریور</string>
+    <string name="month_mehr">مهر</string>
+    <string name="month_aban">آبان</string>
+    <string name="month_azar">آذر</string>
+    <string name="month_dey">دی</string>
+    <string name="month_bahman">بهمن</string>
+    <string name="month_esfand">اسفند</string>
+
+    <string name="month_farvardin_short">فروردین</string>
+    <string name="month_ordibehesht_short">اردیبهشت</string>
+    <string name="month_khordad_short">خرداد</string>
+    <string name="month_tir_short">تیر</string>
+    <string name="month_mordad_short">مرداد</string>
+    <string name="month_shahrivar_short">شهریور</string>
+    <string name="month_mehr_short">مهر</string>
+    <string name="month_aban_short">آبان</string>
+    <string name="month_azar_short">آذر</string>
+    <string name="month_dey_short">دی</string>
+    <string name="month_bahman_short">بهمن</string>
+    <string name="month_esfand_short">اسفند</string>
+</resources>

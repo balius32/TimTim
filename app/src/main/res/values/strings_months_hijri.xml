@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Solar Hijri / Shamsi Month Names (Full) -->
+    <string name="month_farvardin">Farvardin</string>
+    <string name="month_ordibehesht">Ordibehesht</string>
+    <string name="month_khordad">Khordad</string>
+    <string name="month_tir">Tir</string>
+    <string name="month_mordad">Mordad</string>
+    <string name="month_shahrivar">Shahrivar</string>
+    <string name="month_mehr">Mehr</string>
+    <string name="month_aban">Aban</string>
+    <string name="month_azar">Azar</string>
+    <string name="month_dey">Dey</string>
+    <string name="month_bahman">Bahman</string>
+    <string name="month_esfand">Esfand</string>
+
+    <!-- Solar Hijri / Shamsi Month Names (Short) -->
+    <string name="month_farvardin_short">Far</string>
+    <string name="month_ordibehesht_short">Ord</string>
+    <string name="month_khordad_short">Kho</string>
+    <string name="month_tir_short">Tir</string>
+    <string name="month_mordad_short">Mor</string>
+    <string name="month_shahrivar_short">Sha</string>
+    <string name="month_mehr_short">Meh</string>
+    <string name="month_aban_short">Aba</string>
+    <string name="month_azar_short">Aza</string>
+    <string name="month_dey_short">Dey</string>
+    <string name="month_bahman_short">Bah</string>
+    <string name="month_esfand_short">Esf</string>
+</resources>

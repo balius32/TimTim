@@ -1,0 +1,19 @@
+---
+description: Bottom sheet fill-only conventions (title, detail, close)
+globs: app/src/main/java/com/example/ui/**/*.kt
+alwaysApply: false
+---
+
+# Bottom sheets (fill gaps only)
+
+Do **not** rewrite existing sheet headers, titles, descriptions, layout, or style.
+
+When editing a `ModalBottomSheet`:
+
+1. If title already exists → keep it (same string, style, alignment).
+2. If detail/subtitle already exists → keep it.
+3. If close icon (`Icons.Default.Close` / dismiss `IconButton`) is missing → **add** it in the header row only.
+4. If title or detail is missing → **add** the missing piece with `stringResource`, start-aligned; do not restyle the rest of the sheet.
+5. Prefer `skipPartiallyExpanded = true`. Sheets stay presentational (callbacks up to ViewModel).
+
+Never replace a working custom header with a shared wrapper unless the user asks.

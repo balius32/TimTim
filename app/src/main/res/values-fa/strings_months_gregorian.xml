@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gregorian Month Names in Persian/Farsi -->
+    <string name="month_january">ژانویه</string>
+    <string name="month_february">فوریه</string>
+    <string name="month_march">مارس</string>
+    <string name="month_april">آوریل</string>
+    <string name="month_may">مه</string>
+    <string name="month_june">ژوئن</string>
+    <string name="month_july">ژوئیه</string>
+    <string name="month_august">اوت</string>
+    <string name="month_september">سپتامبر</string>
+    <string name="month_october">اکتبر</string>
+    <string name="month_november">نوامبر</string>
+    <string name="month_december">دسامبر</string>
+
+    <string name="month_january_short">ژانویه</string>
+    <string name="month_february_short">فوریه</string>
+    <string name="month_march_short">مارس</string>
+    <string name="month_april_short">آوریل</string>
+    <string name="month_may_short">مه</string>
+    <string name="month_june_short">ژوئن</string>
+    <string name="month_july_short">ژوئیه</string>
+    <string name="month_august_short">اوت</string>
+    <string name="month_september_short">سپتامبر</string>
+    <string name="month_october_short">اکتبر</string>
+    <string name="month_november_short">نوامبر</string>
+    <string name="month_december_short">دسامبر</string>
+</resources>

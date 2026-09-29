@@ -1,0 +1,21 @@
+# Android Studio / IntelliJ
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/app/release
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Secrets & Keys
+.env
+*.jks
+*.keystore
+!debug.keystore
+
+# Kotlin
+.kotlin
