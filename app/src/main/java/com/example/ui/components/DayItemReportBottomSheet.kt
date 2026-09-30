@@ -22,21 +22,17 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.MoreTime
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -60,6 +56,7 @@ import com.example.domain.model.WorkCalculationSummary
 import com.example.ui.theme.DeficitRed
 import com.example.ui.theme.LocalIsFarsi
 import com.example.ui.theme.OvertimeGreen
+import com.example.util.NumberFormatter
 import com.example.util.localizeDigits
 
 /**
@@ -95,8 +92,8 @@ fun DayItemReportBottomSheet(
     val overtimeLabel = stringResource(R.string.status_overtime)
     val deficitLabel = stringResource(R.string.status_deficit)
     val onTargetLabel = stringResource(R.string.status_on_target)
-    val enterLabel = stringResource(R.string.timesheet_enter_button_label)
-    val exitLabel = stringResource(R.string.timesheet_exit_button_label)
+    val enterLabel = stringResource(R.string.day_detail_enter_time)
+    val exitLabel = stringResource(R.string.day_detail_exit_time)
     val estCheckOutLabel = if (isFarsi) "خروج تخمینی" else "Est. Check Out"
     val totalWorkedLabel = stringResource(R.string.timesheet_total_hours)
     val closeLabel = stringResource(R.string.btn_close)
@@ -112,8 +109,16 @@ fun DayItemReportBottomSheet(
 
     val overtimeDeficitValue = when {
         !isComplete -> "_ _ : _ _"
-        diffMins > 0 -> "+${WorkCalculationSummary.formatMinutes(diffMins, isFarsi)}"
-        diffMins < 0 -> "-${WorkCalculationSummary.formatMinutes(-diffMins, isFarsi)}"
+        diffMins > 0 -> NumberFormatter.withSign(
+            WorkCalculationSummary.formatMinutes(diffMins, isFarsi),
+            positive = true,
+            isFarsi = isFarsi
+        )
+        diffMins < 0 -> NumberFormatter.withSign(
+            WorkCalculationSummary.formatMinutes(-diffMins, isFarsi),
+            positive = false,
+            isFarsi = isFarsi
+        )
         else -> if (isFarsi) "۰:۰۰" else "0h 00m"
     }
 
@@ -154,14 +159,14 @@ fun DayItemReportBottomSheet(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.size(36.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -263,20 +268,12 @@ fun DayItemReportBottomSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.size(30.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.AccessTime,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
                             Text(
                                 text = totalWorkedLabel,
                                 style = MaterialTheme.typography.titleMedium.copy(
@@ -350,13 +347,9 @@ fun DayItemReportBottomSheet(
             }
 
             // Close button at the bottom
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = onDismissRequest,
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp)
@@ -407,7 +400,7 @@ private fun CompactDetailTile(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .size(14.dp)
                         .padding(end = 4.dp)

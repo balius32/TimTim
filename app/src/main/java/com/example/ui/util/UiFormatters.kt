@@ -32,10 +32,9 @@ fun formatDurationMinutes(minutes: Int): String {
 @ReadOnlyComposable
 fun formatDurationSigned(minutes: Int): String {
     val formatted = formatDurationMinutes(minutes)
-    val isFarsi = LocalIsFarsi.current
     return when {
-        minutes > 0 -> if (isFarsi) "+$formatted" else stringResource(R.string.duration_plus_signed, formatted)
-        minutes < 0 -> if (isFarsi) "-$formatted" else stringResource(R.string.duration_minus_signed, formatted)
+        minutes > 0 -> stringResource(R.string.duration_plus_signed, formatted)
+        minutes < 0 -> stringResource(R.string.duration_minus_signed, formatted)
         else -> formatted
     }
 }

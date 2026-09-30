@@ -89,6 +89,15 @@ object NumberFormatter {
     fun localize(text: String, isFarsi: Boolean): String {
         return if (isFarsi) toFarsiDigits(text) else text
     }
+
+    /**
+     * Attaches a +/− sign for display.
+     * English: prefix (`+1:30`). Farsi: suffix (`۱:۳۰+`) — sign goes behind the number.
+     */
+    fun withSign(value: String, positive: Boolean, isFarsi: Boolean): String {
+        val sign = if (positive) '+' else '-'
+        return if (isFarsi) "$value$sign" else "$sign$value"
+    }
 }
 
 // Convenient Extension Functions

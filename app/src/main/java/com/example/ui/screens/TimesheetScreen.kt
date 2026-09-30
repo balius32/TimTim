@@ -1061,7 +1061,7 @@ fun WireframeDailyLogRowCard(
                                     Icon(
                                         imageVector = Icons.Default.Insights,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 },
@@ -1191,7 +1191,7 @@ fun WireframeDailyLogRowCard(
                     ) {
                         // Enter Time Box
                         WireframeTimeBox(
-                            label = stringResource(R.string.day_detail_enter_time),
+                            label = stringResource(R.string.timesheet_enter_button_label),
                             timeText = if (day.hasEnterTime) day.formattedEnterTime(isFarsi) else stringResource(R.string.time_placeholder),
                             isSet = day.hasEnterTime,
                             enabled = true,
@@ -1212,7 +1212,7 @@ fun WireframeDailyLogRowCard(
 
                         // Exit Time Box
                         WireframeTimeBox(
-                            label = stringResource(R.string.day_detail_exit_time),
+                            label = stringResource(R.string.timesheet_exit_button_label),
                             timeText = if (day.hasExitTime) day.formattedExitTime(isFarsi) else stringResource(R.string.time_placeholder),
                             isSet = day.hasExitTime,
                             enabled = true,

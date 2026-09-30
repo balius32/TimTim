@@ -121,10 +121,9 @@ object AppStrings {
         @ReadOnlyComposable
         fun formatSignedDuration(minutes: Int): String {
             val formatted = formatDuration(minutes)
-            val isFarsi = LocalIsFarsi.current
             return when {
-                minutes > 0 -> if (isFarsi) "+$formatted" else stringResource(R.string.duration_plus_signed, formatted)
-                minutes < 0 -> if (isFarsi) "-$formatted" else stringResource(R.string.duration_minus_signed, formatted)
+                minutes > 0 -> stringResource(R.string.duration_plus_signed, formatted)
+                minutes < 0 -> stringResource(R.string.duration_minus_signed, formatted)
                 else -> formatted
             }
         }
@@ -145,10 +144,9 @@ object AppStrings {
 
         fun formatSignedDuration(context: Context, minutes: Int): String {
             val formatted = formatDuration(context, minutes)
-            val isFarsi = LocaleHelper.isFarsi(context)
             return when {
-                minutes > 0 -> if (isFarsi) "+$formatted" else context.getString(R.string.duration_plus_signed, formatted)
-                minutes < 0 -> if (isFarsi) "-$formatted" else context.getString(R.string.duration_minus_signed, formatted)
+                minutes > 0 -> context.getString(R.string.duration_plus_signed, formatted)
+                minutes < 0 -> context.getString(R.string.duration_minus_signed, formatted)
                 else -> formatted
             }
         }

@@ -64,5 +64,5 @@ val BentoBackgroundDark = Color(0xFF030712)    // Ultra-deep True Midnight / Obs
 val BentoSurfaceDark = Color(0xFF0D111D)       // Rich Deep Slate Card Surface (Dark & Sleek)
 val BentoSurfaceVariantDark = Color(0xFF151C2C) // Secondary Card / Elevated Surface
 val BentoSurfaceSubtleDark = Color(0xFF080C16)  // Recessed Dark
-val BentoOutlineDark = Color(0xFF1E293B)       // Refined subtle card border
-val BentoOutlineVariantDark = Color(0xFF111827) // Subtle Dark Divider
+val BentoOutlineDark = Color(0xFF2A364A)       // Card border — slightly brighter for dark mode
+val BentoOutlineVariantDark = Color(0xFF1C2536) // Divider — slight lift vs surface

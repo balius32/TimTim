@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -628,15 +629,18 @@ private fun MonthlyWorkDistributionSection(
                 DistributionLegendItem(color = MaterialTheme.colorScheme.outlineVariant, label = stringResource(R.string.status_off_badge))
             }
 
-            // Horizontal Scrollable Bar Chart
+            // Horizontal Scrollable Bar Chart — fixed viewport so empty months don't collapse
             val scrollState = rememberScrollState()
             val maxMinutes = 12 * 60 // 12 hours max scale
+            val barTrackHeight = 140.dp
+            val chartViewportHeight = 196.dp
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(chartViewportHeight)
                     .horizontalScroll(scrollState)
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
@@ -653,13 +657,19 @@ private fun MonthlyWorkDistributionSection(
                         DayStatus.UNSET -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                     }
 
-                    val barHeightFraction = (workedMinutes.toFloat() / maxMinutes).coerceIn(0.06f, 1f)
-                    val barHeightDp = (140 * barHeightFraction).dp
+                    val barHeightFraction = if (workedMinutes > 0) {
+                        (workedMinutes.toFloat() / maxMinutes).coerceIn(0.06f, 1f)
+                    } else {
+                        0.06f
+                    }
+                    val barHeightDp = barTrackHeight * barHeightFraction
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom,
-                        modifier = Modifier.width(22.dp)
+                        modifier = Modifier
+                            .width(22.dp)
+                            .fillMaxHeight()
                     ) {
                         if (workedMinutes > 0) {
                             Text(
@@ -668,7 +678,8 @@ private fun MonthlyWorkDistributionSection(
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                         }
@@ -676,10 +687,17 @@ private fun MonthlyWorkDistributionSection(
                         Box(
                             modifier = Modifier
                                 .width(14.dp)
-                                .height(barHeightDp)
-                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                .background(barColor)
-                        )
+                                .height(barTrackHeight),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(barHeightDp)
+                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(barColor)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(6.dp))
 
@@ -764,24 +782,21 @@ private fun AttendanceMetricsSection(
                     icon = Icons.Default.CheckCircle,
                     label = stringResource(R.string.report_badge_worked),
                     count = "$completedDays".localizeDigits(isFarsi),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
+                    tint = MaterialTheme.colorScheme.primary
                 )
 
                 AttendanceBadge(
                     icon = Icons.Default.EventBusy,
                     label = stringResource(R.string.report_badge_off_days),
                     count = "$offDays".localizeDigits(isFarsi),
-                    tint = Color(0xFFD97706),
-                    modifier = Modifier.weight(1f)
+                    tint = Color(0xFFD97706)
                 )
 
                 AttendanceBadge(
                     icon = Icons.Default.PendingActions,
                     label = stringResource(R.string.report_badge_remaining),
                     count = "$remainingDays".localizeDigits(isFarsi),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -797,7 +812,7 @@ private fun AttendanceBadge(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {

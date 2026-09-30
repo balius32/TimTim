@@ -52,7 +52,7 @@
     <string name="timesheet_deficit">Deficit</string>
     <string name="timesheet_work_summary">Work Summary</string>
     <string name="timesheet_today">Today</string>
-    <string name="timesheet_enter_time">Entry Time</string>
+    <string name="timesheet_enter_time">Enter Time</string>
     <string name="timesheet_exit_time">Exit Time</string>
     <string name="timesheet_presence">Presence</string>
     <string name="timesheet_vacation">Vacation</string>
@@ -271,7 +271,7 @@
     <string name="timesheet_deficit_title">Deficit Time</string>
     <string name="timesheet_today_section">Today</string>
     <string name="timesheet_daily_log_title">Daily Log</string>
-    <string name="timesheet_daily_log_subtitle">Tap ENTER or EXIT to select time</string>
+    <string name="timesheet_daily_log_subtitle">Tap Enter Time or Exit Time to select time</string>
     <string name="timesheet_logged_progress">%1$d/%2$d logged</string>
     <string name="timesheet_remaining_time_title">Remaining Time</string>
     <string name="timesheet_daily_summary_title">Daily Summary</string>
@@ -279,8 +279,8 @@
     <string name="timesheet_menu_cancel_day_off">Cancel Day Off</string>
     <string name="timesheet_menu_set_day_off">Set Off</string>
     <string name="timesheet_scheduled_day_off_banner">Scheduled Day Off · Tap to enable work hours</string>
-    <string name="timesheet_enter_button_label">ENTER</string>
-    <string name="timesheet_exit_button_label">EXIT</string>
+    <string name="timesheet_enter_button_label">Enter Time</string>
+    <string name="timesheet_exit_button_label">Exit Time</string>
     <string name="timesheet_expected_exit_label">Target Exit %1$s</string>
     <string name="timesheet_target_was_label">Target was %1$s</string>
 

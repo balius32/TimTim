@@ -46,8 +46,8 @@
     <string name="duration_empty_hm">--%1$s --%2$s</string>
     <string name="duration_placeholder">--</string>
     <string name="time_placeholder">_ _ : _ _</string>
-    <string name="duration_plus_signed">+%1$s</string>
-    <string name="duration_minus_signed">-%1$s</string>
+    <string name="duration_plus_signed">%1$s+</string>
+    <string name="duration_minus_signed">%1$s-</string>
     <string name="duration_target_reached_ot">هدف روزانه تکمیل شد! (اضافه‌کاری)</string>
     <string name="duration_time_left_to_exit">زمان باقیمانده تا خروج</string>
     <string name="duration_overtime_accumulated">اضافه‌کاری ذخیره شده</string>

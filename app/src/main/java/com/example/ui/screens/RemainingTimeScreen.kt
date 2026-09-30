@@ -372,16 +372,16 @@ fun RemainingTimeScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             // Formatted unified single-line digital clock (always HH:mm:ss, zero-padded)
-                            val displayDigits = buildString {
-                                if (isOvertime) append('+')
-                                append(
-                                    NumberFormatter.formatTimeWithSeconds(
-                                        remHours,
-                                        remMinutes,
-                                        remSeconds,
-                                        isFarsi
-                                    )
-                                )
+                            val timeDigits = NumberFormatter.formatTimeWithSeconds(
+                                remHours,
+                                remMinutes,
+                                remSeconds,
+                                isFarsi
+                            )
+                            val displayDigits = if (isOvertime) {
+                                NumberFormatter.withSign(timeDigits, positive = true, isFarsi)
+                            } else {
+                                timeDigits
                             }
 
                             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {

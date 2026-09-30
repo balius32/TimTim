@@ -23,14 +23,28 @@ data class WorkCalculationSummary(
     fun formattedTotalWorked(isFarsi: Boolean = false): String = formatMinutes(totalWorkedMinutes, isFarsi)
     fun formattedRequiredTotal(isFarsi: Boolean = false): String = formatMinutes(requiredTotalMinutes, isFarsi)
     fun formattedDailyTarget(isFarsi: Boolean = false): String = formatMinutes(dailyTargetMinutes, isFarsi)
-    fun formattedOvertime(isFarsi: Boolean = false): String = if (overtimeMinutes > 0) "+${formatMinutes(overtimeMinutes, isFarsi)}" else formatMinutes(0, isFarsi)
-    fun formattedDeficit(isFarsi: Boolean = false): String = if (deficitMinutes > 0) "-${formatMinutes(deficitMinutes, isFarsi)}" else formatMinutes(0, isFarsi)
+    fun formattedOvertime(isFarsi: Boolean = false): String =
+        if (overtimeMinutes > 0) {
+            com.example.util.NumberFormatter.withSign(formatMinutes(overtimeMinutes, isFarsi), positive = true, isFarsi)
+        } else {
+            formatMinutes(0, isFarsi)
+        }
+
+    fun formattedDeficit(isFarsi: Boolean = false): String =
+        if (deficitMinutes > 0) {
+            com.example.util.NumberFormatter.withSign(formatMinutes(deficitMinutes, isFarsi), positive = false, isFarsi)
+        } else {
+            formatMinutes(0, isFarsi)
+        }
 
     fun formattedNetBalance(isFarsi: Boolean = false): String {
         if (netBalanceMinutes == 0) return formatMinutes(0, isFarsi)
-        val sign = if (netBalanceMinutes > 0) "+" else "-"
         val absVal = kotlin.math.abs(netBalanceMinutes)
-        return "$sign${formatMinutes(absVal, isFarsi)}"
+        return com.example.util.NumberFormatter.withSign(
+            formatMinutes(absVal, isFarsi),
+            positive = netBalanceMinutes > 0,
+            isFarsi = isFarsi
+        )
     }
 
     val totalWorkedDecimalHours: String

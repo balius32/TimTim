@@ -89,8 +89,8 @@ class ExampleRobolectricTest {
 
     assertEquals("14h 3m", enDuration)
     assertEquals("۱۴:۰۳", faDuration)
-    assertEquals("+۱۴:۰۳", faSignedPositive)
-    assertEquals("-۱:۱۵", faSignedNegative)
+    assertEquals("۱۴:۰۳+", faSignedPositive)
+    assertEquals("۱:۱۵-", faSignedNegative)
 
     // Companion format in WorkCalculationSummary
     val enSummary = com.example.domain.model.WorkCalculationSummary.formatMinutes(843, isFarsi = false)

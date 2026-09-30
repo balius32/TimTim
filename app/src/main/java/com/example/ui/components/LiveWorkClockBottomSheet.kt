@@ -502,16 +502,18 @@ fun LiveWorkClockBottomSheet(
                     }
 
                     Text(
-                        text = buildString {
-                            if (isTargetReached) append('+')
-                            append(
-                                NumberFormatter.formatTimeWithSeconds(
-                                    remHours,
-                                    remMinutes,
-                                    remSeconds,
-                                    isFarsi
-                                )
+                        text = run {
+                            val timeDigits = NumberFormatter.formatTimeWithSeconds(
+                                remHours,
+                                remMinutes,
+                                remSeconds,
+                                isFarsi
                             )
+                            if (isTargetReached) {
+                                NumberFormatter.withSign(timeDigits, positive = true, isFarsi)
+                            } else {
+                                timeDigits
+                            }
                         },
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
