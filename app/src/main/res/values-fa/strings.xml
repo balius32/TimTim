@@ -345,6 +345,13 @@
     <string name="avatar_pastel_bloom">شکوفه پاستلی</string>
     <string name="avatar_royal_crown">تاج سلطنتی</string>
     <string name="avatar_coffee_cup">فنجان قهوه</string>
+    <string name="avatar_focus_clock">ساعت تمرکز</string>
+    <string name="avatar_peak_mountain">قله تمرکز</string>
+    <string name="avatar_energy_bolt">رعد انرژی</string>
+    <string name="avatar_ocean_wave">اقیانوس عمیق</string>
+    <string name="avatar_rose_dawn">سپیده رز</string>
+    <string name="avatar_aurora_glow">شفق قطبی</string>
+    <string name="avatar_leaf_focus">برگ تمرکز</string>
 
     <!-- Avatar Selection Sheet -->
     <string name="avatar_choose_picture_title">انتخاب تصویر پروفایل</string>

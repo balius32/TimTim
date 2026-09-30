@@ -536,6 +536,13 @@
     <string name="avatar_pastel_bloom">Pastel Bloom</string>
     <string name="avatar_royal_crown">Royal Crown</string>
     <string name="avatar_coffee_cup">Coffee Cup</string>
+    <string name="avatar_focus_clock">Focus Clock</string>
+    <string name="avatar_peak_mountain">Peak Focus</string>
+    <string name="avatar_energy_bolt">Power Bolt</string>
+    <string name="avatar_ocean_wave">Deep Ocean</string>
+    <string name="avatar_rose_dawn">Rose Dawn</string>
+    <string name="avatar_aurora_glow">Aurora Glow</string>
+    <string name="avatar_leaf_focus">Leaf Focus</string>
 
     <!-- Avatar Selection Sheet -->
     <string name="avatar_choose_picture_title">Choose Profile Picture</string>

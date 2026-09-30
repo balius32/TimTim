@@ -55,13 +55,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -89,12 +94,21 @@ enum class AvatarStyle(val id: String, val title: String, val category: String, 
     SUNNY_CREATIVE("sunny_creative", "Creative Sun", "Artistic", R.string.avatar_creative_sun),
     ZEN_CIRCLE("zen_circle", "Zen Flow", "Artistic", R.string.avatar_zen_flow),
     GRADIENT_BLAZE("gradient_blaze", "Sunset Blaze", "Artistic", R.string.avatar_sunset_blaze),
+    AURORA_GLOW("aurora_glow", "Aurora Glow", "Artistic", R.string.avatar_aurora_glow),
+    ROSE_DAWN("rose_dawn", "Rose Dawn", "People", R.string.avatar_rose_dawn),
 
     // Tech & Modern
     GEOMETRIC_CODE("geometric_code", "Dev Matrix", "Tech", R.string.avatar_dev_matrix),
     NIGHT_OWL("night_owl", "Night Shift", "Tech", R.string.avatar_night_shift),
     CYBER_PULSE("cyber_pulse", "Cyber Pulse", "Tech", R.string.avatar_cyber_pulse),
     TERMINAL_RUN("terminal_run", "Terminal", "Tech", R.string.avatar_terminal),
+    ENERGY_BOLT("energy_bolt", "Power Bolt", "Tech", R.string.avatar_energy_bolt),
+
+    // Work & Focus
+    FOCUS_CLOCK("focus_clock", "Focus Clock", "Work", R.string.avatar_focus_clock),
+    PEAK_MOUNTAIN("peak_mountain", "Peak Focus", "Work", R.string.avatar_peak_mountain),
+    OCEAN_WAVE("ocean_wave", "Deep Ocean", "Work", R.string.avatar_ocean_wave),
+    LEAF_FOCUS("leaf_focus", "Leaf Focus", "Work", R.string.avatar_leaf_focus),
 
     // Minimal & People
     PASTEL_PORTRAIT("pastel_portrait", "Pastel Bloom", "People", R.string.avatar_pastel_bloom),
@@ -158,190 +172,629 @@ fun CustomAvatarDisplay(
                 when (currentStyle) {
                     AvatarStyle.MINIMAL_AVATAR -> {
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFFD1FAE5), Color(0xFFA7F3D0))),
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFECFDF5), Color(0xFF6EE7B7), Color(0xFF059669)),
+                                center = Offset(w * 0.35f, h * 0.3f),
+                                radius = w * 0.85f
+                            ),
                             radius = w / 2f
                         )
-                        drawCircle(color = Color(0xFF065F46), radius = w * 0.18f, center = Offset(w * 0.5f, h * 0.38f))
-                        val bodyPath = Path().apply {
-                            moveTo(w * 0.2f, h * 0.85f)
-                            cubicTo(w * 0.28f, h * 0.62f, w * 0.72f, h * 0.62f, w * 0.8f, h * 0.85f)
+                        drawCircle(
+                            color = Color.White.copy(alpha = 0.22f),
+                            radius = w * 0.18f,
+                            center = Offset(w * 0.32f, h * 0.28f)
+                        )
+                        drawCircle(
+                            brush = Brush.linearGradient(listOf(Color(0xFF047857), Color(0xFF065F46))),
+                            radius = w * 0.17f,
+                            center = Offset(w * 0.5f, h * 0.36f)
+                        )
+                        val body = Path().apply {
+                            moveTo(w * 0.18f, h * 0.92f)
+                            cubicTo(w * 0.22f, h * 0.58f, w * 0.78f, h * 0.58f, w * 0.82f, h * 0.92f)
+                            close()
                         }
                         drawPath(
-                            path = bodyPath,
-                            color = Color(0xFF047857),
-                            style = Stroke(width = (w * 0.08f).coerceAtLeast(3f), cap = StrokeCap.Round)
+                            path = body,
+                            brush = Brush.verticalGradient(listOf(Color(0xFF10B981), Color(0xFF047857)))
                         )
                     }
 
                     AvatarStyle.GEOMETRIC_CODE -> {
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFF1E1B4B), Color(0xFF312E81))),
+                            brush = Brush.linearGradient(
+                                listOf(Color(0xFF0F172A), Color(0xFF312E81), Color(0xFF1E1B4B)),
+                                start = Offset(0f, 0f),
+                                end = Offset(w, h)
+                            ),
                             radius = w / 2f
                         )
-                        val stroke = (w * 0.035f).coerceAtLeast(1.5f)
-                        drawLine(Color(0xFF818CF8), Offset(w * 0.25f, h * 0.35f), Offset(w * 0.75f, h * 0.35f), stroke, StrokeCap.Round)
-                        drawLine(Color(0xFF38BDF8), Offset(w * 0.2f, h * 0.55f), Offset(w * 0.8f, h * 0.55f), stroke, StrokeCap.Round)
-                        drawLine(Color(0xFFC084FC), Offset(w * 0.35f, h * 0.75f), Offset(w * 0.65f, h * 0.75f), stroke, StrokeCap.Round)
-                        drawCircle(Color(0xFF38BDF8), radius = w * 0.09f, center = Offset(w * 0.5f, h * 0.55f))
+                        val stroke = (w * 0.055f).coerceAtLeast(2.2f)
+                        val left = Path().apply {
+                            moveTo(w * 0.42f, h * 0.28f)
+                            lineTo(w * 0.26f, h * 0.5f)
+                            lineTo(w * 0.42f, h * 0.72f)
+                        }
+                        val right = Path().apply {
+                            moveTo(w * 0.58f, h * 0.28f)
+                            lineTo(w * 0.74f, h * 0.5f)
+                            lineTo(w * 0.58f, h * 0.72f)
+                        }
+                        drawPath(left, Color(0xFF818CF8), style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                        drawPath(right, Color(0xFF38BDF8), style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                        drawLine(
+                            Color(0xFFC084FC),
+                            Offset(w * 0.48f, h * 0.68f),
+                            Offset(w * 0.56f, h * 0.32f),
+                            (w * 0.045f).coerceAtLeast(2f),
+                            StrokeCap.Round
+                        )
                     }
 
                     AvatarStyle.SUNNY_CREATIVE -> {
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFFCA5A5))),
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFFFFBEB), Color(0xFFFDE68A), Color(0xFFFCA5A5)),
+                                center = Offset(w * 0.45f, h * 0.4f),
+                                radius = w * 0.8f
+                            ),
                             radius = w / 2f
                         )
-                        drawCircle(color = Color(0xFFF59E0B), radius = w * 0.24f, center = Offset(w * 0.5f, h * 0.5f))
-                        val rayLength = w * 0.12f
-                        val stroke = (w * 0.04f).coerceAtLeast(1.8f)
-                        val angles = listOf(0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0)
-                        angles.forEach { deg ->
-                            val rad = Math.toRadians(deg)
-                            val startX = (w * 0.5f + Math.cos(rad) * (w * 0.28f)).toFloat()
-                            val startY = (h * 0.5f + Math.sin(rad) * (h * 0.28f)).toFloat()
-                            val endX = (w * 0.5f + Math.cos(rad) * (w * 0.28f + rayLength)).toFloat()
-                            val endY = (h * 0.5f + Math.sin(rad) * (h * 0.28f + rayLength)).toFloat()
-                            drawLine(Color(0xFFD97706), Offset(startX, startY), Offset(endX, endY), stroke, StrokeCap.Round)
+                        drawCircle(
+                            color = Color(0xFFFBBF24).copy(alpha = 0.35f),
+                            radius = w * 0.34f,
+                            center = Offset(w * 0.5f, h * 0.5f)
+                        )
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFFDE047), Color(0xFFF59E0B)),
+                                center = Offset(w * 0.45f, h * 0.42f),
+                                radius = w * 0.28f
+                            ),
+                            radius = w * 0.22f,
+                            center = Offset(w * 0.5f, h * 0.5f)
+                        )
+                        val stroke = (w * 0.045f).coerceAtLeast(2f)
+                        for (i in 0 until 8) {
+                            val rad = i * PI / 4.0
+                            val inner = w * 0.30f
+                            val outer = w * 0.42f
+                            drawLine(
+                                Color(0xFFD97706),
+                                Offset(
+                                    (w * 0.5f + cos(rad) * inner).toFloat(),
+                                    (h * 0.5f + sin(rad) * inner).toFloat()
+                                ),
+                                Offset(
+                                    (w * 0.5f + cos(rad) * outer).toFloat(),
+                                    (h * 0.5f + sin(rad) * outer).toFloat()
+                                ),
+                                stroke,
+                                StrokeCap.Round
+                            )
                         }
                     }
 
                     AvatarStyle.NIGHT_OWL -> {
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B))),
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFF334155), Color(0xFF0F172A), Color(0xFF020617)),
+                                center = Offset(w * 0.4f, h * 0.35f),
+                                radius = w * 0.9f
+                            ),
                             radius = w / 2f
                         )
-                        drawCircle(color = Color(0xFFFDE047), radius = w * 0.25f, center = Offset(w * 0.48f, h * 0.5f))
-                        drawCircle(color = Color(0xFF0F172A), radius = w * 0.22f, center = Offset(w * 0.58f, h * 0.46f))
-                        drawCircle(Color(0xFF93C5FD), radius = w * 0.04f, center = Offset(w * 0.78f, h * 0.32f))
-                        drawCircle(Color(0xFF93C5FD), radius = w * 0.03f, center = Offset(w * 0.28f, h * 0.68f))
+                        drawCircle(
+                            color = Color(0xFFFDE047).copy(alpha = 0.2f),
+                            radius = w * 0.32f,
+                            center = Offset(w * 0.46f, h * 0.5f)
+                        )
+                        drawCircle(Color(0xFFFDE047), radius = w * 0.24f, center = Offset(w * 0.46f, h * 0.5f))
+                        drawCircle(Color(0xFF0F172A), radius = w * 0.20f, center = Offset(w * 0.58f, h * 0.46f))
+                        listOf(
+                            Offset(w * 0.78f, h * 0.28f) to w * 0.035f,
+                            Offset(w * 0.22f, h * 0.30f) to w * 0.025f,
+                            Offset(w * 0.30f, h * 0.72f) to w * 0.03f,
+                            Offset(w * 0.72f, h * 0.70f) to w * 0.02f
+                        ).forEach { (c, r) ->
+                            drawCircle(Color(0xFFBFDBFE), radius = r, center = c)
+                        }
                     }
 
                     AvatarStyle.ZEN_CIRCLE -> {
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFFFFEDD5), Color(0xFFFED7AA))),
+                            brush = Brush.linearGradient(
+                                listOf(Color(0xFFFFF7ED), Color(0xFFFED7AA), Color(0xFFFDBA74)),
+                                start = Offset(0f, 0f),
+                                end = Offset(w, h)
+                            ),
                             radius = w / 2f
                         )
-                        val ringStroke = (w * 0.05f).coerceAtLeast(2f)
-                        drawCircle(color = Color(0xFFEA580C), radius = w * 0.25f, center = Offset(w * 0.42f, h * 0.45f), style = Stroke(width = ringStroke))
-                        drawCircle(color = Color(0xFF0284C7), radius = w * 0.25f, center = Offset(w * 0.58f, h * 0.55f), style = Stroke(width = ringStroke))
+                        val ringStroke = (w * 0.055f).coerceAtLeast(2.2f)
+                        drawCircle(
+                            Color(0xFFEA580C).copy(alpha = 0.25f),
+                            radius = w * 0.28f,
+                            center = Offset(w * 0.42f, h * 0.44f)
+                        )
+                        drawCircle(
+                            Color(0xFF0284C7).copy(alpha = 0.25f),
+                            radius = w * 0.28f,
+                            center = Offset(w * 0.58f, h * 0.56f)
+                        )
+                        drawCircle(
+                            Color(0xFFEA580C),
+                            radius = w * 0.26f,
+                            center = Offset(w * 0.42f, h * 0.44f),
+                            style = Stroke(ringStroke)
+                        )
+                        drawCircle(
+                            Color(0xFF0284C7),
+                            radius = w * 0.26f,
+                            center = Offset(w * 0.58f, h * 0.56f),
+                            style = Stroke(ringStroke)
+                        )
+                        drawCircle(Color(0xFFFB923C), radius = w * 0.05f, center = Offset(w * 0.5f, h * 0.5f))
                     }
 
                     AvatarStyle.GRADIENT_BLAZE -> {
-                        // Radiant fiery gradient with clean dynamic rings
                         drawCircle(
-                            brush = Brush.sweepGradient(listOf(Color(0xFFFF5722), Color(0xFFFF9800), Color(0xFFE91E63), Color(0xFFFF5722))),
+                            brush = Brush.sweepGradient(
+                                listOf(
+                                    Color(0xFFFF6B35),
+                                    Color(0xFFFFB347),
+                                    Color(0xFFFF2E63),
+                                    Color(0xFFFF8A00),
+                                    Color(0xFFFF6B35)
+                                )
+                            ),
                             radius = w / 2f
                         )
                         drawCircle(
-                            color = Color.White.copy(alpha = 0.25f),
-                            radius = w * 0.34f,
+                            Color.White.copy(alpha = 0.18f),
+                            radius = w * 0.38f,
                             center = Offset(w * 0.5f, h * 0.5f),
-                            style = Stroke(width = (w * 0.06f).coerceAtLeast(2f))
+                            style = Stroke((w * 0.05f).coerceAtLeast(2f))
                         )
                         drawCircle(
-                            color = Color.White,
-                            radius = w * 0.16f,
+                            brush = Brush.radialGradient(
+                                listOf(Color.White, Color.White.copy(alpha = 0.85f)),
+                                center = Offset(w * 0.45f, h * 0.42f),
+                                radius = w * 0.22f
+                            ),
+                            radius = w * 0.15f,
                             center = Offset(w * 0.5f, h * 0.5f)
                         )
                     }
 
                     AvatarStyle.CYBER_PULSE -> {
-                        // Deep Cyan / Teal Neon Matrix
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFF042F2E), Color(0xFF134E4A))),
+                            brush = Brush.linearGradient(
+                                listOf(Color(0xFF022C22), Color(0xFF134E4A), Color(0xFF042F2E)),
+                                start = Offset(0f, h),
+                                end = Offset(w, 0f)
+                            ),
                             radius = w / 2f
                         )
-                        val pulseStroke = (w * 0.045f).coerceAtLeast(2f)
+                        drawCircle(
+                            Color(0xFF2DD4BF).copy(alpha = 0.12f),
+                            radius = w * 0.36f,
+                            center = Offset(w * 0.5f, h * 0.5f)
+                        )
+                        val pulseStroke = (w * 0.05f).coerceAtLeast(2.2f)
                         val pulsePath = Path().apply {
-                            moveTo(w * 0.15f, h * 0.5f)
-                            lineTo(w * 0.35f, h * 0.5f)
-                            lineTo(w * 0.45f, h * 0.25f)
-                            lineTo(w * 0.55f, h * 0.75f)
-                            lineTo(w * 0.65f, h * 0.5f)
-                            lineTo(w * 0.85f, h * 0.5f)
+                            moveTo(w * 0.12f, h * 0.52f)
+                            lineTo(w * 0.30f, h * 0.52f)
+                            lineTo(w * 0.40f, h * 0.28f)
+                            lineTo(w * 0.52f, h * 0.72f)
+                            lineTo(w * 0.62f, h * 0.40f)
+                            lineTo(w * 0.70f, h * 0.52f)
+                            lineTo(w * 0.88f, h * 0.52f)
                         }
                         drawPath(
-                            path = pulsePath,
-                            color = Color(0xFF2DD4BF),
-                            style = Stroke(width = pulseStroke, cap = StrokeCap.Round)
+                            pulsePath,
+                            Color(0xFF5EEAD4),
+                            style = Stroke(width = pulseStroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
                         )
+                        drawCircle(Color(0xFF99F6E4), radius = w * 0.045f, center = Offset(w * 0.40f, h * 0.28f))
                     }
 
                     AvatarStyle.TERMINAL_RUN -> {
-                        // Hacker Terminal Emerald on Dark
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFF0A0A0A), Color(0xFF171717))),
+                            brush = Brush.linearGradient(
+                                listOf(Color(0xFF171717), Color(0xFF0A0A0A)),
+                                start = Offset(0f, 0f),
+                                end = Offset(w, h)
+                            ),
                             radius = w / 2f
                         )
-                        val codeStroke = (w * 0.05f).coerceAtLeast(2f)
+                        drawRoundRect(
+                            Color(0xFF22C55E).copy(alpha = 0.08f),
+                            topLeft = Offset(w * 0.18f, h * 0.22f),
+                            size = Size(w * 0.64f, h * 0.56f),
+                            cornerRadius = CornerRadius(w * 0.08f)
+                        )
+                        val codeStroke = (w * 0.055f).coerceAtLeast(2.2f)
                         val promptPath = Path().apply {
-                            moveTo(w * 0.3f, h * 0.35f)
+                            moveTo(w * 0.28f, h * 0.34f)
                             lineTo(w * 0.48f, h * 0.5f)
-                            lineTo(w * 0.3f, h * 0.65f)
+                            lineTo(w * 0.28f, h * 0.66f)
                         }
-                        drawPath(path = promptPath, color = Color(0xFF22C55E), style = Stroke(width = codeStroke, cap = StrokeCap.Round))
-                        drawLine(Color(0xFF22C55E), Offset(w * 0.55f, h * 0.65f), Offset(w * 0.72f, h * 0.65f), codeStroke, StrokeCap.Round)
+                        drawPath(
+                            promptPath,
+                            Color(0xFF4ADE80),
+                            style = Stroke(width = codeStroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+                        drawLine(
+                            Color(0xFF4ADE80),
+                            Offset(w * 0.54f, h * 0.66f),
+                            Offset(w * 0.72f, h * 0.66f),
+                            codeStroke,
+                            StrokeCap.Round
+                        )
+                        drawRoundRect(
+                            Color(0xFF86EFAC),
+                            topLeft = Offset(w * 0.74f, h * 0.58f),
+                            size = Size(w * 0.06f, h * 0.14f),
+                            cornerRadius = CornerRadius(w * 0.015f)
+                        )
                     }
 
                     AvatarStyle.PASTEL_PORTRAIT -> {
-                        // Gentle Lavender & Violet Sky
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFFEDE9FE), Color(0xFFDDD6FE))),
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFFAF5FF), Color(0xFFDDD6FE), Color(0xFFC4B5FD)),
+                                center = Offset(w * 0.4f, h * 0.3f),
+                                radius = w * 0.85f
+                            ),
                             radius = w / 2f
                         )
-                        drawCircle(color = Color(0xFF7C3AED), radius = w * 0.18f, center = Offset(w * 0.5f, h * 0.36f))
-                        val coatPath = Path().apply {
-                            moveTo(w * 0.22f, h * 0.85f)
-                            cubicTo(w * 0.3f, h * 0.62f, w * 0.7f, h * 0.62f, w * 0.78f, h * 0.85f)
+                        drawCircle(
+                            brush = Brush.linearGradient(listOf(Color(0xFFA78BFA), Color(0xFF7C3AED))),
+                            radius = w * 0.17f,
+                            center = Offset(w * 0.5f, h * 0.34f)
+                        )
+                        val coat = Path().apply {
+                            moveTo(w * 0.16f, h * 0.92f)
+                            cubicTo(w * 0.22f, h * 0.56f, w * 0.78f, h * 0.56f, w * 0.84f, h * 0.92f)
+                            close()
                         }
-                        drawPath(path = coatPath, color = Color(0xFF6D28D9), style = Stroke(width = (w * 0.07f).coerceAtLeast(2.5f), cap = StrokeCap.Round))
-                        drawCircle(Color(0xFFA78BFA), radius = w * 0.06f, center = Offset(w * 0.5f, h * 0.62f))
+                        drawPath(
+                            coat,
+                            brush = Brush.verticalGradient(listOf(Color(0xFF8B5CF6), Color(0xFF5B21B6)))
+                        )
+                        drawCircle(Color(0xFFE9D5FF), radius = w * 0.055f, center = Offset(w * 0.5f, h * 0.58f))
                     }
 
                     AvatarStyle.ROYAL_BADGE -> {
-                        // Gold & Navy Prestige
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF172554))),
+                            brush = Brush.linearGradient(
+                                listOf(Color(0xFF1E3A8A), Color(0xFF172554), Color(0xFF0F172A)),
+                                start = Offset(0f, 0f),
+                                end = Offset(w, h)
+                            ),
                             radius = w / 2f
                         )
-                        val crownPath = Path().apply {
-                            moveTo(w * 0.28f, h * 0.65f)
-                            lineTo(w * 0.72f, h * 0.65f)
-                            lineTo(w * 0.75f, h * 0.40f)
-                            lineTo(w * 0.60f, h * 0.50f)
-                            lineTo(w * 0.50f, h * 0.34f)
-                            lineTo(w * 0.40f, h * 0.50f)
-                            lineTo(w * 0.25f, h * 0.40f)
+                        drawCircle(
+                            Color(0xFFFBBF24).copy(alpha = 0.15f),
+                            radius = w * 0.36f,
+                            center = Offset(w * 0.5f, h * 0.5f)
+                        )
+                        val band = Path().apply {
+                            moveTo(w * 0.26f, h * 0.68f)
+                            lineTo(w * 0.74f, h * 0.68f)
+                            lineTo(w * 0.72f, h * 0.76f)
+                            lineTo(w * 0.28f, h * 0.76f)
                             close()
                         }
-                        drawPath(path = crownPath, color = Color(0xFFFBBF24))
-                        drawCircle(Color(0xFFF59E0B), radius = w * 0.04f, center = Offset(w * 0.5f, h * 0.32f))
+                        drawPath(band, Color(0xFFF59E0B))
+                        val crownPath = Path().apply {
+                            moveTo(w * 0.26f, h * 0.66f)
+                            lineTo(w * 0.74f, h * 0.66f)
+                            lineTo(w * 0.78f, h * 0.38f)
+                            lineTo(w * 0.62f, h * 0.50f)
+                            lineTo(w * 0.50f, h * 0.28f)
+                            lineTo(w * 0.38f, h * 0.50f)
+                            lineTo(w * 0.22f, h * 0.38f)
+                            close()
+                        }
+                        drawPath(
+                            crownPath,
+                            brush = Brush.linearGradient(listOf(Color(0xFFFDE68A), Color(0xFFF59E0B)))
+                        )
+                        drawCircle(Color(0xFFFEE2E2), radius = w * 0.04f, center = Offset(w * 0.5f, h * 0.30f))
+                        drawCircle(Color(0xFF93C5FD), radius = w * 0.03f, center = Offset(w * 0.34f, h * 0.48f))
+                        drawCircle(Color(0xFF86EFAC), radius = w * 0.03f, center = Offset(w * 0.66f, h * 0.48f))
                     }
 
                     AvatarStyle.COFFEE_BREAK -> {
-                        // Warm Mocha / Caramel Roast
                         drawCircle(
-                            brush = Brush.linearGradient(listOf(Color(0xFFFEF3C7), Color(0xFFFDE68A))),
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFFFFBEB), Color(0xFFFDE68A), Color(0xFFFBBF24)),
+                                center = Offset(w * 0.4f, h * 0.3f),
+                                radius = w * 0.85f
+                            ),
                             radius = w / 2f
                         )
-                        // Cup
-                        drawRoundRect(
-                            color = Color(0xFF78350F),
-                            topLeft = Offset(w * 0.32f, h * 0.45f),
-                            size = Size(w * 0.36f, h * 0.32f),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.08f)
-                        )
-                        // Steam
                         val steamStroke = (w * 0.035f).coerceAtLeast(1.5f)
-                        val steam1 = Path().apply {
-                            moveTo(w * 0.42f, h * 0.38f)
-                            cubicTo(w * 0.40f, h * 0.32f, w * 0.45f, h * 0.28f, w * 0.43f, h * 0.22f)
+                        listOf(0.40f, 0.50f, 0.60f).forEach { x ->
+                            val steam = Path().apply {
+                                moveTo(w * x, h * 0.40f)
+                                cubicTo(w * (x - 0.04f), h * 0.32f, w * (x + 0.04f), h * 0.26f, w * x, h * 0.18f)
+                            }
+                            drawPath(
+                                steam,
+                                Color(0xFFB45309).copy(alpha = 0.75f),
+                                style = Stroke(width = steamStroke, cap = StrokeCap.Round)
+                            )
                         }
-                        val steam2 = Path().apply {
-                            moveTo(w * 0.58f, h * 0.38f)
-                            cubicTo(w * 0.56f, h * 0.32f, w * 0.61f, h * 0.28f, w * 0.59f, h * 0.22f)
+                        drawRoundRect(
+                            brush = Brush.verticalGradient(listOf(Color(0xFF92400E), Color(0xFF78350F))),
+                            topLeft = Offset(w * 0.30f, h * 0.44f),
+                            size = Size(w * 0.36f, h * 0.34f),
+                            cornerRadius = CornerRadius(w * 0.06f, w * 0.06f)
+                        )
+                        drawOval(
+                            Color(0xFF451A03),
+                            topLeft = Offset(w * 0.33f, h * 0.46f),
+                            size = Size(w * 0.30f, h * 0.08f)
+                        )
+                        drawArc(
+                            color = Color(0xFF92400E),
+                            startAngle = -70f,
+                            sweepAngle = 140f,
+                            useCenter = false,
+                            topLeft = Offset(w * 0.58f, h * 0.50f),
+                            size = Size(w * 0.18f, h * 0.20f),
+                            style = Stroke(width = (w * 0.05f).coerceAtLeast(2f), cap = StrokeCap.Round)
+                        )
+                    }
+
+                    AvatarStyle.FOCUS_CLOCK -> {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFE0F2FE), Color(0xFF38BDF8), Color(0xFF0369A1)),
+                                center = Offset(w * 0.35f, h * 0.3f),
+                                radius = w * 0.9f
+                            ),
+                            radius = w / 2f
+                        )
+                        drawCircle(Color.White.copy(alpha = 0.92f), radius = w * 0.32f, center = Offset(w * 0.5f, h * 0.52f))
+                        drawCircle(
+                            Color(0xFF0284C7),
+                            radius = w * 0.32f,
+                            center = Offset(w * 0.5f, h * 0.52f),
+                            style = Stroke((w * 0.04f).coerceAtLeast(2f))
+                        )
+                        drawRoundRect(
+                            Color(0xFF0369A1),
+                            topLeft = Offset(w * 0.44f, h * 0.16f),
+                            size = Size(w * 0.12f, h * 0.10f),
+                            cornerRadius = CornerRadius(w * 0.03f)
+                        )
+                        val handStroke = (w * 0.045f).coerceAtLeast(2f)
+                        drawLine(
+                            Color(0xFF0F172A),
+                            Offset(w * 0.5f, h * 0.52f),
+                            Offset(w * 0.5f, h * 0.34f),
+                            handStroke,
+                            StrokeCap.Round
+                        )
+                        drawLine(
+                            Color(0xFF0369A1),
+                            Offset(w * 0.5f, h * 0.52f),
+                            Offset(w * 0.66f, h * 0.58f),
+                            handStroke * 0.85f,
+                            StrokeCap.Round
+                        )
+                        drawCircle(Color(0xFF0EA5E9), radius = w * 0.04f, center = Offset(w * 0.5f, h * 0.52f))
+                    }
+
+                    AvatarStyle.PEAK_MOUNTAIN -> {
+                        drawCircle(
+                            brush = Brush.verticalGradient(
+                                listOf(Color(0xFFBAE6FD), Color(0xFF7DD3FC), Color(0xFF0EA5E9))
+                            ),
+                            radius = w / 2f
+                        )
+                        drawCircle(Color.White.copy(alpha = 0.55f), radius = w * 0.10f, center = Offset(w * 0.72f, h * 0.28f))
+                        val back = Path().apply {
+                            moveTo(w * 0.08f, h * 0.78f)
+                            lineTo(w * 0.38f, h * 0.38f)
+                            lineTo(w * 0.62f, h * 0.78f)
+                            close()
                         }
-                        drawPath(steam1, color = Color(0xFFB45309), style = Stroke(width = steamStroke, cap = StrokeCap.Round))
-                        drawPath(steam2, color = Color(0xFFB45309), style = Stroke(width = steamStroke, cap = StrokeCap.Round))
+                        drawPath(back, Color(0xFF0369A1).copy(alpha = 0.55f))
+                        val front = Path().apply {
+                            moveTo(w * 0.28f, h * 0.82f)
+                            lineTo(w * 0.58f, h * 0.30f)
+                            lineTo(w * 0.92f, h * 0.82f)
+                            close()
+                        }
+                        drawPath(
+                            front,
+                            brush = Brush.verticalGradient(listOf(Color(0xFF0EA5E9), Color(0xFF075985)))
+                        )
+                        val snow = Path().apply {
+                            moveTo(w * 0.58f, h * 0.30f)
+                            lineTo(w * 0.48f, h * 0.46f)
+                            lineTo(w * 0.54f, h * 0.44f)
+                            lineTo(w * 0.58f, h * 0.50f)
+                            lineTo(w * 0.64f, h * 0.42f)
+                            lineTo(w * 0.70f, h * 0.46f)
+                            close()
+                        }
+                        drawPath(snow, Color.White.copy(alpha = 0.9f))
+                    }
+
+                    AvatarStyle.ENERGY_BOLT -> {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFFEF08A), Color(0xFFFACC15), Color(0xFFCA8A04)),
+                                center = Offset(w * 0.4f, h * 0.35f),
+                                radius = w * 0.85f
+                            ),
+                            radius = w / 2f
+                        )
+                        val bolt = Path().apply {
+                            moveTo(w * 0.58f, h * 0.14f)
+                            lineTo(w * 0.34f, h * 0.50f)
+                            lineTo(w * 0.50f, h * 0.50f)
+                            lineTo(w * 0.40f, h * 0.86f)
+                            lineTo(w * 0.70f, h * 0.42f)
+                            lineTo(w * 0.52f, h * 0.42f)
+                            close()
+                        }
+                        drawPath(bolt, Color(0xFF422006).copy(alpha = 0.2f))
+                        drawPath(
+                            bolt,
+                            brush = Brush.linearGradient(listOf(Color(0xFFFFFBEB), Color(0xFFFEF08A)))
+                        )
+                        drawPath(
+                            bolt,
+                            Color(0xFF854D0E),
+                            style = Stroke(width = (w * 0.025f).coerceAtLeast(1.2f), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+                    }
+
+                    AvatarStyle.OCEAN_WAVE -> {
+                        drawCircle(
+                            brush = Brush.verticalGradient(
+                                listOf(Color(0xFF67E8F9), Color(0xFF0891B2), Color(0xFF164E63))
+                            ),
+                            radius = w / 2f
+                        )
+                        val wave1 = Path().apply {
+                            moveTo(0f, h * 0.55f)
+                            cubicTo(w * 0.25f, h * 0.42f, w * 0.45f, h * 0.68f, w * 0.7f, h * 0.52f)
+                            cubicTo(w * 0.85f, h * 0.42f, w * 0.95f, h * 0.55f, w, h * 0.48f)
+                            lineTo(w, h)
+                            lineTo(0f, h)
+                            close()
+                        }
+                        drawPath(wave1, Color(0xFF0E7490).copy(alpha = 0.55f))
+                        val wave2 = Path().apply {
+                            moveTo(0f, h * 0.68f)
+                            cubicTo(w * 0.3f, h * 0.55f, w * 0.5f, h * 0.82f, w * 0.78f, h * 0.64f)
+                            cubicTo(w * 0.9f, h * 0.56f, w * 0.96f, h * 0.70f, w, h * 0.66f)
+                            lineTo(w, h)
+                            lineTo(0f, h)
+                            close()
+                        }
+                        drawPath(wave2, Color(0xFF155E75).copy(alpha = 0.75f))
+                        drawCircle(Color.White.copy(alpha = 0.5f), radius = w * 0.06f, center = Offset(w * 0.28f, h * 0.30f))
+                        drawCircle(Color.White.copy(alpha = 0.35f), radius = w * 0.04f, center = Offset(w * 0.70f, h * 0.24f))
+                    }
+
+                    AvatarStyle.ROSE_DAWN -> {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFFFF1F2), Color(0xFFFDA4AF), Color(0xFFE11D48)),
+                                center = Offset(w * 0.38f, h * 0.28f),
+                                radius = w * 0.9f
+                            ),
+                            radius = w / 2f
+                        )
+                        drawCircle(
+                            brush = Brush.linearGradient(listOf(Color(0xFFFB7185), Color(0xFFBE123C))),
+                            radius = w * 0.17f,
+                            center = Offset(w * 0.5f, h * 0.35f)
+                        )
+                        val body = Path().apply {
+                            moveTo(w * 0.16f, h * 0.92f)
+                            cubicTo(w * 0.22f, h * 0.56f, w * 0.78f, h * 0.56f, w * 0.84f, h * 0.92f)
+                            close()
+                        }
+                        drawPath(
+                            body,
+                            brush = Brush.verticalGradient(listOf(Color(0xFFFB7185), Color(0xFF9F1239)))
+                        )
+                        drawCircle(Color.White.copy(alpha = 0.35f), radius = w * 0.05f, center = Offset(w * 0.5f, h * 0.58f))
+                    }
+
+                    AvatarStyle.AURORA_GLOW -> {
+                        drawCircle(
+                            brush = Brush.verticalGradient(
+                                listOf(Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF312E81))
+                            ),
+                            radius = w / 2f
+                        )
+                        val aurora = Path().apply {
+                            moveTo(0f, h * 0.45f)
+                            cubicTo(w * 0.2f, h * 0.25f, w * 0.4f, h * 0.55f, w * 0.6f, h * 0.30f)
+                            cubicTo(w * 0.78f, h * 0.12f, w * 0.9f, h * 0.40f, w, h * 0.28f)
+                            lineTo(w, h * 0.58f)
+                            cubicTo(w * 0.85f, h * 0.70f, w * 0.65f, h * 0.48f, w * 0.45f, h * 0.62f)
+                            cubicTo(w * 0.25f, h * 0.76f, w * 0.1f, h * 0.55f, 0f, h * 0.65f)
+                            close()
+                        }
+                        drawPath(
+                            aurora,
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    Color(0xFF34D399).copy(alpha = 0.75f),
+                                    Color(0xFF22D3EE).copy(alpha = 0.7f),
+                                    Color(0xFFA78BFA).copy(alpha = 0.75f)
+                                )
+                            )
+                        )
+                        listOf(
+                            Offset(w * 0.22f, h * 0.22f) to w * 0.025f,
+                            Offset(w * 0.78f, h * 0.18f) to w * 0.02f,
+                            Offset(w * 0.55f, h * 0.78f) to w * 0.018f
+                        ).forEach { (c, r) ->
+                            drawCircle(Color.White.copy(alpha = 0.85f), radius = r, center = c)
+                        }
+                    }
+
+                    AvatarStyle.LEAF_FOCUS -> {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(Color(0xFFECFCCB), Color(0xFF86EFAC), Color(0xFF15803D)),
+                                center = Offset(w * 0.35f, h * 0.28f),
+                                radius = w * 0.9f
+                            ),
+                            radius = w / 2f
+                        )
+                        val leaf = Path().apply {
+                            moveTo(w * 0.52f, h * 0.18f)
+                            cubicTo(w * 0.78f, h * 0.28f, w * 0.82f, h * 0.58f, w * 0.52f, h * 0.78f)
+                            cubicTo(w * 0.22f, h * 0.58f, w * 0.26f, h * 0.28f, w * 0.52f, h * 0.18f)
+                            close()
+                        }
+                        drawPath(
+                            leaf,
+                            brush = Brush.linearGradient(
+                                listOf(Color(0xFFBBF7D0), Color(0xFF22C55E), Color(0xFF166534)),
+                                start = Offset(w * 0.3f, h * 0.2f),
+                                end = Offset(w * 0.7f, h * 0.8f)
+                            )
+                        )
+                        drawLine(
+                            Color(0xFF14532D),
+                            Offset(w * 0.52f, h * 0.22f),
+                            Offset(w * 0.52f, h * 0.82f),
+                            (w * 0.04f).coerceAtLeast(1.8f),
+                            StrokeCap.Round
+                        )
+                        drawLine(
+                            Color(0xFF166534).copy(alpha = 0.75f),
+                            Offset(w * 0.52f, h * 0.40f),
+                            Offset(w * 0.36f, h * 0.48f),
+                            (w * 0.028f).coerceAtLeast(1.4f),
+                            StrokeCap.Round
+                        )
+                        drawLine(
+                            Color(0xFF166534).copy(alpha = 0.75f),
+                            Offset(w * 0.52f, h * 0.52f),
+                            Offset(w * 0.68f, h * 0.58f),
+                            (w * 0.028f).coerceAtLeast(1.4f),
+                            StrokeCap.Round
+                        )
+                        drawCircle(
+                            Color.White.copy(alpha = 0.28f),
+                            radius = w * 0.08f,
+                            center = Offset(w * 0.40f, h * 0.32f)
+                        )
                     }
                 }
             }
@@ -542,7 +995,7 @@ fun AvatarSelectionBottomSheet(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(320.dp)
+                    .height(420.dp)
             ) {
                 items(AvatarStyle.entries) { avatarStyle ->
                     val isSelected = avatarStyle.id == selectedAvatarId
