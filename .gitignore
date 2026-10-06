@@ -19,3 +19,7 @@ local.properties
 
 # Kotlin
 .kotlin
+
+# Graphify (regeneratable cache / viz; keep graph.json + report in repo if desired)
+graphify-out/cache/
+graphify-out/graph.html
