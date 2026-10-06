@@ -1,9 +1,11 @@
 package com.example.ui.screens
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,7 +19,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,15 +30,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
@@ -45,8 +43,6 @@ import androidx.compose.material.icons.filled.ImportExport
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Timer
@@ -63,17 +59,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -91,30 +83,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.annotation.StringRes
-import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.WorkViewModel
-import com.example.ui.mvi.AppScreen
-import com.example.ui.mvi.WorkUiIntent
-import com.example.ui.mvi.WorkUiState
 import com.example.ui.components.LimitTimePickerDialog
 import com.example.ui.components.TargetTimePickerDialog
+import com.example.ui.mvi.WorkUiIntent
+import com.example.ui.mvi.WorkUiState
 import com.example.ui.theme.ACCENT_COLOR_OPTIONS
 import com.example.ui.theme.DeficitRed
-import com.example.ui.theme.OvertimeGreen
-import com.example.ui.theme.LocalAppColors
 import com.example.ui.theme.LocalIsFarsi
 import com.example.ui.theme.buildThemeModeString
 import com.example.ui.theme.parseThemeSettings
 import com.example.util.BackupData
-import com.example.util.CalendarHelper
 import com.example.util.CalendarType
 import com.example.util.DataBackupHelper
 import com.example.util.localizeDigits
@@ -152,6 +137,34 @@ fun SettingsScreen(
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
     var pendingImportData by remember { mutableStateOf<Pair<BackupData, String>?>(null) }
     var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var isDriveBusy by remember { mutableStateOf(false) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        // Always parse the Intent — Google often returns errors inside RESULT_OK,
+        // and cancels with RESULT_CANCELED (which used to look like "nothing happened").
+        if (result.data == null && result.resultCode != Activity.RESULT_OK) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.msg_drive_sign_in_cancelled),
+                Toast.LENGTH_LONG
+            ).show()
+            return@rememberLauncherForActivityResult
+        }
+        isDriveBusy = true
+        viewModel.onIntent(
+            WorkUiIntent.HandleGoogleDriveSignInResult(
+                data = result.data,
+                onComplete = { success, message ->
+                    isDriveBusy = false
+                    if (!success) {
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
+        )
+    }
 
     // Launcher for Save Document (Export to file)
     val createDocumentLauncher = rememberLauncherForActivityResult(
@@ -452,6 +465,50 @@ fun SettingsScreen(
     // 5. Import & Export BottomSheet
     if (showImportExportBottomSheet) {
         ImportExportBottomSheet(
+            driveAccountEmail = settings.driveAccountEmail,
+            driveLastBackupEpochMs = settings.driveLastBackupEpochMs,
+            isDriveBusy = isDriveBusy,
+            onConnectDrive = {
+                googleSignInLauncher.launch(viewModel.getGoogleDriveSignInIntent())
+            },
+            onDisconnectDrive = {
+                isDriveBusy = true
+                viewModel.onIntent(WorkUiIntent.DisconnectGoogleDrive)
+                isDriveBusy = false
+            },
+            onBackupToDrive = {
+                isDriveBusy = true
+                viewModel.onIntent(
+                    WorkUiIntent.BackupToGoogleDrive { success, message ->
+                        isDriveBusy = false
+                        if (!success) {
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+            },
+            onRestoreFromDrive = {
+                isDriveBusy = true
+                viewModel.onIntent(
+                    WorkUiIntent.RestoreFromGoogleDrive { success, json ->
+                        isDriveBusy = false
+                        if (success && json != null) {
+                            try {
+                                val backupData = DataBackupHelper.parseBackupJson(json)
+                                pendingImportData = Pair(backupData, json)
+                                showImportExportBottomSheet = false
+                                showImportConfirmDialog = true
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.onboarding_invalid_backup, e.localizedMessage ?: ""),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    }
+                )
+            },
             onExportShare = {
                 coroutineScope.launch {
                     try {
@@ -1130,11 +1187,27 @@ private fun WireframeImportExportCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ImportExportBottomSheet(
+    driveAccountEmail: String?,
+    driveLastBackupEpochMs: Long?,
+    isDriveBusy: Boolean,
+    onConnectDrive: () -> Unit,
+    onDisconnectDrive: () -> Unit,
+    onBackupToDrive: () -> Unit,
+    onRestoreFromDrive: () -> Unit,
     onExportShare: () -> Unit,
     onExportSaveFile: () -> Unit,
     onImportFile: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val isDriveConnected = !driveAccountEmail.isNullOrBlank()
+    val lastBackupLabel = driveLastBackupEpochMs?.let { epoch ->
+        java.text.DateFormat.getDateTimeInstance(
+            java.text.DateFormat.MEDIUM,
+            java.text.DateFormat.SHORT,
+            java.util.Locale.getDefault()
+        ).format(java.util.Date(epoch))
+    } ?: context.getString(R.string.settings_drive_never_backed_up)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -1347,6 +1420,132 @@ private fun ImportExportBottomSheet(
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSecondary
                         )
+                    }
+                }
+            }
+
+            // Google Drive Section
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.tertiaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudUpload,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_drive_section_title),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_drive_section_desc),
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    if (isDriveConnected) {
+                        Text(
+                            text = stringResource(R.string.settings_drive_connected_as, driveAccountEmail!!),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_drive_last_backup, lastBackupLabel),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Button(
+                                onClick = onBackupToDrive,
+                                enabled = !isDriveBusy,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp)
+                                    .testTag("drive_backup_button")
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_drive_backup_now),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = onRestoreFromDrive,
+                                enabled = !isDriveBusy,
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp)
+                                    .testTag("drive_restore_button")
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_drive_restore),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        TextButton(
+                            onClick = onDisconnectDrive,
+                            enabled = !isDriveBusy,
+                            modifier = Modifier.testTag("drive_disconnect_button")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_drive_disconnect),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onConnectDrive,
+                            enabled = !isDriveBusy,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("drive_connect_button")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_drive_connect),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }

@@ -41,6 +41,8 @@ interface WorkRepository {
     suspend fun resetMonthDays(year: Int, month: Int)
     suspend fun resetAllDays()
     suspend fun setCompletedOnboarding(completed: Boolean)
+    suspend fun updateDriveConnection(accountEmail: String?, lastBackupEpochMs: Long? = null)
+    suspend fun updateDriveLastBackup(epochMs: Long)
     suspend fun exportAllDataJson(): String
     suspend fun importAllDataJson(jsonString: String): Result<String>
 }

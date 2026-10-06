@@ -250,6 +250,27 @@ class WorkRepository(
         workDao.saveSettings(current.copy(hasCompletedOnboarding = completed))
     }
 
+    override suspend fun updateDriveConnection(accountEmail: String?, lastBackupEpochMs: Long?) =
+        withContext(ioDispatcher) {
+            val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
+            val resolvedLastBackup = when {
+                accountEmail == null -> null
+                lastBackupEpochMs != null -> lastBackupEpochMs
+                else -> current.driveLastBackupEpochMs
+            }
+            workDao.saveSettings(
+                current.copy(
+                    driveAccountEmail = accountEmail,
+                    driveLastBackupEpochMs = resolvedLastBackup
+                )
+            )
+        }
+
+    override suspend fun updateDriveLastBackup(epochMs: Long) = withContext(ioDispatcher) {
+        val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
+        workDao.saveSettings(current.copy(driveLastBackupEpochMs = epochMs))
+    }
+
     override suspend fun exportAllDataJson(): String = withContext(ioDispatcher) {
         val settings = workDao.getSettingsDirect() ?: AppSettingsEntity()
         val monthTargets = workDao.getAllMonthTargetsDirect()
@@ -260,7 +281,15 @@ class WorkRepository(
     override suspend fun importAllDataJson(jsonString: String): Result<String> = withContext(ioDispatcher) {
         runCatching {
             val backupData = DataBackupHelper.parseBackupJson(jsonString)
-            backupData.settings?.let { workDao.saveSettings(it) }
+            val existing = workDao.getSettingsDirect()
+            backupData.settings?.let { imported ->
+                workDao.saveSettings(
+                    imported.copy(
+                        driveAccountEmail = existing?.driveAccountEmail,
+                        driveLastBackupEpochMs = existing?.driveLastBackupEpochMs
+                    )
+                )
+            }
             if (backupData.monthTargets.isNotEmpty()) workDao.insertMonthTargets(backupData.monthTargets)
             if (backupData.workDays.isNotEmpty()) workDao.insertDays(backupData.workDays)
             "Import successful"

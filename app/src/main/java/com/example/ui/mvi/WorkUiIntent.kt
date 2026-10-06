@@ -1,5 +1,6 @@
 package com.example.ui.mvi
 
+import android.content.Intent
 import com.example.domain.model.WorkDay
 
 sealed interface WorkUiIntent {
@@ -58,6 +59,10 @@ sealed interface WorkUiIntent {
     data class ToggleSettingsSheet(val show: Boolean) : WorkUiIntent
     data object ClearAllData : WorkUiIntent
     data class ImportBackupData(val jsonString: String, val onComplete: (Boolean, String) -> Unit = { _, _ -> }) : WorkUiIntent
+    data class HandleGoogleDriveSignInResult(val data: Intent?, val onComplete: (Boolean, String) -> Unit) : WorkUiIntent
+    data object DisconnectGoogleDrive : WorkUiIntent
+    data class BackupToGoogleDrive(val onComplete: (Boolean, String) -> Unit) : WorkUiIntent
+    data class RestoreFromGoogleDrive(val onComplete: (Boolean, String?) -> Unit) : WorkUiIntent
 
     // Onboarding Intents
     data object CompleteOnboarding : WorkUiIntent

@@ -22,6 +22,12 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    val googleOAuthWebClientId =
+      (project.findProperty("GOOGLE_OAUTH_WEB_CLIENT_ID") as String?)
+        ?: System.getenv("GOOGLE_OAUTH_WEB_CLIENT_ID")
+        ?: ""
+    buildConfigField("String", "GOOGLE_OAUTH_WEB_CLIENT_ID", "\"$googleOAuthWebClientId\"")
   }
 
   signingConfigs {
@@ -58,6 +64,13 @@ android {
     }
     debug {
       signingConfig = signingConfigs.getByName("debugConfig")
+    }
+  }
+
+  packaging {
+    resources {
+      excludes += "/META-INF/INDEX.LIST"
+      excludes += "/META-INF/DEPENDENCIES"
     }
   }
 
@@ -104,6 +117,11 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.koin.android)
   implementation(libs.koin.compose)
+  implementation(libs.play.services.auth)
+  implementation(libs.google.api.client)
+  implementation(libs.google.api.client.android)
+  implementation(libs.google.api.services.drive)
+  implementation(libs.kotlinx.coroutines.play.services)
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)

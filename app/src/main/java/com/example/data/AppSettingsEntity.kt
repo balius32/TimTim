@@ -19,7 +19,9 @@ data class AppSettingsEntity(
     val maxExitMinutes: Int? = null, // e.g. 19 * 60 = 1140 for 19:00 (if picked later like 20:00, sets to 19:00)
     val minDailyMinutes: Int? = null,
     val maxDailyMinutes: Int? = null,
-    val hasCompletedOnboarding: Boolean = false
+    val hasCompletedOnboarding: Boolean = false,
+    val driveAccountEmail: String? = null,
+    val driveLastBackupEpochMs: Long? = null
 ) {
     val dailyRequiredHours: Int
         get() = dailyRequiredMinutes / 60

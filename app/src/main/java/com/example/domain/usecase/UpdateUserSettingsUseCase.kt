@@ -56,4 +56,13 @@ class UpdateUserSettingsUseCase(
     suspend fun setCompletedOnboarding(completed: Boolean): Result<Unit> = runCatching {
         repository.setCompletedOnboarding(completed)
     }
+
+    suspend fun updateDriveConnection(accountEmail: String?, lastBackupEpochMs: Long? = null): Result<Unit> =
+        runCatching {
+            repository.updateDriveConnection(accountEmail, lastBackupEpochMs)
+        }
+
+    suspend fun updateDriveLastBackup(epochMs: Long): Result<Unit> = runCatching {
+        repository.updateDriveLastBackup(epochMs)
+    }
 }

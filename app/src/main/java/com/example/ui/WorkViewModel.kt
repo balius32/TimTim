@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.R
 import com.example.domain.model.WorkCalculationSummary
 import com.example.domain.model.WorkDay
+import android.content.Intent
+import com.example.data.drive.DriveAuthManager
 import com.example.domain.usecase.*
 import com.example.ui.mvi.AppScreen
 import com.example.ui.mvi.NavigationTab
@@ -39,8 +41,12 @@ class WorkViewModel(
     private val getMonthTargetUseCase: GetMonthTargetUseCase,
     private val getDayUseCase: GetDayUseCase,
     private val backupRestoreUseCase: BackupRestoreUseCase,
+    private val driveBackupUseCase: DriveBackupUseCase,
+    private val driveAuthManager: DriveAuthManager,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : AndroidViewModel(application) {
+
+    fun getGoogleDriveSignInIntent(): Intent = driveAuthManager.getSignInIntent()
 
     private val _uiControlState = MutableStateFlow(UiControlState())
     private val _effects = Channel<WorkUiEffect>(Channel.BUFFERED)
@@ -338,6 +344,79 @@ class WorkViewModel(
                 resetMonthUseCase.resetAll()
                 _uiControlState.update { it.copy(showResetConfirmation = false) }
                 _effects.send(WorkUiEffect.ShowSnackbar(getApplication<Application>().getString(R.string.msg_all_data_cleared)))
+            }
+            is WorkUiIntent.HandleGoogleDriveSignInResult -> viewModelScope.launch(ioDispatcher) {
+                val signInResult = driveAuthManager.handleSignInResult(intent.data)
+                signInResult.onSuccess { account ->
+                    val email = account.email ?: ""
+                    driveBackupUseCase.onDriveConnected(email).getOrThrow()
+                    withContext(Dispatchers.Main) {
+                        intent.onComplete(true, email)
+                    }
+                    _effects.send(
+                        WorkUiEffect.ShowSnackbar(
+                            getApplication<Application>().getString(R.string.msg_drive_connected, email)
+                        )
+                    )
+                }.onFailure { err ->
+                    val msg = err.message ?: getApplication<Application>().getString(R.string.msg_drive_connect_failed)
+                    withContext(Dispatchers.Main) {
+                        intent.onComplete(false, msg)
+                    }
+                    _effects.send(WorkUiEffect.ShowSnackbar(msg))
+                }
+            }
+            WorkUiIntent.DisconnectGoogleDrive -> viewModelScope.launch(ioDispatcher) {
+                driveBackupUseCase.disconnectDrive()
+                    .onSuccess {
+                        _effects.send(
+                            WorkUiEffect.ShowSnackbar(
+                                getApplication<Application>().getString(R.string.msg_drive_disconnected)
+                            )
+                        )
+                    }
+                    .onFailure { err ->
+                        _effects.send(
+                            WorkUiEffect.ShowSnackbar(
+                                err.message ?: getApplication<Application>().getString(R.string.msg_drive_disconnect_failed)
+                            )
+                        )
+                    }
+            }
+            is WorkUiIntent.BackupToGoogleDrive -> viewModelScope.launch(ioDispatcher) {
+                driveBackupUseCase.backupToDrive()
+                    .onSuccess {
+                        withContext(Dispatchers.Main) {
+                            intent.onComplete(true, "")
+                        }
+                        _effects.send(
+                            WorkUiEffect.ShowSnackbar(
+                                getApplication<Application>().getString(R.string.msg_drive_backup_success)
+                            )
+                        )
+                    }
+                    .onFailure { err ->
+                        val msg = err.message ?: getApplication<Application>().getString(R.string.msg_drive_backup_failed)
+                        withContext(Dispatchers.Main) {
+                            intent.onComplete(false, msg)
+                        }
+                        _effects.send(WorkUiEffect.ShowSnackbar(msg))
+                    }
+            }
+            is WorkUiIntent.RestoreFromGoogleDrive -> viewModelScope.launch(ioDispatcher) {
+                driveBackupUseCase.restoreFromDrive()
+                    .onSuccess { json ->
+                        withContext(Dispatchers.Main) {
+                            intent.onComplete(true, json)
+                        }
+                    }
+                    .onFailure { err ->
+                        val msg = err.message ?: getApplication<Application>().getString(R.string.msg_drive_restore_failed)
+                        withContext(Dispatchers.Main) {
+                            intent.onComplete(false, null)
+                        }
+                        _effects.send(WorkUiEffect.ShowSnackbar(msg))
+                    }
             }
             is WorkUiIntent.ImportBackupData -> viewModelScope.launch(ioDispatcher) {
                 val result = backupRestoreUseCase.importData(intent.jsonString)

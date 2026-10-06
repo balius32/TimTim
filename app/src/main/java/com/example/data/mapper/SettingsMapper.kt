@@ -16,7 +16,9 @@ fun AppSettingsEntity.toDomain(): AppSettings = AppSettings(
     maxExitMinutes = maxExitMinutes,
     minDailyMinutes = minDailyMinutes,
     maxDailyMinutes = maxDailyMinutes,
-    hasCompletedOnboarding = hasCompletedOnboarding
+    hasCompletedOnboarding = hasCompletedOnboarding,
+    driveAccountEmail = driveAccountEmail,
+    driveLastBackupEpochMs = driveLastBackupEpochMs
 )
 
 fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
@@ -32,5 +34,7 @@ fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
     maxExitMinutes = maxExitMinutes,
     minDailyMinutes = minDailyMinutes,
     maxDailyMinutes = maxDailyMinutes,
-    hasCompletedOnboarding = hasCompletedOnboarding
+    hasCompletedOnboarding = hasCompletedOnboarding,
+    driveAccountEmail = driveAccountEmail,
+    driveLastBackupEpochMs = driveLastBackupEpochMs
 )

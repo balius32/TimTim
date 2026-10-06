@@ -2,6 +2,10 @@ package com.example.di
 
 import com.example.data.AppDatabase
 import com.example.data.WorkRepository
+import com.example.data.drive.DriveAuthManager
+import com.example.data.drive.GoogleDriveDataSource
+import com.example.data.drive.GoogleDriveRepositoryImpl
+import com.example.domain.repository.GoogleDriveRepository
 import com.example.domain.repository.WorkRepository as DomainWorkRepository
 import com.example.domain.usecase.*
 import com.example.ui.WorkViewModel
@@ -35,6 +39,10 @@ val appModule = module {
     single { GetMonthTargetUseCase(get()) }
     single { GetDayUseCase(get()) }
     single { BackupRestoreUseCase(get()) }
+    single { DriveAuthManager(androidContext()) }
+    single { GoogleDriveDataSource() }
+    single<GoogleDriveRepository> { GoogleDriveRepositoryImpl(get(), get()) }
+    single { DriveBackupUseCase(get(), get(), get()) }
 
     viewModel {
         WorkViewModel(
@@ -52,6 +60,8 @@ val appModule = module {
             getMonthTargetUseCase = get(),
             getDayUseCase = get(),
             backupRestoreUseCase = get(),
+            driveBackupUseCase = get(),
+            driveAuthManager = get(),
             ioDispatcher = Dispatchers.IO
         )
     }
