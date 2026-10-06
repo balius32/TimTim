@@ -6,6 +6,9 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.ActivityOptionsCompat
@@ -35,6 +38,16 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        updateAppWidget(context, appWidgetManager, appWidgetId)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -151,12 +164,42 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                 val targetMinutes = if (settings.dailyRequiredMinutes > 0) settings.dailyRequiredMinutes else 480
 
                 bindWidgetData(context, views, today, targetMinutes)
+                applyWidgetScale(context, views, appWidgetManager.getAppWidgetOptions(appWidgetId))
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+    }
+
+    private fun applyWidgetScale(context: Context, views: RemoteViews, options: Bundle) {
+        val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180)
+        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110)
+        val scale = WidgetScale.fromSize(minWidth, minHeight)
+        val density = context.resources.displayMetrics.density
+
+        views.setTextViewTextSize(R.id.widget_timer_value, TypedValue.COMPLEX_UNIT_SP, scale.timerSp)
+        views.setTextViewTextSize(R.id.widget_timer_subtitle, TypedValue.COMPLEX_UNIT_SP, scale.subtitleSp)
+        views.setTextViewTextSize(R.id.widget_title, TypedValue.COMPLEX_UNIT_SP, scale.titleSp)
+        views.setTextViewTextSize(R.id.widget_info_left, TypedValue.COMPLEX_UNIT_SP, scale.infoSp)
+        views.setTextViewTextSize(R.id.widget_info_right, TypedValue.COMPLEX_UNIT_SP, scale.infoSp)
+        views.setTextViewTextSize(R.id.widget_btn_action, TypedValue.COMPLEX_UNIT_SP, scale.buttonSp)
+
+        val padH = (scale.buttonPadHDp * density).toInt()
+        val padV = (scale.buttonPadVDp * density).toInt()
+        views.setViewPadding(R.id.widget_btn_action, padH, padV, padH, padV)
+
+        val refreshPad = (scale.refreshPadDp * density).toInt()
+        views.setViewPadding(R.id.widget_btn_refresh, refreshPad, refreshPad, refreshPad, refreshPad)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val iconPx = scale.refreshIconDp * density
+            views.setViewLayoutWidth(R.id.widget_refresh_icon, iconPx, TypedValue.COMPLEX_UNIT_PX)
+            views.setViewLayoutHeight(R.id.widget_refresh_icon, iconPx, TypedValue.COMPLEX_UNIT_PX)
+        }
+
+        val rootPad = (scale.rootPadDp * density).toInt()
+        views.setViewPadding(R.id.widget_root, rootPad, rootPad, rootPad, rootPad)
     }
 
     private fun bindWidgetData(
@@ -316,6 +359,63 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                 action = ACTION_REFRESH_WIDGET
             }
             context.sendBroadcast(intent)
+        }
+    }
+}
+
+private data class WidgetScale(
+    val timerSp: Float,
+    val subtitleSp: Float,
+    val titleSp: Float,
+    val infoSp: Float,
+    val buttonSp: Float,
+    val buttonPadHDp: Int,
+    val buttonPadVDp: Int,
+    val rootPadDp: Int,
+    val refreshIconDp: Int,
+    val refreshPadDp: Int
+) {
+    companion object {
+        fun fromSize(minWidthDp: Int, minHeightDp: Int): WidgetScale {
+            val area = minWidthDp * minHeightDp
+            return when {
+                minWidthDp < 180 || minHeightDp < 100 || area < 18_000 -> WidgetScale(
+                    timerSp = 22f,
+                    subtitleSp = 11f,
+                    titleSp = 12f,
+                    infoSp = 10f,
+                    buttonSp = 11f,
+                    buttonPadHDp = 8,
+                    buttonPadVDp = 4,
+                    rootPadDp = 10,
+                    refreshIconDp = 22,
+                    refreshPadDp = 6
+                )
+                minWidthDp > 280 || minHeightDp > 160 || area > 45_000 -> WidgetScale(
+                    timerSp = 34f,
+                    subtitleSp = 14f,
+                    titleSp = 15f,
+                    infoSp = 13f,
+                    buttonSp = 15f,
+                    buttonPadHDp = 20,
+                    buttonPadVDp = 10,
+                    rootPadDp = 20,
+                    refreshIconDp = 32,
+                    refreshPadDp = 10
+                )
+                else -> WidgetScale(
+                    timerSp = 28f,
+                    subtitleSp = 12f,
+                    titleSp = 13f,
+                    infoSp = 11f,
+                    buttonSp = 12f,
+                    buttonPadHDp = 12,
+                    buttonPadVDp = 6,
+                    rootPadDp = 16,
+                    refreshIconDp = 24,
+                    refreshPadDp = 8
+                )
+            }
         }
     }
 }

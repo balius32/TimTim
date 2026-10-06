@@ -49,11 +49,12 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:padding="4dp">
+            android:padding="8dp">
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:id="@+id/widget_refresh_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:contentDescription="Refresh"
                 android:src="@drawable/ic_widget_refresh" />
         </LinearLayout>
