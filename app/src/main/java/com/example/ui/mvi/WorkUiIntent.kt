@@ -48,6 +48,7 @@ sealed interface WorkUiIntent {
     data class UpdateEnterExitLimits(val minEnterMinutes: Int?, val maxExitMinutes: Int?) : WorkUiIntent
     data class UpdateMinEnterTime(val minutes: Int?) : WorkUiIntent
     data class UpdateMaxExitTime(val minutes: Int?) : WorkUiIntent
+    data class SetCheckoutReminderEnabled(val enabled: Boolean) : WorkUiIntent
     data class UpdateMonthDailyTarget(val year: Int, val month: Int, val hours: Int, val minutes: Int) : WorkUiIntent
     data class UpdateSelectedMonthDailyTarget(val hours: Int, val minutes: Int) : WorkUiIntent
     data class UpdateReportMonthDailyTarget(val hours: Int, val minutes: Int) : WorkUiIntent

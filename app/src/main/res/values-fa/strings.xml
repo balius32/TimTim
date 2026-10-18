@@ -494,7 +494,13 @@
     <string name="settings_minutes">دقیقه</string>
     <string name="settings_notifications">اعلان‌ها</string>
     <string name="settings_remind_check_in">یادآور ثبت ورود</string>
-    <string name="settings_remind_check_out">یادآور ثبت خروج</string>
+    <string name="settings_remind_check_out">یادت نره خروج بزنی</string>
+    <string name="settings_remind_check_out_desc">۵ دقیقه قبل از ساعت خروج تقریبی</string>
+    <string name="notif_checkout_channel_name">یادآور ثبت خروج</string>
+    <string name="notif_checkout_reminder_body">حدود ۵ دقیقه مونده. ساعت خروج تقریبی %1$s.</string>
+    <string name="msg_exact_alarm_required">برای یادآور به‌موقع، مجوز هشدار و یادآور را بدهید.</string>
+    <string name="msg_checkout_reminder_inexact">یادآور خروج روشن شد. تا وقتی مجوز هشدار و یادآور داده نشود، ممکن است چند دقیقه جابه‌جا شود.</string>
+    <string name="msg_notification_permission_required">برای یادآور خروج، اجازه اعلان را بدهید.</string>
     <string name="settings_reset_all_data">بازنشانی کلیه داده‌ها</string>
     <string name="settings_reset_confirm_message">این عمل تمام ساعات ورود و خروج ثبت‌شده در تمام روزهای این ماه را پاک می‌کند. این عملیات قابل بازگشت نیست.</string>
     <string name="settings_reset_confirm_title">آیا از بازنشانی همه روزها مطمئن هستید؟</string>

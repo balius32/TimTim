@@ -143,7 +143,13 @@
     <string name="settings_theme_dark">Dark Theme</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_remind_check_in">Check-in Reminder</string>
-    <string name="settings_remind_check_out">Check-out Reminder</string>
+    <string name="settings_remind_check_out">Don\'t forget to check out</string>
+    <string name="settings_remind_check_out_desc">5 minutes before estimated checkout</string>
+    <string name="notif_checkout_channel_name">Check-out reminder</string>
+    <string name="notif_checkout_reminder_body">About 5 minutes left. Estimated checkout is %1$s.</string>
+    <string name="msg_exact_alarm_required">Allow alarms and reminders so the check-out reminder can fire on time.</string>
+    <string name="msg_checkout_reminder_inexact">Check-out reminder is on. It may be a few minutes off until Alarms &amp; reminders is allowed.</string>
+    <string name="msg_notification_permission_required">Allow notifications to get the check-out reminder.</string>
     <string name="settings_data_management">Data Management</string>
     <string name="settings_backup_restore">Backup &amp; Restore</string>
     <string name="settings_export_backup">Export JSON Backup</string>

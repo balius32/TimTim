@@ -41,6 +41,7 @@ interface WorkRepository {
     suspend fun resetMonthDays(year: Int, month: Int)
     suspend fun resetAllDays()
     suspend fun setCompletedOnboarding(completed: Boolean)
+    suspend fun setCheckoutReminderEnabled(enabled: Boolean)
     suspend fun exportAllDataJson(): String
     suspend fun importAllDataJson(jsonString: String): Result<String>
 }

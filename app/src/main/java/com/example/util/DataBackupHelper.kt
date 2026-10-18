@@ -50,6 +50,7 @@ object DataBackupHelper {
             s.minEnterMinutes?.let { sObj.put("minEnterMinutes", it) }
             s.maxExitMinutes?.let { sObj.put("maxExitMinutes", it) }
             sObj.put("hasCompletedOnboarding", s.hasCompletedOnboarding)
+            sObj.put("checkoutReminderEnabled", s.checkoutReminderEnabled)
             root.put("settings", sObj)
         }
 
@@ -105,7 +106,8 @@ object DataBackupHelper {
                 maxDailyMinutes = if (s.has("maxDailyMinutes") && !s.isNull("maxDailyMinutes")) s.optInt("maxDailyMinutes") else null,
                 minEnterMinutes = if (s.has("minEnterMinutes") && !s.isNull("minEnterMinutes")) s.optInt("minEnterMinutes") else null,
                 maxExitMinutes = if (s.has("maxExitMinutes") && !s.isNull("maxExitMinutes")) s.optInt("maxExitMinutes") else null,
-                hasCompletedOnboarding = s.optBoolean("hasCompletedOnboarding", true)
+                hasCompletedOnboarding = s.optBoolean("hasCompletedOnboarding", true),
+                checkoutReminderEnabled = s.optBoolean("checkoutReminderEnabled", false)
             )
         }
 

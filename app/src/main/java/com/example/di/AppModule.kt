@@ -2,7 +2,9 @@ package com.example.di
 
 import com.example.data.AppDatabase
 import com.example.data.WorkRepository
+import com.example.domain.reminder.CheckoutReminderScheduler
 import com.example.domain.repository.WorkRepository as DomainWorkRepository
+import com.example.reminder.CheckoutReminderSchedulerImpl
 import com.example.domain.usecase.*
 import com.example.ui.WorkViewModel
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +17,17 @@ val appModule = module {
     single { AppDatabase.getDatabase(androidContext()) }
     single { get<AppDatabase>().workDao() }
 
+    single<CheckoutReminderScheduler> {
+        CheckoutReminderSchedulerImpl(
+            context = androidContext(),
+            workDao = get()
+        )
+    }
     single<DomainWorkRepository> {
         WorkRepository(
             workDao = get(),
-            ioDispatcher = Dispatchers.IO
+            ioDispatcher = Dispatchers.IO,
+            checkoutReminderScheduler = get()
         )
     }
 

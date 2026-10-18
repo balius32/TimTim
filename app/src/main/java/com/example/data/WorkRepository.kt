@@ -5,6 +5,7 @@ import com.example.data.mapper.toEntity
 import com.example.domain.model.AppSettings
 import com.example.domain.model.MonthTarget
 import com.example.domain.model.WorkDay
+import com.example.domain.reminder.CheckoutReminderScheduler
 import com.example.domain.repository.WorkRepository as DomainWorkRepository
 import com.example.util.CalendarHelper
 import com.example.util.CalendarType
@@ -17,7 +18,8 @@ import kotlinx.coroutines.withContext
 
 class WorkRepository(
     private val workDao: WorkDao,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val checkoutReminderScheduler: CheckoutReminderScheduler? = null
 ) : DomainWorkRepository {
 
     override val settings: Flow<AppSettings>
@@ -85,26 +87,31 @@ class WorkRepository(
     override suspend fun setEnterTime(year: Int, month: Int, dayNumber: Int, hour: Int, minute: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
         workDao.insertOrUpdateDay(existing.copy(enterHour = hour, enterMinute = minute, isDayOff = false))
+        syncCheckoutReminder()
     }
 
     override suspend fun setExitTime(year: Int, month: Int, dayNumber: Int, hour: Int, minute: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
         workDao.insertOrUpdateDay(existing.copy(exitHour = hour, exitMinute = minute, isDayOff = false))
+        syncCheckoutReminder()
     }
 
     override suspend fun setDayTimes(year: Int, month: Int, dayNumber: Int, enterH: Int, enterM: Int, exitH: Int, exitM: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
         workDao.insertOrUpdateDay(existing.copy(enterHour = enterH, enterMinute = enterM, exitHour = exitH, exitMinute = exitM, isDayOff = false))
+        syncCheckoutReminder()
     }
 
     override suspend fun clearEnterTime(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: return@withContext
         workDao.insertOrUpdateDay(existing.copy(enterHour = null, enterMinute = null))
+        syncCheckoutReminder()
     }
 
     override suspend fun clearExitTime(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: return@withContext
         workDao.insertOrUpdateDay(existing.copy(exitHour = null, exitMinute = null))
+        syncCheckoutReminder()
     }
 
     override suspend fun clearDay(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
@@ -115,12 +122,14 @@ class WorkRepository(
         val dow = CalendarHelper.getDayOfWeek(year, month, dayNumber, calType)
         val shouldBeOff = dow != null && offDaysList.contains(dow.name)
         workDao.insertOrUpdateDay(existing.copy(enterHour = null, enterMinute = null, exitHour = null, exitMinute = null, isDayOff = shouldBeOff, note = ""))
+        syncCheckoutReminder()
     }
 
     override suspend fun toggleDayOff(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
         val newDayOff = !existing.isDayOff
         workDao.insertOrUpdateDay(existing.copy(isDayOff = newDayOff))
+        syncCheckoutReminder()
     }
 
     override suspend fun updateThemeMode(themeMode: String) = withContext(ioDispatcher) {
@@ -134,6 +143,7 @@ class WorkRepository(
             workDao.deleteEntireWorkDaysTable()
             workDao.deleteAllMonthTargetsDirect()
             workDao.saveSettings(currentSettings.copy(calendarType = calendarType))
+            syncCheckoutReminder()
         }
     }
 
@@ -164,6 +174,7 @@ class WorkRepository(
             }
             workDao.insertDays(updatedDays)
         }
+        syncCheckoutReminder()
     }
 
     override suspend fun updateMonthDailyTarget(year: Int, month: Int, dailyRequiredMinutes: Int) = withContext(ioDispatcher) {
@@ -173,6 +184,7 @@ class WorkRepository(
     override suspend fun updateDailyRequiredMinutes(minutes: Int) = withContext(ioDispatcher) {
         val currentSettings = workDao.getSettingsDirect() ?: AppSettingsEntity()
         workDao.saveSettings(currentSettings.copy(dailyRequiredMinutes = minutes))
+        syncCheckoutReminder()
     }
 
     override suspend fun updateUserName(name: String) = withContext(ioDispatcher) {
@@ -228,6 +240,7 @@ class WorkRepository(
             }
             workDao.insertDays(updated)
         }
+        syncCheckoutReminder()
     }
 
     override suspend fun resetAllDays() = withContext(ioDispatcher) {
@@ -243,11 +256,18 @@ class WorkRepository(
             }
             workDao.insertDays(updated)
         }
+        syncCheckoutReminder()
     }
 
     override suspend fun setCompletedOnboarding(completed: Boolean) = withContext(ioDispatcher) {
         val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
         workDao.saveSettings(current.copy(hasCompletedOnboarding = completed))
+    }
+
+    override suspend fun setCheckoutReminderEnabled(enabled: Boolean) = withContext(ioDispatcher) {
+        val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
+        workDao.saveSettings(current.copy(checkoutReminderEnabled = enabled))
+        syncCheckoutReminder()
     }
 
     override suspend fun exportAllDataJson(): String = withContext(ioDispatcher) {
@@ -263,7 +283,12 @@ class WorkRepository(
             backupData.settings?.let { workDao.saveSettings(it) }
             if (backupData.monthTargets.isNotEmpty()) workDao.insertMonthTargets(backupData.monthTargets)
             if (backupData.workDays.isNotEmpty()) workDao.insertDays(backupData.workDays)
+            syncCheckoutReminder()
             "Import successful"
         }
+    }
+
+    private suspend fun syncCheckoutReminder() {
+        runCatching { checkoutReminderScheduler?.syncToday() }
     }
 }

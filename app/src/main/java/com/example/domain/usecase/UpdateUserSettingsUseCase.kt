@@ -56,4 +56,8 @@ class UpdateUserSettingsUseCase(
     suspend fun setCompletedOnboarding(completed: Boolean): Result<Unit> = runCatching {
         repository.setCompletedOnboarding(completed)
     }
+
+    suspend fun setCheckoutReminderEnabled(enabled: Boolean): Result<Unit> = runCatching {
+        repository.setCheckoutReminderEnabled(enabled)
+    }
 }

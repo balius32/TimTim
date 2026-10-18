@@ -13,7 +13,8 @@ data class AppSettings(
     val maxExitMinutes: Int? = null,
     val minDailyMinutes: Int? = null,
     val maxDailyMinutes: Int? = null,
-    val hasCompletedOnboarding: Boolean = false
+    val hasCompletedOnboarding: Boolean = false,
+    val checkoutReminderEnabled: Boolean = false
 ) {
     fun formattedDailyTarget(isFarsi: Boolean = false): String {
         if (dailyRequiredMinutes <= 0) return "_ _ : _ _"

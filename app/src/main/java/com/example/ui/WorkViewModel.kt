@@ -320,6 +320,9 @@ class WorkViewModel(
             is WorkUiIntent.UpdateEnterExitLimits -> viewModelScope.launch { updateUserSettingsUseCase.updateEnterExitLimits(intent.minEnterMinutes, intent.maxExitMinutes) }
             is WorkUiIntent.UpdateMinEnterTime -> viewModelScope.launch { updateUserSettingsUseCase.updateMinEnterTime(intent.minutes) }
             is WorkUiIntent.UpdateMaxExitTime -> viewModelScope.launch { updateUserSettingsUseCase.updateMaxExitTime(intent.minutes) }
+            is WorkUiIntent.SetCheckoutReminderEnabled -> viewModelScope.launch {
+                updateUserSettingsUseCase.setCheckoutReminderEnabled(intent.enabled)
+            }
             is WorkUiIntent.UpdateMonthDailyTarget -> viewModelScope.launch { updateDailyTargetUseCase.updateMonthSpecificTarget(intent.year, intent.month, intent.hours, intent.minutes) }
             is WorkUiIntent.UpdateSelectedMonthDailyTarget -> viewModelScope.launch {
                 updateDailyTargetUseCase.updateMonthSpecificTarget(_uiControlState.value.selectedYear, _uiControlState.value.selectedMonth, intent.hours, intent.minutes)
@@ -458,6 +461,9 @@ class WorkViewModel(
     fun updateDailyRequiredTime(hours: Int, minutes: Int) = onIntent(WorkUiIntent.UpdateDailyRequiredTime(hours, minutes))
     fun updateMinEnterTime(minutes: Int?) = onIntent(WorkUiIntent.UpdateMinEnterTime(minutes))
     fun updateMaxExitTime(minutes: Int?) = onIntent(WorkUiIntent.UpdateMaxExitTime(minutes))
+    fun showSnackbar(message: String) {
+        viewModelScope.launch { _effects.send(WorkUiEffect.ShowSnackbar(message)) }
+    }
     fun showResetConfirmation(show: Boolean) = onIntent(WorkUiIntent.ShowResetConfirmation(show))
     fun confirmResetAll() = onIntent(WorkUiIntent.ConfirmResetAll)
     fun clearAllData() = onIntent(WorkUiIntent.ClearAllData)

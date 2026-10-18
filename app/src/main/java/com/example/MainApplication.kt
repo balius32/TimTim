@@ -2,9 +2,15 @@ package com.example
 
 import android.app.Application
 import com.example.di.appModule
+import com.example.domain.reminder.CheckoutReminderScheduler
 import com.example.util.LocaleHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
 class MainApplication : Application() {
@@ -26,6 +32,9 @@ class MainApplication : Application() {
                 androidContext(this@MainApplication)
                 modules(appModule)
             }
+        }
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            runCatching { GlobalContext.get().get<CheckoutReminderScheduler>().syncToday() }
         }
     }
 }
