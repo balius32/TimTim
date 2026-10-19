@@ -85,6 +85,8 @@
     <string name="timesheet_clear_button">پاک کردن</string>
     <string name="timesheet_menu_cancel_day_off">لغو تعطیلی</string>
     <string name="timesheet_menu_set_day_off">تعطیل کردن</string>
+    <string name="timesheet_menu_note">یادداشت</string>
+    <string name="day_note_sheet_title">یادداشت</string>
     <string name="timesheet_scheduled_day_off_banner">تعطیل برنامه‌ریزی شده · برای ثبت ساعات کاری لمس کنید</string>
     <string name="timesheet_enter_button_label">ورود</string>
     <string name="timesheet_exit_button_label">خروج</string>

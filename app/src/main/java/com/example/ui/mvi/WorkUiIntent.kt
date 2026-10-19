@@ -27,6 +27,7 @@ sealed interface WorkUiIntent {
     data class ClearExitTime(val dayNumber: Int) : WorkUiIntent
     data class ClearDay(val dayNumber: Int) : WorkUiIntent
     data class ToggleDayOff(val dayNumber: Int, val year: Int = 0, val month: Int = 0) : WorkUiIntent
+    data class SaveDayNote(val year: Int, val month: Int, val dayNumber: Int, val note: String) : WorkUiIntent
 
     // Quick Action (Today) Banner Intents
     data object LogTodayEnterNow : WorkUiIntent

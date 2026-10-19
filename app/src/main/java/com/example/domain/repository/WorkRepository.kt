@@ -23,6 +23,7 @@ interface WorkRepository {
     suspend fun clearEnterTime(year: Int, month: Int, dayNumber: Int)
     suspend fun clearExitTime(year: Int, month: Int, dayNumber: Int)
     suspend fun clearDay(year: Int, month: Int, dayNumber: Int)
+    suspend fun setDayNote(year: Int, month: Int, dayNumber: Int, note: String)
     suspend fun toggleDayOff(year: Int, month: Int, dayNumber: Int)
     suspend fun updateThemeMode(themeMode: String)
     suspend fun updateCalendarType(calendarType: String)

@@ -125,6 +125,12 @@ class WorkRepository(
         syncCheckoutReminder()
     }
 
+    override suspend fun setDayNote(year: Int, month: Int, dayNumber: Int, note: String) = withContext(ioDispatcher) {
+        val existing = workDao.getDay(year, month, dayNumber)
+            ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
+        workDao.insertOrUpdateDay(existing.copy(note = note.trim()))
+    }
+
     override suspend fun toggleDayOff(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
         val newDayOff = !existing.isDayOff

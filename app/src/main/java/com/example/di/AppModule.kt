@@ -35,6 +35,7 @@ val appModule = module {
     single { LogWorkTimeUseCase(get()) }
     single { ToggleDayOffUseCase(get()) }
     single { ClearDayTimesUseCase(get()) }
+    single { SaveDayNoteUseCase(get()) }
     single { UpdateDailyTargetUseCase(get()) }
     single { UpdateUserSettingsUseCase(get()) }
     single { ResetMonthUseCase(get()) }
@@ -52,6 +53,7 @@ val appModule = module {
             logWorkTimeUseCase = get(),
             toggleDayOffUseCase = get(),
             clearDayTimesUseCase = get(),
+            saveDayNoteUseCase = get(),
             updateDailyTargetUseCase = get(),
             updateUserSettingsUseCase = get(),
             resetMonthUseCase = get(),

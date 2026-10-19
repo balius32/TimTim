@@ -30,6 +30,7 @@ class WorkViewModel(
     private val logWorkTimeUseCase: LogWorkTimeUseCase,
     private val toggleDayOffUseCase: ToggleDayOffUseCase,
     private val clearDayTimesUseCase: ClearDayTimesUseCase,
+    private val saveDayNoteUseCase: SaveDayNoteUseCase,
     private val updateDailyTargetUseCase: UpdateDailyTargetUseCase,
     private val updateUserSettingsUseCase: UpdateUserSettingsUseCase,
     private val resetMonthUseCase: ResetMonthUseCase,
@@ -244,6 +245,9 @@ class WorkViewModel(
                 val m = if (intent.month != 0) intent.month else _uiControlState.value.selectedMonth
                 toggleDayOffUseCase(y, m, intent.dayNumber)
             }
+            is WorkUiIntent.SaveDayNote -> viewModelScope.launch {
+                saveDayNoteUseCase(intent.year, intent.month, intent.dayNumber, intent.note)
+            }
             WorkUiIntent.LogTodayEnterNow -> viewModelScope.launch(ioDispatcher) {
                 val settings = getAppSettingsUseCase.getDirect()
                 val calType = CalendarHelper.parseCalendarType(settings.calendarType)
@@ -446,6 +450,8 @@ class WorkViewModel(
     fun clearEnterTime(dayNumber: Int) = onIntent(WorkUiIntent.ClearEnterTime(dayNumber))
     fun clearExitTime(dayNumber: Int) = onIntent(WorkUiIntent.ClearExitTime(dayNumber))
     fun clearDay(dayNumber: Int) = onIntent(WorkUiIntent.ClearDay(dayNumber))
+    fun saveDayNote(year: Int, month: Int, dayNumber: Int, note: String) =
+        onIntent(WorkUiIntent.SaveDayNote(year, month, dayNumber, note))
     fun toggleDayOff(day: WorkDay) = onIntent(WorkUiIntent.ToggleDayOff(dayNumber = day.dayNumber, year = day.year, month = day.month))
     fun toggleDayOff(dayNumber: Int) = onIntent(WorkUiIntent.ToggleDayOff(dayNumber = dayNumber))
     fun logTodayEnterNow() = onIntent(WorkUiIntent.LogTodayEnterNow)

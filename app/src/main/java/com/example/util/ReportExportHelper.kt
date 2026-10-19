@@ -138,9 +138,8 @@ object ReportExportHelper {
                     val target = AppStrings.Units.formatDuration(context, item.targetMinutes)
                     val diffWithSign = AppStrings.Units.formatSignedDuration(context, item.diffMinutes)
                     val status = AppStrings.Status.localizedName(context, item.status)
-                    val notes = item.day.note.replace(",", " ")
 
-                    writer.write("$dayNum,$dateFormatted,$enter,$exit,$worked,$target,$diffWithSign,$status,\"$notes\"\n")
+                    writer.write("$dayNum,$dateFormatted,$enter,$exit,$worked,$target,$diffWithSign,$status,${csvNoteCell(item.day.note)}\n")
                 }
 
                 writer.flush()
@@ -178,14 +177,80 @@ object ReportExportHelper {
             val effectiveYear = if (uiState.reportYear != 0) uiState.reportYear else uiState.currentCalendarNow.year
             val effectiveMonth = if (uiState.reportMonth != 0) uiState.reportMonth else uiState.currentCalendarNow.month
 
-            pdfDoc = PdfDocument()
+            val document = PdfDocument()
+            pdfDoc = document
             val pageWidth = 595 // A4 standard width in points at 72dpi
             val pageHeight = 842 // A4 standard height
-            val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
-            val page = pdfDoc.startPage(pageInfo)
-            val canvas = page.canvas
+            val pageBottom = pageHeight - 40f
+            var pageNumber = 1
+            var page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
+            var canvas = page.canvas
 
             val paint = Paint().apply { isAntiAlias = true }
+            val headers = listOf(
+                context.getString(R.string.export_col_day),
+                context.getString(R.string.export_col_enter),
+                context.getString(R.string.export_col_exit),
+                context.getString(R.string.export_col_worked),
+                context.getString(R.string.export_col_target),
+                context.getString(R.string.export_col_diff),
+                context.getString(R.string.export_col_status),
+                context.getString(R.string.export_col_notes)
+            )
+            val colPositions = floatArrayOf(28f, 56f, 108f, 160f, 214f, 268f, 322f, 400f)
+            val metricLeft = floatArrayOf(24f, 56f, 108f, 160f, 214f, 268f, 322f)
+            val metricRight = floatArrayOf(56f, 108f, 160f, 214f, 268f, 322f, 400f)
+            val noteMaxWidth = (pageWidth - 24f) - colPositions[7] - 6f
+            val lineHeight = 11f
+            val minRowHeight = 17.5f
+
+            fun drawFooter() {
+                paint.color = Color.parseColor("#94A3B8")
+                paint.textSize = 8.5f
+                paint.typeface = Typeface.DEFAULT
+                canvas.drawText(
+                    "${context.getString(R.string.export_generated_by)}  •  ${uiState.formattedReportMonthHeader}",
+                    28f,
+                    (pageHeight - 20).toFloat(),
+                    paint
+                )
+            }
+
+            fun textBaseline(rowTop: Float, rowHeight: Float): Float {
+                val metrics = paint.fontMetrics
+                return rowTop + (rowHeight - (metrics.descent - metrics.ascent)) / 2f - metrics.ascent
+            }
+
+            fun drawCenteredInCell(text: String, left: Float, right: Float, baseline: Float) {
+                val x = left + ((right - left) - paint.measureText(text)) / 2f
+                canvas.drawText(text, x, baseline, paint)
+            }
+
+            fun drawTableHeader(y: Float): Float {
+                paint.color = Color.parseColor("#2563EB")
+                canvas.drawRect(24f, y, (pageWidth - 24).toFloat(), y + 24f, paint)
+                paint.color = Color.WHITE
+                paint.textSize = 9.5f
+                paint.typeface = Typeface.DEFAULT_BOLD
+                val headerBaseline = textBaseline(y, 24f)
+                headers.forEachIndexed { i, title ->
+                    if (i < metricLeft.size) {
+                        drawCenteredInCell(title, metricLeft[i], metricRight[i], headerBaseline)
+                    } else {
+                        canvas.drawText(title, colPositions[i], headerBaseline, paint)
+                    }
+                }
+                return y + 24f
+            }
+
+            fun startNextPage(): Float {
+                drawFooter()
+                document.finishPage(page)
+                pageNumber += 1
+                page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
+                canvas = page.canvas
+                return drawTableHeader(28f)
+            }
 
             // Header Background
             paint.color = Color.parseColor("#1565C0") // Primary Blue
@@ -240,50 +305,17 @@ object ReportExportHelper {
             }
 
             yPos += 78f
+            yPos = drawTableHeader(yPos)
 
-            // Table Header
-            paint.color = Color.parseColor("#2563EB")
-            canvas.drawRect(24f, yPos, (pageWidth - 24).toFloat(), yPos + 24f, paint)
-
-            paint.color = Color.WHITE
-            paint.textSize = 9.5f
-            paint.typeface = Typeface.DEFAULT_BOLD
-
-            val headers = listOf(
-                context.getString(R.string.export_col_day),
-                context.getString(R.string.export_col_enter),
-                context.getString(R.string.export_col_exit),
-                context.getString(R.string.export_col_worked),
-                context.getString(R.string.export_col_target),
-                context.getString(R.string.export_col_diff),
-                context.getString(R.string.export_col_status)
-            )
-            val colPositions = floatArrayOf(30f, 75f, 135f, 195f, 265f, 335f, 410f)
-
-            headers.forEachIndexed { i, title ->
-                canvas.drawText(title, colPositions[i], yPos + 16f, paint)
-            }
-
-            yPos += 24f
-
-            // Table Rows
             paint.textSize = 8.5f
-            val rowHeight = 17.5f
+            paint.typeface = Typeface.DEFAULT
 
             summary.daySummaries.forEachIndexed { index, item ->
-                if (yPos + rowHeight > pageHeight - 40f) return@forEachIndexed
-
-                // Zebra striping
-                paint.color = if (index % 2 == 0) Color.parseColor("#F8FAFC") else Color.WHITE
-                canvas.drawRect(24f, yPos, (pageWidth - 24).toFloat(), yPos + rowHeight, paint)
-
-                // Row text
-                paint.typeface = Typeface.DEFAULT
-                paint.color = Color.parseColor("#1E293B")
-
+                val noteLines = wrapText(paint, item.day.note.trim(), noteMaxWidth)
+                var lineIndex = 0
+                var firstSlice = true
                 val diffFormatted = AppStrings.Units.formatSignedDuration(context, item.diffMinutes)
                 val statusText = AppStrings.Status.localizedName(context, item.status)
-
                 val statusColor = when (item.status) {
                     DayStatus.DAY_OFF -> Color.parseColor("#2563EB")
                     DayStatus.OVERTIME -> Color.parseColor("#16A34A")
@@ -292,31 +324,55 @@ object ReportExportHelper {
                     DayStatus.IN_PROGRESS -> Color.parseColor("#D97706")
                     DayStatus.UNSET -> Color.parseColor("#94A3B8")
                 }
-
                 val workedText = if (item.workedMinutes > 0) AppStrings.Units.formatDuration(context, item.workedMinutes) else "-"
                 val targetText = if (item.targetMinutes > 0) AppStrings.Units.formatDuration(context, item.targetMinutes) else "-"
 
-                canvas.drawText("${item.day.dayNumber}", colPositions[0], yPos + 12f, paint)
-                canvas.drawText(item.day.formattedEnterTime(), colPositions[1], yPos + 12f, paint)
-                canvas.drawText(item.day.formattedExitTime(), colPositions[2], yPos + 12f, paint)
-                canvas.drawText(workedText, colPositions[3], yPos + 12f, paint)
-                canvas.drawText(targetText, colPositions[4], yPos + 12f, paint)
-                canvas.drawText(diffFormatted, colPositions[5], yPos + 12f, paint)
+                while (firstSlice || lineIndex < noteLines.size) {
+                    if (yPos + minRowHeight > pageBottom) {
+                        yPos = startNextPage()
+                    }
+                    val room = pageBottom - yPos
+                    val maxLines = ((room - 6f) / lineHeight).toInt().coerceAtLeast(1)
+                    val remaining = noteLines.size - lineIndex
+                    val take = if (remaining <= 0) 0 else minOf(remaining, maxLines)
+                    val rowHeight = if (take <= 1) {
+                        minRowHeight
+                    } else {
+                        maxOf(minRowHeight, 6f + (take * lineHeight))
+                    }
 
-                paint.color = statusColor
-                paint.typeface = Typeface.DEFAULT_BOLD
-                canvas.drawText(statusText, colPositions[6], yPos + 12f, paint)
+                    paint.color = if (index % 2 == 0) Color.parseColor("#F8FAFC") else Color.WHITE
+                    canvas.drawRect(24f, yPos, (pageWidth - 24).toFloat(), yPos + rowHeight, paint)
 
-                yPos += rowHeight
+                    paint.typeface = Typeface.DEFAULT
+                    paint.color = Color.parseColor("#1E293B")
+                    paint.textSize = 8.5f
+                    val baseline = textBaseline(yPos, rowHeight)
+                    drawCenteredInCell("${item.day.dayNumber}", metricLeft[0], metricRight[0], baseline)
+                    if (firstSlice) {
+                        drawCenteredInCell(item.day.formattedEnterTime(), metricLeft[1], metricRight[1], baseline)
+                        drawCenteredInCell(item.day.formattedExitTime(), metricLeft[2], metricRight[2], baseline)
+                        drawCenteredInCell(workedText, metricLeft[3], metricRight[3], baseline)
+                        drawCenteredInCell(targetText, metricLeft[4], metricRight[4], baseline)
+                        drawCenteredInCell(diffFormatted, metricLeft[5], metricRight[5], baseline)
+                        paint.color = statusColor
+                        paint.typeface = Typeface.DEFAULT_BOLD
+                        drawCenteredInCell(statusText, metricLeft[6], metricRight[6], textBaseline(yPos, rowHeight))
+                        paint.typeface = Typeface.DEFAULT
+                        paint.color = Color.parseColor("#1E293B")
+                    }
+                    for (i in 0 until take) {
+                        canvas.drawText(noteLines[lineIndex + i], colPositions[7], yPos + 12f + (i * lineHeight), paint)
+                    }
+
+                    yPos += rowHeight
+                    lineIndex += take
+                    firstSlice = false
+                }
             }
 
-            // Footer
-            paint.color = Color.parseColor("#94A3B8")
-            paint.textSize = 8.5f
-            paint.typeface = Typeface.DEFAULT
-            canvas.drawText("${context.getString(R.string.export_generated_by)}  •  ${uiState.formattedReportMonthHeader}", 28f, (pageHeight - 20).toFloat(), paint)
-
-            pdfDoc.finishPage(page)
+            drawFooter()
+            document.finishPage(page)
 
             val reportsDir = File(context.cacheDir, "reports").apply { mkdirs() }
             val pdfFile = File(reportsDir, "Timesheet_${effectiveYear}_${effectiveMonth}.pdf")
@@ -324,9 +380,9 @@ object ReportExportHelper {
                 pdfFile.delete()
             }
             FileOutputStream(pdfFile).use { out ->
-                pdfDoc.writeTo(out)
+                document.writeTo(out)
             }
-            pdfDoc.close()
+            document.close()
             pdfDoc = null
 
             val uri: Uri = FileProvider.getUriForFile(
@@ -354,5 +410,56 @@ object ReportExportHelper {
                 pdfDoc?.close()
             } catch (_: Exception) {}
         }
+    }
+
+    private fun csvNoteCell(note: String): String {
+        val singleLine = note
+            .replace("\r\n", " ")
+            .replace('\n', ' ')
+            .replace('\r', ' ')
+        val escaped = singleLine.replace("\"", "\"\"")
+        return "\"$escaped\""
+    }
+
+    private fun wrapText(paint: Paint, text: String, maxWidth: Float): List<String> {
+        if (text.isEmpty() || maxWidth <= 0f) return emptyList()
+        val lines = mutableListOf<String>()
+        val paragraphs = text.replace("\r\n", "\n").replace('\r', '\n').split('\n')
+        for (paragraph in paragraphs) {
+            if (paragraph.isEmpty()) {
+                lines.add("")
+                continue
+            }
+            var current = ""
+            for (word in paragraph.split(' ')) {
+                if (word.isEmpty()) continue
+                val candidate = if (current.isEmpty()) word else "$current $word"
+                if (paint.measureText(candidate) <= maxWidth) {
+                    current = candidate
+                    continue
+                }
+                if (current.isNotEmpty()) {
+                    lines.add(current)
+                    current = ""
+                }
+                if (paint.measureText(word) <= maxWidth) {
+                    current = word
+                    continue
+                }
+                var chunk = ""
+                for (ch in word) {
+                    val next = chunk + ch
+                    if (paint.measureText(next) <= maxWidth) {
+                        chunk = next
+                    } else {
+                        if (chunk.isNotEmpty()) lines.add(chunk)
+                        chunk = ch.toString()
+                    }
+                }
+                current = chunk
+            }
+            if (current.isNotEmpty()) lines.add(current)
+        }
+        return lines
     }
 }

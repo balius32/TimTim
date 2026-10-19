@@ -103,6 +103,7 @@ import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.components.CustomAvatarDisplay
 import com.example.ui.components.DayItemReportBottomSheet
+import com.example.ui.components.DayNoteBottomSheet
 import com.example.ui.components.LiveWorkClockBottomSheet
 import com.example.ui.components.MonthYearPickerBottomSheet
 import com.example.ui.components.TodayQuickActionBanner
@@ -159,6 +160,7 @@ fun TimesheetScreen(
 
     var showMonthPickerSheet by remember { mutableStateOf(false) }
     var reportDaySummary by remember { mutableStateOf<DaySummary?>(null) }
+    var noteDay by remember { mutableStateOf<WorkDay?>(null) }
 
     if (showMonthPickerSheet) {
         MonthYearPickerBottomSheet(
@@ -185,6 +187,27 @@ fun TimesheetScreen(
             onEditExitTime = {
                 reportDaySummary = null
                 viewModel.openTimePicker(selectedDaySummary.day, isEnter = false)
+            }
+        )
+    }
+
+    noteDay?.let { selectedNoteDay ->
+        val latestNoteDay = uiState.summary.daySummaries
+            .firstOrNull { it.day.dayNumber == selectedNoteDay.dayNumber }
+            ?.day
+            ?: selectedNoteDay
+        DayNoteBottomSheet(
+            day = latestNoteDay,
+            formattedFullDate = uiState.formattedFullDate(latestNoteDay.dayNumber),
+            dayOfWeek = stringResource(uiState.getDayOfWeekResId(latestNoteDay.dayNumber)),
+            onDismissRequest = { noteDay = null },
+            onSave = { text ->
+                viewModel.saveDayNote(latestNoteDay.year, latestNoteDay.month, latestNoteDay.dayNumber, text)
+                noteDay = null
+            },
+            onDelete = {
+                viewModel.saveDayNote(latestNoteDay.year, latestNoteDay.month, latestNoteDay.dayNumber, "")
+                noteDay = null
             }
         )
     }
@@ -343,6 +366,7 @@ fun TimesheetScreen(
                             onOpenItemReport = {
                                 reportDaySummary = it
                             },
+                            onOpenNote = { noteDay = it },
                             modifier = Modifier.testTag("today_card")
                         )
                     }
@@ -414,6 +438,7 @@ fun TimesheetScreen(
                     onOpenItemReport = {
                         reportDaySummary = it
                     },
+                    onOpenNote = { noteDay = it },
                     modifier = Modifier.animateItem()
                 )
             }
@@ -817,6 +842,7 @@ fun WireframeDailyLogRowCard(
     onClearDay: () -> Unit,
     onOpenRemainingTime: (WorkDay) -> Unit = {},
     onOpenItemReport: (DaySummary) -> Unit = {},
+    onOpenNote: (WorkDay) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val day = daySummary.day
@@ -1045,6 +1071,32 @@ fun WireframeDailyLogRowCard(
                                 modifier = Modifier.testTag("day_menu_item_report_${day.dayNumber}")
                             )
                         }
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.timesheet_menu_note),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onOpenNote(day)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            modifier = Modifier.testTag("day_menu_note_${day.dayNumber}")
+                        )
 
                         DropdownMenuItem(
                             text = {
