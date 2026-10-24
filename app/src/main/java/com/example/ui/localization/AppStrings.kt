@@ -223,7 +223,6 @@ object AppStrings {
         val nameRes: Int = R.string.app_name
         val subtitleRes: Int = R.string.app_subtitle
         val versionRes: Int = R.string.app_version
-        val betaRes: Int = R.string.label_beta
 
         @Composable
         @ReadOnlyComposable
@@ -236,10 +235,6 @@ object AppStrings {
         @Composable
         @ReadOnlyComposable
         fun version(): String = stringResource(versionRes)
-
-        @Composable
-        @ReadOnlyComposable
-        fun beta(): String = stringResource(betaRes)
     }
 
     object Buttons {

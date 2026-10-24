@@ -2,8 +2,7 @@
     <!-- App Information -->
     <string name="app_name">TimTim</string>
     <string name="app_subtitle">Work Hours &amp; Timesheet Tracker</string>
-    <string name="app_version">Version 1.0.0</string>
-    <string name="label_beta">Beta</string>
+    <string name="app_version">Version 1.1.0</string>
     <string name="widget_remaining_time_title">Work Time Left</string>
     <string name="widget_remaining_time_description">Shows live time left until exit, worked progress line, and today\'s schedule at a glance.</string>
 
@@ -187,6 +186,12 @@
     <string name="msg_all_data_cleared">All application data cleared</string>
     <string name="msg_import_failed">Import failed: %1$s</string>
     <string name="msg_welcome">Welcome to TimTim!</string>
+    <string name="welcome_title">Welcome to TimTim</string>
+    <string name="welcome_body">TimTim keeps your work hours on this phone.</string>
+    <string name="welcome_point_log">Log the time you enter and leave.</string>
+    <string name="welcome_point_month">See the month against your daily target.</string>
+    <string name="welcome_point_remaining">Check remaining time, and turn on a checkout reminder if you want one.</string>
+    <string name="welcome_got_it">Got it</string>
     <string name="msg_validation_exit_earlier">Exit time cannot be earlier than enter time (%1$s)</string>
     <string name="msg_validation_enter_later">Enter time cannot be later than exit time (%1$s)</string>
 

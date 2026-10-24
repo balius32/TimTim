@@ -57,6 +57,10 @@ class UpdateUserSettingsUseCase(
         repository.setCompletedOnboarding(completed)
     }
 
+    suspend fun setHasSeenWelcome(seen: Boolean): Result<Unit> = runCatching {
+        repository.setHasSeenWelcome(seen)
+    }
+
     suspend fun setCheckoutReminderEnabled(enabled: Boolean): Result<Unit> = runCatching {
         repository.setCheckoutReminderEnabled(enabled)
     }

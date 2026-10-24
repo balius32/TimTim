@@ -41,6 +41,7 @@ class ExampleRobolectricTest {
     assertEquals(1, parsed.monthTargets.size)
     assertEquals(1, parsed.workDays.size)
     assertEquals(9, parsed.workDays[0].enterHour)
+    assertEquals(false, parsed.settings?.hasSeenWelcome)
   }
 
   @Test
@@ -51,6 +52,7 @@ class ExampleRobolectricTest {
     assertEquals(420, parsed.settings?.dailyRequiredMinutes)
     assertEquals(1, parsed.workDays.size)
     assertEquals(5, parsed.workDays[0].dayNumber)
+    assertEquals(true, parsed.settings?.hasSeenWelcome)
   }
 
   @Test

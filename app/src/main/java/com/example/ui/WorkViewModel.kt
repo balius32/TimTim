@@ -154,7 +154,10 @@ class WorkViewModel(
                     showSettingsSheet = control.showSettingsSheet,
                     isTodayPromptDismissed = control.isTodayPromptDismissed,
                     isLoading = control.isLoading,
-                    isReady = isReady
+                    isReady = isReady,
+                    onboardingStep = control.onboardingStep,
+                    backupPromptDismissed = control.backupPromptDismissed,
+                    welcomeDismissed = control.welcomeDismissed
                 )
             }
         }
@@ -388,14 +391,23 @@ class WorkViewModel(
                     _effects.send(WorkUiEffect.ShowSnackbar(getApplication<Application>().getString(R.string.msg_import_failed, errMsg)))
                 }
             }
+            is WorkUiIntent.SetOnboardingStep -> _uiControlState.update {
+                it.copy(onboardingStep = intent.step.coerceIn(0, 4))
+            }
+            WorkUiIntent.DismissBackupPrompt -> _uiControlState.update {
+                it.copy(backupPromptDismissed = true)
+            }
             WorkUiIntent.CompleteOnboarding -> viewModelScope.launch {
                 updateUserSettingsUseCase.setCompletedOnboarding(true)
                 _uiControlState.update { it.copy(currentScreen = AppScreen.TIMESHEET) }
-                _effects.send(WorkUiEffect.ShowSnackbar(getApplication<Application>().getString(R.string.msg_welcome)))
             }
             WorkUiIntent.SkipOnboarding -> viewModelScope.launch {
                 updateUserSettingsUseCase.setCompletedOnboarding(true)
                 _uiControlState.update { it.copy(currentScreen = AppScreen.TIMESHEET) }
+            }
+            WorkUiIntent.MarkWelcomeSeen -> {
+                _uiControlState.update { it.copy(welcomeDismissed = true) }
+                viewModelScope.launch { updateUserSettingsUseCase.setHasSeenWelcome(true) }
             }
         }
     }
@@ -473,8 +485,11 @@ class WorkViewModel(
     fun showResetConfirmation(show: Boolean) = onIntent(WorkUiIntent.ShowResetConfirmation(show))
     fun confirmResetAll() = onIntent(WorkUiIntent.ConfirmResetAll)
     fun clearAllData() = onIntent(WorkUiIntent.ClearAllData)
+    fun setOnboardingStep(step: Int) = onIntent(WorkUiIntent.SetOnboardingStep(step))
+    fun dismissBackupPrompt() = onIntent(WorkUiIntent.DismissBackupPrompt)
     fun completeOnboarding() = onIntent(WorkUiIntent.CompleteOnboarding)
     fun skipOnboarding() = onIntent(WorkUiIntent.SkipOnboarding)
+    fun markWelcomeSeen() = onIntent(WorkUiIntent.MarkWelcomeSeen)
 
     suspend fun getExportJson(): String = backupRestoreUseCase.exportData().getOrDefault("")
 

@@ -62,8 +62,11 @@ sealed interface WorkUiIntent {
     data class ImportBackupData(val jsonString: String, val onComplete: (Boolean, String) -> Unit = { _, _ -> }) : WorkUiIntent
 
     // Onboarding Intents
+    data class SetOnboardingStep(val step: Int) : WorkUiIntent
+    data object DismissBackupPrompt : WorkUiIntent
     data object CompleteOnboarding : WorkUiIntent
     data object SkipOnboarding : WorkUiIntent
+    data object MarkWelcomeSeen : WorkUiIntent
 }
 
 enum class AppScreen {

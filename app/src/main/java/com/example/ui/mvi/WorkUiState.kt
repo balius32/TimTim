@@ -40,7 +40,10 @@ data class UiControlState(
     val showSettingsSheet: Boolean = false,
     val isTodayPromptDismissed: Boolean = false,
     val isLoading: Boolean = false,
-    val isInitialized: Boolean = false
+    val isInitialized: Boolean = false,
+    val onboardingStep: Int = 0,
+    val backupPromptDismissed: Boolean = false,
+    val welcomeDismissed: Boolean = false
 )
 
 data class WorkUiState(
@@ -65,7 +68,10 @@ data class WorkUiState(
     val showSettingsSheet: Boolean = false,
     val isTodayPromptDismissed: Boolean = false,
     val isLoading: Boolean = false,
-    val isReady: Boolean = false
+    val isReady: Boolean = false,
+    val onboardingStep: Int = 0,
+    val backupPromptDismissed: Boolean = false,
+    val welcomeDismissed: Boolean = false
 ) {
     val calendarType: CalendarType
         get() = CalendarHelper.parseCalendarType(settings.calendarType)

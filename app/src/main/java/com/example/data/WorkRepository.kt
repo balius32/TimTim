@@ -270,6 +270,11 @@ class WorkRepository(
         workDao.saveSettings(current.copy(hasCompletedOnboarding = completed))
     }
 
+    override suspend fun setHasSeenWelcome(seen: Boolean) = withContext(ioDispatcher) {
+        val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
+        workDao.saveSettings(current.copy(hasSeenWelcome = seen))
+    }
+
     override suspend fun setCheckoutReminderEnabled(enabled: Boolean) = withContext(ioDispatcher) {
         val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
         workDao.saveSettings(current.copy(checkoutReminderEnabled = enabled))

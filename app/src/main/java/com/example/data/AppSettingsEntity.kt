@@ -20,7 +20,8 @@ data class AppSettingsEntity(
     val minDailyMinutes: Int? = null,
     val maxDailyMinutes: Int? = null,
     val hasCompletedOnboarding: Boolean = false,
-    val checkoutReminderEnabled: Boolean = false
+    val checkoutReminderEnabled: Boolean = false,
+    val hasSeenWelcome: Boolean = false
 ) {
     val dailyRequiredHours: Int
         get() = dailyRequiredMinutes / 60

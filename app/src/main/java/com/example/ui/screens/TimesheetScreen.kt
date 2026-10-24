@@ -1016,8 +1016,7 @@ fun WireframeDailyLogRowCard(
                         onDismissRequest = { menuExpanded = false },
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
-                        if (isToday && !day.hasExitTime) {
-                            // For today without exit time: show Remaining Time
+                        if (isToday && day.hasEnterTime && !day.hasExitTime) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -1043,8 +1042,7 @@ fun WireframeDailyLogRowCard(
                                 },
                                 modifier = Modifier.testTag("day_menu_remaining_time_${day.dayNumber}")
                             )
-                        } else {
-                            // When exit time is set (or for any past/completed day): show Daily Summary opening the bottom sheet
+                        } else if (!isToday || day.hasExitTime) {
                             DropdownMenuItem(
                                 text = {
                                     Text(

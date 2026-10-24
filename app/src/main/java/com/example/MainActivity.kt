@@ -300,6 +300,39 @@ fun WorkHoursApp(
             )
         }
 
+        val showWelcome = uiState.currentScreen == AppScreen.TIMESHEET &&
+            uiState.settings.hasCompletedOnboarding &&
+            !uiState.settings.hasSeenWelcome &&
+            !uiState.welcomeDismissed
+        if (showWelcome) {
+            AlertDialog(
+                onDismissRequest = { viewModel.markWelcomeSeen() },
+                modifier = Modifier.testTag("welcome_dialog"),
+                title = {
+                    Text(
+                        text = stringResource(R.string.welcome_title),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.welcome_body))
+                        Text(stringResource(R.string.welcome_point_log))
+                        Text(stringResource(R.string.welcome_point_month))
+                        Text(stringResource(R.string.welcome_point_remaining))
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.markWelcomeSeen() },
+                        modifier = Modifier.testTag("welcome_got_it_button")
+                    ) {
+                        Text(stringResource(R.string.welcome_got_it))
+                    }
+                }
+            )
+        }
+
         // Reset Confirmation Dialog
         if (uiState.showResetConfirmation) {
             AlertDialog(

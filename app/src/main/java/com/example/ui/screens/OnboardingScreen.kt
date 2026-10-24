@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.Manifest
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,6 +50,8 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
@@ -80,6 +83,8 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -115,6 +120,7 @@ import com.example.ui.components.AvatarStyle
 import com.example.ui.components.CustomAvatarDisplay
 import com.example.ui.components.LimitTimePickerDialog
 import com.example.ui.components.TargetTimePickerDialog
+import com.example.ui.mvi.WorkUiIntent
 import com.example.ui.mvi.WorkUiState
 import com.example.ui.theme.ACCENT_COLOR_OPTIONS
 import com.example.ui.theme.LocalIsFarsi
@@ -138,11 +144,11 @@ fun OnboardingScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var currentStep by remember { mutableIntStateOf(0) }
+    val currentStep = uiState.onboardingStep
     var slideDirection by remember { mutableIntStateOf(1) }
-
-    // Dialog state for restoring backup on the first step of onboarding
-    var showInitialBackupPromptDialog by remember { mutableStateOf(true) }
+    val languageChosen = isExplicitAppLanguage(uiState.settings.appLanguage)
+    val showInitialBackupPromptDialog =
+        currentStep == 0 && languageChosen && !uiState.backupPromptDismissed
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var pendingImportData by remember { mutableStateOf<Pair<com.example.util.BackupData, String>?>(null) }
     var isReadingFile by remember { mutableStateOf(false) }
@@ -177,37 +183,15 @@ fun OnboardingScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.onboarding_app_brand),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-
-                        Surface(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(6.dp),
-                            modifier = Modifier.testTag("onboarding_beta_label")
-                        ) {
-                            Text(
-                                text = stringResource(R.string.label_beta),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    letterSpacing = 0.5.sp
-                                ),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                        title = {
+                    Text(
+                        text = stringResource(R.string.onboarding_app_brand),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 },
                 actions = {
                     TextButton(
@@ -245,7 +229,7 @@ fun OnboardingScreen(
                         OutlinedButton(
                             onClick = {
                                 slideDirection = -1
-                                currentStep--
+                                viewModel.setOnboardingStep(currentStep - 1)
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -269,11 +253,12 @@ fun OnboardingScreen(
                         onClick = {
                             if (currentStep < TOTAL_STEPS - 1) {
                                 slideDirection = 1
-                                currentStep++
+                                viewModel.setOnboardingStep(currentStep + 1)
                             } else {
                                 onComplete()
                             }
                         },
+                        enabled = currentStep > 0 || languageChosen,
                         modifier = Modifier
                             .weight(if (currentStep > 0) 1.5f else 1f)
                             .height(52.dp)
@@ -380,7 +365,7 @@ fun OnboardingScreen(
     if (currentStep == 0 && showInitialBackupPromptDialog) {
         Dialog(
             onDismissRequest = {
-                showInitialBackupPromptDialog = false
+                viewModel.dismissBackupPrompt()
             }
         ) {
             Card(
@@ -436,7 +421,7 @@ fun OnboardingScreen(
                     // 1st Button: Select Backup File (.json)
                     Button(
                         onClick = {
-                            showInitialBackupPromptDialog = false
+                            viewModel.dismissBackupPrompt()
                             openDocumentLauncher.launch("*/*")
                         },
                         shape = RoundedCornerShape(14.dp),
@@ -464,7 +449,7 @@ fun OnboardingScreen(
                     // 2nd Button: Continue Manual Setup
                     FilledTonalButton(
                         onClick = {
-                            showInitialBackupPromptDialog = false
+                            viewModel.dismissBackupPrompt()
                         },
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -642,6 +627,13 @@ private fun getStepTitleRes(step: Int): Int = when (step) {
     else -> R.string.empty_string
 }
 
+private fun isExplicitAppLanguage(code: String): Boolean {
+    return when (code.lowercase().trim()) {
+        "fa", "farsi", "persian", "en", "english" -> true
+        else -> false
+    }
+}
+
 /**
  * Reusable Settings-style Card Container for onboarding steps
  */
@@ -727,6 +719,41 @@ fun OnboardingProfileStep(
     viewModel: WorkViewModel
 ) {
     var userNameInput by remember(uiState.userName) { mutableStateOf(uiState.userName) }
+    val languageCode = uiState.settings.appLanguage.lowercase().trim()
+    val faSelected = languageCode == "fa" || languageCode == "farsi" || languageCode == "persian"
+    val enSelected = languageCode == "en" || languageCode == "english"
+
+    SettingsStyleCard(
+        title = stringResource(R.string.settings_language),
+        icon = Icons.Default.Language
+    ) {
+        Text(
+            text = stringResource(R.string.settings_language_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            LanguageChoiceButton(
+                label = "فارسی",
+                selected = faSelected,
+                onClick = { viewModel.updateAppLanguage("fa") },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("onboarding_language_fa")
+            )
+            LanguageChoiceButton(
+                label = "English",
+                selected = enSelected,
+                onClick = { viewModel.updateAppLanguage("en") },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("onboarding_language_en")
+            )
+        }
+    }
 
     // Name input card
     SettingsStyleCard(
@@ -1305,6 +1332,22 @@ fun OnboardingThemeStep(
     uiState: WorkUiState,
     viewModel: WorkViewModel
 ) {
+    val context = LocalContext.current
+    val exactAlarmSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        finishCheckoutReminderEnable(context, viewModel)
+    }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            persistCheckoutReminderIfAlarmsAllowed(context, viewModel, exactAlarmSettingsLauncher)
+        } else {
+            viewModel.showSnackbar(context.getString(R.string.msg_notification_permission_required))
+        }
+    }
+
     val (selectedMode, selectedColorId) = remember(uiState.settings.themeMode) {
         parseThemeSettings(uiState.settings.themeMode)
     }
@@ -1458,6 +1501,77 @@ fun OnboardingThemeStep(
                     }
                 }
             }
+        }
+    }
+
+    SettingsStyleCard(
+        title = stringResource(R.string.settings_notifications),
+        icon = Icons.Default.Notifications
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_remind_check_out),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(R.string.settings_remind_check_out_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = uiState.settings.checkoutReminderEnabled,
+                onCheckedChange = { enabled ->
+                    if (enabled) {
+                        requestCheckoutReminder(context, viewModel, exactAlarmSettingsLauncher) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    } else {
+                        viewModel.onIntent(WorkUiIntent.SetCheckoutReminderEnabled(false))
+                    }
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    uncheckedBorderColor = MaterialTheme.colorScheme.outline
+                ),
+                modifier = Modifier.testTag("onboarding_checkout_reminder_switch")
+            )
+        }
+    }
+}
+
+@Composable
+private fun LanguageChoiceButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(52.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        )
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = label,
+                fontWeight = FontWeight.Bold,
+                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
