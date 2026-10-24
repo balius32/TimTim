@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Insights
@@ -348,6 +349,7 @@ fun TimesheetScreen(
                             formattedMonthDay = uiState.formattedMonthDay(currentTodaySummary.day.dayNumber),
                             dayOfWeek = stringResource(uiState.getDayOfWeekResId(currentTodaySummary.day.dayNumber)),
                             isToday = true,
+                            remoteWorkEnabled = uiState.settings.remoteWorkEnabled,
                             onEnterClick = {
                                 viewModel.openTimePicker(currentTodaySummary.day, isEnter = true)
                             },
@@ -356,6 +358,9 @@ fun TimesheetScreen(
                             },
                             onToggleDayOff = {
                                 viewModel.toggleDayOff(currentTodaySummary.day)
+                            },
+                            onToggleRemote = {
+                                viewModel.toggleRemote(currentTodaySummary.day)
                             },
                             onClearDay = {
                                 viewModel.clearDay(currentTodaySummary.day.dayNumber)
@@ -420,6 +425,7 @@ fun TimesheetScreen(
                     formattedMonthDay = uiState.formattedMonthDay(daySummary.day.dayNumber),
                     dayOfWeek = stringResource(uiState.getDayOfWeekResId(daySummary.day.dayNumber)),
                     isToday = isCurrentDay,
+                    remoteWorkEnabled = uiState.settings.remoteWorkEnabled,
                     onEnterClick = {
                         viewModel.openTimePicker(daySummary.day, isEnter = true)
                     },
@@ -428,6 +434,9 @@ fun TimesheetScreen(
                     },
                     onToggleDayOff = {
                         viewModel.toggleDayOff(daySummary.day)
+                    },
+                    onToggleRemote = {
+                        viewModel.toggleRemote(daySummary.day)
                     },
                     onClearDay = {
                         viewModel.clearDay(daySummary.day.dayNumber)
@@ -836,9 +845,11 @@ fun WireframeDailyLogRowCard(
     formattedMonthDay: String,
     dayOfWeek: String = "",
     isToday: Boolean = false,
+    remoteWorkEnabled: Boolean = false,
     onEnterClick: () -> Unit,
     onExitClick: () -> Unit,
     onToggleDayOff: () -> Unit,
+    onToggleRemote: () -> Unit = {},
     onClearDay: () -> Unit,
     onOpenRemainingTime: (WorkDay) -> Unit = {},
     onOpenItemReport: (DaySummary) -> Unit = {},
@@ -849,6 +860,7 @@ fun WireframeDailyLogRowCard(
     val isDayOff = day.isDayOff
     val isComplete = day.isComplete
     val isInProgress = !isDayOff && day.hasEnterTime && !day.hasExitTime
+    val showRemoteTag = remoteWorkEnabled && day.isRemote && !isDayOff
     var menuExpanded by remember { mutableStateOf(false) }
     val isFarsi = LocalIsFarsi.current
 
@@ -883,16 +895,36 @@ fun WireframeDailyLogRowCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left Column: Day of week + MM/dd date
+                // Left Column: Day of week + MM/dd date (+ optional Remote tag)
                 Column(horizontalAlignment = Alignment.Start) {
-                    Text(
-                        text = if (dayOfWeek.isNotBlank()) dayOfWeek else stringResource(R.string.timesheet_day_number, day.dayNumber).localizeDigits(isFarsi),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 16.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (dayOfWeek.isNotBlank()) dayOfWeek else stringResource(R.string.timesheet_day_number, day.dayNumber).localizeDigits(isFarsi),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 16.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (showRemoteTag) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier.testTag("remote_tag_${day.dayNumber}")
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.tag_remote),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(1.dp))
                     Text(
                         text = formattedMonthDay,
@@ -1121,6 +1153,38 @@ fun WireframeDailyLogRowCard(
                             },
                             modifier = Modifier.testTag("day_menu_set_off_${day.dayNumber}")
                         )
+
+                        if (remoteWorkEnabled && !isDayOff) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = if (day.isRemote) {
+                                            stringResource(R.string.timesheet_menu_unmark_remote)
+                                        } else {
+                                            stringResource(R.string.timesheet_menu_mark_remote)
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onToggleRemote()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.HomeWork,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                modifier = Modifier.testTag("day_menu_remote_${day.dayNumber}")
+                            )
+                        }
 
                         DropdownMenuItem(
                             text = {

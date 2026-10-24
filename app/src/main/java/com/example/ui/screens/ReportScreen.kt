@@ -182,8 +182,11 @@ fun ReportScreen(
                 onMonthClick = { showMonthPickerSheet = true }
             )
 
-            // 1. Summary Metrics Cards (Worked, Target, Overtime, Deficit)
-            ReportKeyMetricsGrid(summary = summary)
+            // 1. Summary Metrics Cards (Worked, Target, Overtime, Deficit [+ remote when enabled])
+            ReportKeyMetricsGrid(
+                summary = summary,
+                showRemoteStats = uiState.settings.remoteWorkEnabled
+            )
 
             // 2. Monthly Work Distribution (Visual Bar Chart)
             MonthlyWorkDistributionSection(
@@ -469,7 +472,10 @@ private fun ReportHeaderSection(
  * 1. Summary Metrics 2x2 Grid.
  */
 @Composable
-private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
+private fun ReportKeyMetricsGrid(
+    summary: WorkCalculationSummary,
+    showRemoteStats: Boolean = false
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(R.string.report_work_overview),
@@ -524,6 +530,28 @@ private fun ReportKeyMetricsGrid(summary: WorkCalculationSummary) {
                 backgroundColor = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.weight(1f)
             )
+        }
+
+        if (showRemoteStats) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MetricCard(
+                    title = stringResource(R.string.report_in_person_days),
+                    value = summary.inPersonDaysCount.toString().localizeDigits(LocalIsFarsi.current),
+                    accentColor = MaterialTheme.colorScheme.onSurface,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.weight(1f)
+                )
+                MetricCard(
+                    title = stringResource(R.string.report_remote_days),
+                    value = summary.remoteDaysCount.toString().localizeDigits(LocalIsFarsi.current),
+                    accentColor = MaterialTheme.colorScheme.tertiary,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }

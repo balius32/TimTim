@@ -89,6 +89,9 @@ class CalculateMonthSummaryUseCase {
         val requiredTotal = workingDays * targetForCalc
         val netBalance = overtimeMins - deficitMins
         val loggedDaysCount = completedCount + offDaysCount
+        val loggedWorkDays = days.filter { !it.isDayOff && (it.isComplete || it.hasEnterTime || it.hasExitTime) }
+        val remoteDaysCount = loggedWorkDays.count { it.isRemote }
+        val inPersonDaysCount = loggedWorkDays.count { !it.isRemote }
 
         return WorkCalculationSummary(
             totalWorkedMinutes = totalWorkedMins,
@@ -104,6 +107,8 @@ class CalculateMonthSummaryUseCase {
             overtimeDaysCount = overtimeDaysCount,
             deficitDaysCount = deficitDaysCount,
             exactDaysCount = exactDaysCount,
+            remoteDaysCount = remoteDaysCount,
+            inPersonDaysCount = inPersonDaysCount,
             daySummaries = summaries,
             dailyTargetMinutes = targetForCalc
         )

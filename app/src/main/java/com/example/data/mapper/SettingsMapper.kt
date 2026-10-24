@@ -18,7 +18,8 @@ fun AppSettingsEntity.toDomain(): AppSettings = AppSettings(
     maxDailyMinutes = maxDailyMinutes,
     hasCompletedOnboarding = hasCompletedOnboarding,
     checkoutReminderEnabled = checkoutReminderEnabled,
-    hasSeenWelcome = hasSeenWelcome
+    hasSeenWelcome = hasSeenWelcome,
+    remoteWorkEnabled = remoteWorkEnabled
 )
 
 fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
@@ -36,5 +37,6 @@ fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
     maxDailyMinutes = maxDailyMinutes,
     hasCompletedOnboarding = hasCompletedOnboarding,
     checkoutReminderEnabled = checkoutReminderEnabled,
-    hasSeenWelcome = hasSeenWelcome
+    hasSeenWelcome = hasSeenWelcome,
+    remoteWorkEnabled = remoteWorkEnabled
 )

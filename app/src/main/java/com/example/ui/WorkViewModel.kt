@@ -29,6 +29,7 @@ class WorkViewModel(
     private val calculateMonthSummaryUseCase: CalculateMonthSummaryUseCase,
     private val logWorkTimeUseCase: LogWorkTimeUseCase,
     private val toggleDayOffUseCase: ToggleDayOffUseCase,
+    private val toggleRemoteUseCase: ToggleRemoteUseCase,
     private val clearDayTimesUseCase: ClearDayTimesUseCase,
     private val saveDayNoteUseCase: SaveDayNoteUseCase,
     private val updateDailyTargetUseCase: UpdateDailyTargetUseCase,
@@ -247,9 +248,22 @@ class WorkViewModel(
                 val y = if (intent.year != 0) intent.year else _uiControlState.value.selectedYear
                 val m = if (intent.month != 0) intent.month else _uiControlState.value.selectedMonth
                 toggleDayOffUseCase(y, m, intent.dayNumber)
+                try {
+                    WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
+                } catch (_: Exception) {
+                }
+            }
+            is WorkUiIntent.ToggleRemote -> viewModelScope.launch {
+                val y = if (intent.year != 0) intent.year else _uiControlState.value.selectedYear
+                val m = if (intent.month != 0) intent.month else _uiControlState.value.selectedMonth
+                toggleRemoteUseCase(y, m, intent.dayNumber)
             }
             is WorkUiIntent.SaveDayNote -> viewModelScope.launch {
                 saveDayNoteUseCase(intent.year, intent.month, intent.dayNumber, intent.note)
+                try {
+                    WorkRemainingWidgetProvider.notifyWidgetUpdate(getApplication())
+                } catch (_: Exception) {
+                }
             }
             WorkUiIntent.LogTodayEnterNow -> viewModelScope.launch(ioDispatcher) {
                 val settings = getAppSettingsUseCase.getDirect()
@@ -329,6 +343,9 @@ class WorkViewModel(
             is WorkUiIntent.UpdateMaxExitTime -> viewModelScope.launch { updateUserSettingsUseCase.updateMaxExitTime(intent.minutes) }
             is WorkUiIntent.SetCheckoutReminderEnabled -> viewModelScope.launch {
                 updateUserSettingsUseCase.setCheckoutReminderEnabled(intent.enabled)
+            }
+            is WorkUiIntent.SetRemoteWorkEnabled -> viewModelScope.launch {
+                updateUserSettingsUseCase.setRemoteWorkEnabled(intent.enabled)
             }
             is WorkUiIntent.UpdateMonthDailyTarget -> viewModelScope.launch { updateDailyTargetUseCase.updateMonthSpecificTarget(intent.year, intent.month, intent.hours, intent.minutes) }
             is WorkUiIntent.UpdateSelectedMonthDailyTarget -> viewModelScope.launch {
@@ -466,6 +483,8 @@ class WorkViewModel(
         onIntent(WorkUiIntent.SaveDayNote(year, month, dayNumber, note))
     fun toggleDayOff(day: WorkDay) = onIntent(WorkUiIntent.ToggleDayOff(dayNumber = day.dayNumber, year = day.year, month = day.month))
     fun toggleDayOff(dayNumber: Int) = onIntent(WorkUiIntent.ToggleDayOff(dayNumber = dayNumber))
+    fun toggleRemote(day: WorkDay) = onIntent(WorkUiIntent.ToggleRemote(dayNumber = day.dayNumber, year = day.year, month = day.month))
+    fun toggleRemote(dayNumber: Int) = onIntent(WorkUiIntent.ToggleRemote(dayNumber = dayNumber))
     fun logTodayEnterNow() = onIntent(WorkUiIntent.LogTodayEnterNow)
     fun logTodayExitNow() = onIntent(WorkUiIntent.LogTodayExitNow)
     fun dismissTodayPrompt() = onIntent(WorkUiIntent.DismissTodayPrompt)

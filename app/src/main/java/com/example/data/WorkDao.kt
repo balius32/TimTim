@@ -63,9 +63,9 @@ interface WorkDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMonthTargets(targets: List<MonthTargetEntity>)
 
-    @Query("UPDATE work_days SET enterHour = NULL, enterMinute = NULL, exitHour = NULL, exitMinute = NULL, isDayOff = 0, note = '' WHERE year = :year AND month = :month")
+    @Query("UPDATE work_days SET enterHour = NULL, enterMinute = NULL, exitHour = NULL, exitMinute = NULL, isDayOff = 0, isRemote = 0, note = '' WHERE year = :year AND month = :month")
     suspend fun clearMonthDays(year: Int, month: Int)
 
-    @Query("UPDATE work_days SET enterHour = NULL, enterMinute = NULL, exitHour = NULL, exitMinute = NULL, isDayOff = 0, note = ''")
+    @Query("UPDATE work_days SET enterHour = NULL, enterMinute = NULL, exitHour = NULL, exitMinute = NULL, isDayOff = 0, isRemote = 0, note = ''")
     suspend fun clearAllDays()
 }

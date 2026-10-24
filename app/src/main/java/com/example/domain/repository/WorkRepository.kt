@@ -25,6 +25,7 @@ interface WorkRepository {
     suspend fun clearDay(year: Int, month: Int, dayNumber: Int)
     suspend fun setDayNote(year: Int, month: Int, dayNumber: Int, note: String)
     suspend fun toggleDayOff(year: Int, month: Int, dayNumber: Int)
+    suspend fun toggleRemote(year: Int, month: Int, dayNumber: Int)
     suspend fun updateThemeMode(themeMode: String)
     suspend fun updateCalendarType(calendarType: String)
     suspend fun updateAppLanguage(appLanguage: String)
@@ -44,6 +45,7 @@ interface WorkRepository {
     suspend fun setCompletedOnboarding(completed: Boolean)
     suspend fun setHasSeenWelcome(seen: Boolean)
     suspend fun setCheckoutReminderEnabled(enabled: Boolean)
+    suspend fun setRemoteWorkEnabled(enabled: Boolean)
     suspend fun exportAllDataJson(): String
     suspend fun importAllDataJson(jsonString: String): Result<String>
 }

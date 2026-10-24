@@ -27,6 +27,7 @@ sealed interface WorkUiIntent {
     data class ClearExitTime(val dayNumber: Int) : WorkUiIntent
     data class ClearDay(val dayNumber: Int) : WorkUiIntent
     data class ToggleDayOff(val dayNumber: Int, val year: Int = 0, val month: Int = 0) : WorkUiIntent
+    data class ToggleRemote(val dayNumber: Int, val year: Int = 0, val month: Int = 0) : WorkUiIntent
     data class SaveDayNote(val year: Int, val month: Int, val dayNumber: Int, val note: String) : WorkUiIntent
 
     // Quick Action (Today) Banner Intents
@@ -50,6 +51,7 @@ sealed interface WorkUiIntent {
     data class UpdateMinEnterTime(val minutes: Int?) : WorkUiIntent
     data class UpdateMaxExitTime(val minutes: Int?) : WorkUiIntent
     data class SetCheckoutReminderEnabled(val enabled: Boolean) : WorkUiIntent
+    data class SetRemoteWorkEnabled(val enabled: Boolean) : WorkUiIntent
     data class UpdateMonthDailyTarget(val year: Int, val month: Int, val hours: Int, val minutes: Int) : WorkUiIntent
     data class UpdateSelectedMonthDailyTarget(val hours: Int, val minutes: Int) : WorkUiIntent
     data class UpdateReportMonthDailyTarget(val hours: Int, val minutes: Int) : WorkUiIntent

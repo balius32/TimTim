@@ -70,6 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import com.example.BuildConfig
 import com.example.R
 import com.example.ui.WorkViewModel
 import com.example.ui.mvi.WorkUiIntent
@@ -218,7 +219,7 @@ fun ProfileScreen(
             val isFarsi = LocalIsFarsi.current
             // App Version at bottom of page
             Text(
-                text = stringResource(R.string.profile_version_format, "1.0.0").localizeDigits(isFarsi),
+                text = stringResource(R.string.profile_version_format, BuildConfig.VERSION_NAME).localizeDigits(isFarsi),
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium

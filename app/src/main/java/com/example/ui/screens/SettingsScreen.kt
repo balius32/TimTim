@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material.icons.filled.ImportExport
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
@@ -152,6 +153,7 @@ fun SettingsScreen(
     var showLanguageBottomSheet by remember { mutableStateOf(false) }
     var showOffDaysBottomSheet by remember { mutableStateOf(false) }
     var showClearAllConfirmDialog by remember { mutableStateOf(false) }
+    var showRemoteWorkInfoDialog by remember { mutableStateOf(false) }
     var showImportExportBottomSheet by remember { mutableStateOf(false) }
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
     var pendingImportData by remember { mutableStateOf<Pair<BackupData, String>?>(null) }
@@ -299,6 +301,17 @@ fun SettingsScreen(
                 }
             )
 
+            WireframeRemoteWorkCard(
+                remoteWorkEnabled = settings.remoteWorkEnabled,
+                onRemoteWorkChange = { enabled ->
+                    if (enabled) {
+                        showRemoteWorkInfoDialog = true
+                    } else {
+                        viewModel.onIntent(WorkUiIntent.SetRemoteWorkEnabled(false))
+                    }
+                }
+            )
+
             // 6. Import and Export Card
             WireframeImportExportCard(
                 onClick = { showImportExportBottomSheet = true }
@@ -424,6 +437,65 @@ fun SettingsScreen(
                 viewModel.updateOffDaysOfWeek(newOffDays)
             },
             onDismiss = { showOffDaysBottomSheet = false }
+        )
+    }
+
+    if (showRemoteWorkInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoteWorkInfoDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HomeWork,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.settings_remote_work_dialog_title),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.settings_remote_work_dialog_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.onIntent(WorkUiIntent.SetRemoteWorkEnabled(true))
+                        showRemoteWorkInfoDialog = false
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.settings_remote_work_dialog_enable),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoteWorkInfoDialog = false }) {
+                    Text(
+                        stringResource(R.string.btn_cancel),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -2518,4 +2590,92 @@ private fun WireframeNotificationsCard(
         }
     }
 }
+
+@Composable
+private fun WireframeRemoteWorkCard(
+    remoteWorkEnabled: Boolean,
+    onRemoteWorkChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("remote_work_card")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HomeWork,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.settings_remote_work),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.settings_remote_work),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_remote_work_desc),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = remoteWorkEnabled,
+                    onCheckedChange = onRemoteWorkChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        uncheckedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    modifier = Modifier.testTag("remote_work_switch")
+                )
+            }
+        }
+    }
+}
+
 

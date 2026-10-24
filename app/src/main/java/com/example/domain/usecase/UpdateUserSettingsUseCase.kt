@@ -64,4 +64,8 @@ class UpdateUserSettingsUseCase(
     suspend fun setCheckoutReminderEnabled(enabled: Boolean): Result<Unit> = runCatching {
         repository.setCheckoutReminderEnabled(enabled)
     }
+
+    suspend fun setRemoteWorkEnabled(enabled: Boolean): Result<Unit> = runCatching {
+        repository.setRemoteWorkEnabled(enabled)
+    }
 }

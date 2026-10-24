@@ -121,7 +121,17 @@ class WorkRepository(
         val offDaysList = currentSettings.getOffDaysList().toSet()
         val dow = CalendarHelper.getDayOfWeek(year, month, dayNumber, calType)
         val shouldBeOff = dow != null && offDaysList.contains(dow.name)
-        workDao.insertOrUpdateDay(existing.copy(enterHour = null, enterMinute = null, exitHour = null, exitMinute = null, isDayOff = shouldBeOff, note = ""))
+        workDao.insertOrUpdateDay(
+            existing.copy(
+                enterHour = null,
+                enterMinute = null,
+                exitHour = null,
+                exitMinute = null,
+                isDayOff = shouldBeOff,
+                isRemote = false,
+                note = ""
+            )
+        )
         syncCheckoutReminder()
     }
 
@@ -134,8 +144,19 @@ class WorkRepository(
     override suspend fun toggleDayOff(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
         val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
         val newDayOff = !existing.isDayOff
-        workDao.insertOrUpdateDay(existing.copy(isDayOff = newDayOff))
+        workDao.insertOrUpdateDay(
+            existing.copy(
+                isDayOff = newDayOff,
+                isRemote = if (newDayOff) false else existing.isRemote
+            )
+        )
         syncCheckoutReminder()
+    }
+
+    override suspend fun toggleRemote(year: Int, month: Int, dayNumber: Int) = withContext(ioDispatcher) {
+        val existing = workDao.getDay(year, month, dayNumber) ?: WorkDayEntity(year = year, month = month, dayNumber = dayNumber)
+        if (existing.isDayOff) return@withContext
+        workDao.insertOrUpdateDay(existing.copy(isRemote = !existing.isRemote))
     }
 
     override suspend fun updateThemeMode(themeMode: String) = withContext(ioDispatcher) {
@@ -173,7 +194,10 @@ class WorkRepository(
                 if (day.enterHour == null && day.exitHour == null) {
                     val dow = CalendarHelper.getDayOfWeek(day.year, day.month, day.dayNumber, calType)
                     val shouldBeOff = dow != null && newOffDaysSet.contains(dow.name)
-                    day.copy(isDayOff = shouldBeOff)
+                    day.copy(
+                        isDayOff = shouldBeOff,
+                        isRemote = if (shouldBeOff) false else day.isRemote
+                    )
                 } else {
                     day
                 }
@@ -242,7 +266,15 @@ class WorkRepository(
             val updated = days.map { day ->
                 val dow = CalendarHelper.getDayOfWeek(day.year, day.month, day.dayNumber, calType)
                 val shouldBeOff = dow != null && offDaysList.contains(dow.name)
-                day.copy(enterHour = null, enterMinute = null, exitHour = null, exitMinute = null, isDayOff = shouldBeOff, note = "")
+                day.copy(
+                    enterHour = null,
+                    enterMinute = null,
+                    exitHour = null,
+                    exitMinute = null,
+                    isDayOff = shouldBeOff,
+                    isRemote = false,
+                    note = ""
+                )
             }
             workDao.insertDays(updated)
         }
@@ -258,7 +290,15 @@ class WorkRepository(
             val updated = days.map { day ->
                 val dow = CalendarHelper.getDayOfWeek(day.year, day.month, day.dayNumber, calType)
                 val shouldBeOff = dow != null && offDaysList.contains(dow.name)
-                day.copy(enterHour = null, enterMinute = null, exitHour = null, exitMinute = null, isDayOff = shouldBeOff, note = "")
+                day.copy(
+                    enterHour = null,
+                    enterMinute = null,
+                    exitHour = null,
+                    exitMinute = null,
+                    isDayOff = shouldBeOff,
+                    isRemote = false,
+                    note = ""
+                )
             }
             workDao.insertDays(updated)
         }
@@ -279,6 +319,11 @@ class WorkRepository(
         val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
         workDao.saveSettings(current.copy(checkoutReminderEnabled = enabled))
         syncCheckoutReminder()
+    }
+
+    override suspend fun setRemoteWorkEnabled(enabled: Boolean) = withContext(ioDispatcher) {
+        val current = workDao.getSettingsDirect() ?: AppSettingsEntity()
+        workDao.saveSettings(current.copy(remoteWorkEnabled = enabled))
     }
 
     override suspend fun exportAllDataJson(): String = withContext(ioDispatcher) {

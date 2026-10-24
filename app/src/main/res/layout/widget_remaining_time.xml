@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Top Header: Logo, Title, and Refresh / Status -->
+    <!-- Top Header: Logo, Title, and Refresh -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -33,9 +33,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
-                android:text="Work Status"
+                android:gravity="start"
+                android:maxLines="1"
+                android:text="@string/widget_remaining_time_title"
+                android:textAlignment="viewStart"
                 android:textColor="@color/widget_text_secondary"
+                android:textDirection="locale"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -55,12 +60,12 @@
                 android:id="@+id/widget_refresh_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:contentDescription="Refresh"
+                android:contentDescription="@string/widget_refresh"
                 android:src="@drawable/ic_widget_refresh" />
         </LinearLayout>
     </RelativeLayout>
 
-    <!-- Center Content: Remaining Time Big Display & Status Subtitle -->
+    <!-- Center: timer, subtitle, progress -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -72,25 +77,32 @@
 
         <TextView
             android:id="@+id/widget_timer_value"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-black"
-            android:text="--h --m"
+            android:gravity="start"
+            android:text="@string/duration_placeholder"
+            android:textAlignment="viewStart"
             android:textColor="@color/widget_text_primary"
+            android:textDirection="locale"
             android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_timer_subtitle"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
+            android:ellipsize="end"
             android:fontFamily="sans-serif"
-            android:text="Time left to exit"
+            android:gravity="start"
+            android:maxLines="2"
+            android:text="@string/widget_time_left_to_exit"
+            android:textAlignment="viewStart"
             android:textColor="@color/widget_text_secondary"
+            android:textDirection="locale"
             android:textSize="12sp" />
 
-        <!-- Linear Progress Bar -->
         <ProgressBar
             android:id="@+id/widget_progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
@@ -102,7 +114,7 @@
             android:progressDrawable="@drawable/widget_progress_bar" />
     </LinearLayout>
 
-    <!-- Bottom Footer: Check-in, Expected Exit, or Quick Action -->
+    <!-- Footer: schedule info + Clock In/Out -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -114,29 +126,37 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingEnd="8dp">
 
             <TextView
                 android:id="@+id/widget_info_left"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:fontFamily="sans-serif"
-                android:text="In: --:--"
+                android:gravity="start"
+                android:maxLines="1"
+                android:textAlignment="viewStart"
                 android:textColor="@color/widget_text_muted"
+                android:textDirection="locale"
                 android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/widget_info_right"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="1dp"
+                android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
-                android:text="Target Exit: --:--"
+                android:gravity="start"
+                android:maxLines="1"
+                android:textAlignment="viewStart"
                 android:textColor="@color/widget_text_secondary"
+                android:textDirection="locale"
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Quick Log Today Button (visible when not clocked in or for quick log) -->
         <TextView
             android:id="@+id/widget_btn_action"
             android:layout_width="wrap_content"
@@ -145,14 +165,51 @@
             android:clickable="true"
             android:focusable="true"
             android:fontFamily="sans-serif-medium"
+            android:gravity="center"
             android:paddingStart="12dp"
             android:paddingTop="6dp"
             android:paddingEnd="12dp"
             android:paddingBottom="6dp"
-            android:text="Clock In"
+            android:text="@string/widget_clock_in"
             android:textColor="@color/white"
             android:textSize="12sp"
             android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Note section: below checkout / footer (shown when widget is enlarged) -->
+    <LinearLayout
+        android:id="@+id/widget_note_section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/widget_note_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="start"
+            android:text="@string/widget_note_label"
+            android:textAlignment="viewStart"
+            android:textColor="@color/widget_text_secondary"
+            android:textDirection="locale"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/widget_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:gravity="start"
+            android:maxLines="2"
+            android:textAlignment="viewStart"
+            android:textColor="@color/widget_text_muted"
+            android:textDirection="locale"
+            android:textSize="11sp" />
     </LinearLayout>
 
 </LinearLayout>

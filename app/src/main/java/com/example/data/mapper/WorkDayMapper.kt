@@ -12,6 +12,7 @@ fun WorkDayEntity.toDomain(): WorkDay = WorkDay(
     exitHour = exitHour,
     exitMinute = exitMinute,
     isDayOff = isDayOff,
+    isRemote = isRemote,
     note = note
 )
 
@@ -24,5 +25,6 @@ fun WorkDay.toEntity(): WorkDayEntity = WorkDayEntity(
     exitHour = exitHour,
     exitMinute = exitMinute,
     isDayOff = isDayOff,
+    isRemote = isRemote,
     note = note
 )

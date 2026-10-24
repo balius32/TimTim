@@ -16,6 +16,7 @@ data class WorkDayEntity(
     val exitHour: Int? = null, // 0 to 23
     val exitMinute: Int? = null, // 0 to 59
     val isDayOff: Boolean = false,
+    val isRemote: Boolean = false,
     val note: String = ""
 ) {
     val hasEnterTime: Boolean

@@ -267,9 +267,11 @@ object ReportExportHelper {
             canvas.drawText("${context.getString(R.string.nav_report)}: ${uiState.formattedReportMonthHeader}    |    ${context.getString(R.string.export_user_label, uiState.userName)}", 28f, 68f, paint)
 
             // Summary Stats Cards Banner
+            val remoteWorkEnabled = uiState.settings.remoteWorkEnabled
             var yPos = 118f
+            val summaryBandHeight = if (remoteWorkEnabled) 100f else 60f
             paint.color = Color.parseColor("#F1F5F9")
-            canvas.drawRoundRect(24f, yPos, (pageWidth - 24).toFloat(), yPos + 60f, 8f, 8f, paint)
+            canvas.drawRoundRect(24f, yPos, (pageWidth - 24).toFloat(), yPos + summaryBandHeight, 8f, 8f, paint)
 
             val colW = (pageWidth - 48f) / 4f
             val cardTitles = listOf(
@@ -304,18 +306,61 @@ object ReportExportHelper {
                 canvas.drawText(cardValues[i], cx, yPos + 46f, paint)
             }
 
-            yPos += 78f
+            if (remoteWorkEnabled) {
+                val remoteColW = (pageWidth - 48f) / 2f
+                val remoteTitles = listOf(
+                    context.getString(R.string.export_in_person_days),
+                    context.getString(R.string.export_remote_days)
+                )
+                val remoteValues = listOf(
+                    summary.inPersonDaysCount.toString(),
+                    summary.remoteDaysCount.toString()
+                )
+                val remoteColors = listOf(
+                    Color.parseColor("#475569"),
+                    Color.parseColor("#7C3AED")
+                )
+                for (i in 0..1) {
+                    val cx = 24f + (i * remoteColW) + 12f
+                    paint.color = Color.parseColor("#64748B")
+                    paint.textSize = 9.5f
+                    paint.typeface = Typeface.DEFAULT
+                    canvas.drawText(remoteTitles[i], cx, yPos + 70f, paint)
+
+                    paint.color = remoteColors[i]
+                    paint.textSize = 13f
+                    paint.typeface = Typeface.DEFAULT_BOLD
+                    canvas.drawText(remoteValues[i], cx, yPos + 90f, paint)
+                }
+            }
+
+            yPos += summaryBandHeight + 18f
+            if (remoteWorkEnabled) {
+                paint.color = Color.parseColor("#EDE9FE")
+                canvas.drawRect(24f, yPos, 36f, yPos + 10f, paint)
+                paint.color = Color.parseColor("#64748B")
+                paint.textSize = 8.5f
+                paint.typeface = Typeface.DEFAULT
+                canvas.drawText(context.getString(R.string.export_remote_legend), 42f, yPos + 9f, paint)
+                yPos += 16f
+            }
             yPos = drawTableHeader(yPos)
 
             paint.textSize = 8.5f
             paint.typeface = Typeface.DEFAULT
+            val remoteTag = context.getString(R.string.tag_remote)
 
             summary.daySummaries.forEachIndexed { index, item ->
                 val noteLines = wrapText(paint, item.day.note.trim(), noteMaxWidth)
                 var lineIndex = 0
                 var firstSlice = true
                 val diffFormatted = AppStrings.Units.formatSignedDuration(context, item.diffMinutes)
-                val statusText = AppStrings.Status.localizedName(context, item.status)
+                val isRemoteRow = remoteWorkEnabled && item.day.isRemote && !item.day.isDayOff
+                val statusText = if (isRemoteRow) {
+                    "${AppStrings.Status.localizedName(context, item.status)} · $remoteTag"
+                } else {
+                    AppStrings.Status.localizedName(context, item.status)
+                }
                 val statusColor = when (item.status) {
                     DayStatus.DAY_OFF -> Color.parseColor("#2563EB")
                     DayStatus.OVERTIME -> Color.parseColor("#16A34A")
@@ -341,7 +386,11 @@ object ReportExportHelper {
                         maxOf(minRowHeight, 6f + (take * lineHeight))
                     }
 
-                    paint.color = if (index % 2 == 0) Color.parseColor("#F8FAFC") else Color.WHITE
+                    paint.color = when {
+                        isRemoteRow -> Color.parseColor("#EDE9FE")
+                        index % 2 == 0 -> Color.parseColor("#F8FAFC")
+                        else -> Color.WHITE
+                    }
                     canvas.drawRect(24f, yPos, (pageWidth - 24).toFloat(), yPos + rowHeight, paint)
 
                     paint.typeface = Typeface.DEFAULT
@@ -355,7 +404,7 @@ object ReportExportHelper {
                         drawCenteredInCell(workedText, metricLeft[3], metricRight[3], baseline)
                         drawCenteredInCell(targetText, metricLeft[4], metricRight[4], baseline)
                         drawCenteredInCell(diffFormatted, metricLeft[5], metricRight[5], baseline)
-                        paint.color = statusColor
+                        paint.color = if (isRemoteRow) Color.parseColor("#7C3AED") else statusColor
                         paint.typeface = Typeface.DEFAULT_BOLD
                         drawCenteredInCell(statusText, metricLeft[6], metricRight[6], textBaseline(yPos, rowHeight))
                         paint.typeface = Typeface.DEFAULT

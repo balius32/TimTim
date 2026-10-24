@@ -34,6 +34,7 @@ val appModule = module {
     single { CalculateMonthSummaryUseCase() }
     single { LogWorkTimeUseCase(get()) }
     single { ToggleDayOffUseCase(get()) }
+    single { ToggleRemoteUseCase(get()) }
     single { ClearDayTimesUseCase(get()) }
     single { SaveDayNoteUseCase(get()) }
     single { UpdateDailyTargetUseCase(get()) }
@@ -52,6 +53,7 @@ val appModule = module {
             calculateMonthSummaryUseCase = get(),
             logWorkTimeUseCase = get(),
             toggleDayOffUseCase = get(),
+            toggleRemoteUseCase = get(),
             clearDayTimesUseCase = get(),
             saveDayNoteUseCase = get(),
             updateDailyTargetUseCase = get(),

@@ -84,6 +84,9 @@
     <string name="timesheet_clear_button">پاک کردن</string>
     <string name="timesheet_menu_cancel_day_off">لغو تعطیلی</string>
     <string name="timesheet_menu_set_day_off">تعطیل کردن</string>
+    <string name="timesheet_menu_mark_remote">علامت دورکاری</string>
+    <string name="timesheet_menu_unmark_remote">لغو دورکاری</string>
+    <string name="tag_remote">دورکار</string>
     <string name="timesheet_menu_note">یادداشت</string>
     <string name="day_note_sheet_title">یادداشت</string>
     <string name="timesheet_scheduled_day_off_banner">تعطیل برنامه‌ریزی شده · برای ثبت ساعات کاری لمس کنید</string>
@@ -128,6 +131,8 @@
     <string name="report_required_target">هدف الزامی</string>
     <string name="report_total_overtime">مجموع اضافه‌کاری</string>
     <string name="report_total_deficit">مجموع کسری کار</string>
+    <string name="report_in_person_days">حضوری</string>
+    <string name="report_remote_days">دورکار</string>
     <string name="report_work_distribution">توزیع کارکرد ماهانه</string>
     <string name="status_completed">تکمیل شده</string>
     <string name="status_under_target">کمتر از هدف</string>
@@ -150,6 +155,9 @@
     <string name="export_target_required">هدف الزامی</string>
     <string name="export_overtime">اضافه‌کاری</string>
     <string name="export_deficit">کسری کار</string>
+    <string name="export_in_person_days">حضوری</string>
+    <string name="export_remote_days">دورکار</string>
+    <string name="export_remote_legend">ردیف‌های رنگی = روزهای دورکار</string>
     <string name="export_net_balance">تراز خالص</string>
     <string name="export_completed_days">روزهای تکمیل شده</string>
     <string name="export_off_days">روزهای تعطیل</string>
@@ -319,6 +327,8 @@
     <string name="widget_time_left_to_exit">زمان باقیمانده تا خروج</string>
     <string name="widget_check_in_at">ورود: %1$s</string>
     <string name="widget_target_exit_at">خروج هدف: %1$s</string>
+    <string name="widget_note_label">یادداشت</string>
+    <string name="widget_refresh">به‌روزرسانی</string>
 
     <!-- Color Names -->
     <string name="color_royal_blue">آبی رویال</string>
@@ -503,6 +513,11 @@
     <string name="settings_remind_check_in">یادآور ثبت ورود</string>
     <string name="settings_remind_check_out">یادت نره خروج بزنی</string>
     <string name="settings_remind_check_out_desc">۵ دقیقه قبل از ساعت خروج تقریبی</string>
+    <string name="settings_remote_work">دورکاری</string>
+    <string name="settings_remote_work_desc">از منوی صفحه اصلی، روزها را دورکار علامت بزن</string>
+    <string name="settings_remote_work_dialog_title">فعال‌سازی دورکاری؟</string>
+    <string name="settings_remote_work_dialog_message">با روشن کردن این قابلیت، از منوی هر روز (⋮) در صفحهٔ اصلی می‌توانید آن روز را دورکار علامت بزنید. برچسب دورکار روی روز نمایش داده می‌شود و در گزارش و خروجی PDF جداگانه شمارش می‌شود. روزهای تعطیل را نمی‌توان دورکار کرد.</string>
+    <string name="settings_remote_work_dialog_enable">فعال کردن</string>
     <string name="notif_checkout_channel_name">یادآور ثبت خروج</string>
     <string name="notif_checkout_reminder_body">حدود ۵ دقیقه مونده. ساعت خروج تقریبی %1$s.</string>
     <string name="msg_exact_alarm_required">برای یادآور به‌موقع، مجوز هشدار و یادآور را بدهید.</string>

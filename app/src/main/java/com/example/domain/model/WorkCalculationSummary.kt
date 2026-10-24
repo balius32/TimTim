@@ -14,6 +14,8 @@ data class WorkCalculationSummary(
     val overtimeDaysCount: Int = 0,
     val deficitDaysCount: Int = 0,
     val exactDaysCount: Int = 0,
+    val remoteDaysCount: Int = 0,
+    val inPersonDaysCount: Int = 0,
     val daySummaries: List<DaySummary> = emptyList(),
     val dailyTargetMinutes: Int = 480
 ) {

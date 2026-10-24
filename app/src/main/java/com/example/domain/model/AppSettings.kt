@@ -15,7 +15,8 @@ data class AppSettings(
     val maxDailyMinutes: Int? = null,
     val hasCompletedOnboarding: Boolean = false,
     val checkoutReminderEnabled: Boolean = false,
-    val hasSeenWelcome: Boolean = false
+    val hasSeenWelcome: Boolean = false,
+    val remoteWorkEnabled: Boolean = false
 ) {
     fun formattedDailyTarget(isFarsi: Boolean = false): String {
         if (dailyRequiredMinutes <= 0) return "_ _ : _ _"

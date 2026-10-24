@@ -52,6 +52,7 @@ object DataBackupHelper {
             sObj.put("hasCompletedOnboarding", s.hasCompletedOnboarding)
             sObj.put("checkoutReminderEnabled", s.checkoutReminderEnabled)
             sObj.put("hasSeenWelcome", s.hasSeenWelcome)
+            sObj.put("remoteWorkEnabled", s.remoteWorkEnabled)
             root.put("settings", sObj)
         }
 
@@ -78,6 +79,7 @@ object DataBackupHelper {
             if (d.exitHour != null) dObj.put("exitHour", d.exitHour)
             if (d.exitMinute != null) dObj.put("exitMinute", d.exitMinute)
             dObj.put("isDayOff", d.isDayOff)
+            dObj.put("isRemote", d.isRemote)
             dObj.put("note", d.note)
             daysArray.put(dObj)
         }
@@ -113,7 +115,8 @@ object DataBackupHelper {
                     s.optBoolean("hasSeenWelcome", false)
                 } else {
                     s.optBoolean("hasCompletedOnboarding", true)
-                }
+                },
+                remoteWorkEnabled = s.optBoolean("remoteWorkEnabled", false)
             )
         }
 
@@ -156,6 +159,7 @@ object DataBackupHelper {
                             exitHour = if (d.has("exitHour") && !d.isNull("exitHour")) d.optInt("exitHour") else null,
                             exitMinute = if (d.has("exitMinute") && !d.isNull("exitMinute")) d.optInt("exitMinute") else null,
                             isDayOff = d.optBoolean("isDayOff", false),
+                            isRemote = d.optBoolean("isRemote", false),
                             note = d.optString("note", "")
                         )
                     )

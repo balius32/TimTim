@@ -16,6 +16,7 @@ import com.example.MainActivity
 import com.example.R
 import com.example.domain.model.WorkDay
 import com.example.domain.repository.WorkRepository
+import com.example.ui.localization.AppStrings
 import com.example.util.CalendarHelper
 import com.example.util.LocaleHelper
 import com.example.util.localizeDigits
@@ -71,20 +72,19 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                         val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                         val now = CalendarHelper.now(calType)
                         repository.initializeMonthIfEmpty(now.year, now.month)
-                        
+
                         val calendar = Calendar.getInstance()
                         var hour = calendar.get(Calendar.HOUR_OF_DAY)
                         var minute = calendar.get(Calendar.MINUTE)
                         val currentMins = hour * 60 + minute
-                        
+
                         val minEnter = settings.minEnterMinutes
                         if (minEnter != null && minEnter > 0 && currentMins < minEnter) {
                             hour = minEnter / 60
                             minute = minEnter % 60
                         }
                         repository.setEnterTime(now.year, now.month, now.day, hour, minute)
-                        
-                        // Update widget
+
                         notifyWidgetUpdate(context)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -98,20 +98,19 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                         val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                         val now = CalendarHelper.now(calType)
                         repository.initializeMonthIfEmpty(now.year, now.month)
-                        
+
                         val calendar = Calendar.getInstance()
                         var hour = calendar.get(Calendar.HOUR_OF_DAY)
                         var minute = calendar.get(Calendar.MINUTE)
                         val currentMins = hour * 60 + minute
-                        
+
                         val maxExit = settings.maxExitMinutes
                         if (maxExit != null && maxExit > 0 && currentMins > maxExit) {
                             hour = maxExit / 60
                             minute = maxExit % 60
                         }
                         repository.setExitTime(now.year, now.month, now.day, hour, minute)
-                        
-                        // Update widget
+
                         notifyWidgetUpdate(context)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -124,9 +123,19 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
     private fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         scope.launch {
             try {
-                val views = RemoteViews(context.packageName, R.layout.widget_remaining_time)
+                val settings = repository.getSettingsDirect()
+                val loc = LocaleHelper.getLocalizedContext(context, settings.appLanguage)
+                val isFarsi = LocaleHelper.isFarsi(settings.appLanguage, context)
+                val views = RemoteViews(loc.packageName, R.layout.widget_remaining_time)
 
-                // 1. Setup Click on Widget Root to open MainActivity with smooth launch options
+                views.setInt(
+                    R.id.widget_root,
+                    "setLayoutDirection",
+                    if (isFarsi) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+                )
+                views.setTextViewText(R.id.widget_title, loc.getString(R.string.widget_remaining_time_title))
+                views.setTextViewText(R.id.widget_note_label, loc.getString(R.string.widget_note_label))
+
                 val mainIntent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
@@ -144,7 +153,6 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pendingMainIntent)
 
-                // 2. Setup Refresh button
                 val refreshIntent = Intent(context, WorkRemainingWidgetProvider::class.java).apply {
                     this.action = ACTION_REFRESH_WIDGET
                 }
@@ -156,15 +164,21 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
                 )
                 views.setOnClickPendingIntent(R.id.widget_btn_refresh, pendingRefreshIntent)
 
-                // 3. Load today's work data
-                val settings = repository.getSettingsDirect()
                 val calType = CalendarHelper.parseCalendarType(settings.calendarType)
                 val now = CalendarHelper.now(calType)
                 val today = repository.getDayDirect(now.year, now.month, now.day)
                 val targetMinutes = if (settings.dailyRequiredMinutes > 0) settings.dailyRequiredMinutes else 480
 
-                bindWidgetData(context, views, today, targetMinutes)
-                applyWidgetScale(context, views, appWidgetManager.getAppWidgetOptions(appWidgetId))
+                val todayNote = today?.note?.trim().orEmpty()
+                views.setTextViewText(R.id.widget_note, todayNote)
+
+                bindWidgetData(loc, context, views, today, targetMinutes, isFarsi)
+                applyWidgetScale(
+                    context,
+                    views,
+                    appWidgetManager.getAppWidgetOptions(appWidgetId),
+                    hasNote = todayNote.isNotBlank()
+                )
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
@@ -173,10 +187,14 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         }
     }
 
-    private fun applyWidgetScale(context: Context, views: RemoteViews, options: Bundle) {
-        val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180)
-        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110)
-        val scale = WidgetScale.fromSize(minWidth, minHeight)
+    private fun applyWidgetScale(
+        context: Context,
+        views: RemoteViews,
+        options: Bundle,
+        hasNote: Boolean
+    ) {
+        val (widthDp, heightDp) = estimateWidgetSizeDp(options)
+        val scale = WidgetScale.fromSize(widthDp, heightDp)
         val density = context.resources.displayMetrics.density
 
         views.setTextViewTextSize(R.id.widget_timer_value, TypedValue.COMPLEX_UNIT_SP, scale.timerSp)
@@ -185,6 +203,8 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         views.setTextViewTextSize(R.id.widget_info_left, TypedValue.COMPLEX_UNIT_SP, scale.infoSp)
         views.setTextViewTextSize(R.id.widget_info_right, TypedValue.COMPLEX_UNIT_SP, scale.infoSp)
         views.setTextViewTextSize(R.id.widget_btn_action, TypedValue.COMPLEX_UNIT_SP, scale.buttonSp)
+        views.setTextViewTextSize(R.id.widget_note_label, TypedValue.COMPLEX_UNIT_SP, scale.noteLabelSp)
+        views.setTextViewTextSize(R.id.widget_note, TypedValue.COMPLEX_UNIT_SP, scale.noteSp)
 
         val padH = (scale.buttonPadHDp * density).toInt()
         val padV = (scale.buttonPadVDp * density).toInt()
@@ -200,13 +220,38 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
 
         val rootPad = (scale.rootPadDp * density).toInt()
         views.setViewPadding(R.id.widget_root, rootPad, rootPad, rootPad, rootPad)
+
+        val showNoteSection = scale.showNote && hasNote
+        views.setViewVisibility(
+            R.id.widget_note_section,
+            if (showNoteSection) View.VISIBLE else View.GONE
+        )
+        if (showNoteSection) {
+            views.setInt(R.id.widget_note, "setMaxLines", scale.noteMaxLines)
+        }
+    }
+
+    /** Prefer mid of min/max on API 31+ so enlarge unlocks note; pre-31 uses min only. */
+    private fun estimateWidgetSizeDp(options: Bundle): Pair<Int, Int> {
+        val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180)
+        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return minWidth to minHeight
+        }
+        val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+        val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        val width = if (maxWidth > 0) (minWidth + maxWidth) / 2 else minWidth
+        val height = if (maxHeight > 0) (minHeight + maxHeight) / 2 else minHeight
+        return width to height
     }
 
     private fun bindWidgetData(
-        context: Context,
+        loc: Context,
+        appContext: Context,
         views: RemoteViews,
         today: WorkDay?,
-        targetMinutes: Int
+        targetMinutes: Int,
+        isFarsi: Boolean
     ) {
         val calendar = Calendar.getInstance()
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -214,30 +259,26 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         val currentTotalMinutes = currentHour * 60 + currentMinute
 
         if (today == null || (!today.hasEnterTime && !today.isDayOff)) {
-            // Case 1: Not clocked in yet today
-            views.setTextViewText(R.id.widget_timer_value, context.getString(R.string.duration_placeholder))
-            views.setTextViewText(R.id.widget_timer_subtitle, context.getString(R.string.widget_not_clocked_in))
+            views.setTextViewText(R.id.widget_timer_value, loc.getString(R.string.duration_placeholder))
+            views.setTextViewText(R.id.widget_timer_subtitle, loc.getString(R.string.widget_not_clocked_in))
             views.setProgressBar(R.id.widget_progress_bar, 100, 0, false)
-            views.setTextViewText(
-                R.id.widget_info_left,
-                context.getString(
-                    R.string.widget_daily_goal,
-                    targetMinutes / 60,
-                    context.getString(R.string.unit_h),
-                    targetMinutes % 60,
-                    context.getString(R.string.unit_m)
-                )
-            )
-            views.setTextViewText(R.id.widget_info_right, context.getString(R.string.widget_ready_to_start))
+            val goal = loc.getString(
+                R.string.widget_daily_goal,
+                targetMinutes / 60,
+                loc.getString(R.string.unit_h),
+                targetMinutes % 60,
+                loc.getString(R.string.unit_m)
+            ).localizeDigits(isFarsi)
+            views.setTextViewText(R.id.widget_info_left, goal)
+            views.setTextViewText(R.id.widget_info_right, loc.getString(R.string.widget_ready_to_start))
 
-            // Show Clock-In Quick Action button
             views.setViewVisibility(R.id.widget_btn_action, View.VISIBLE)
-            views.setTextViewText(R.id.widget_btn_action, context.getString(R.string.widget_clock_in))
-            val clockInIntent = Intent(context, WorkRemainingWidgetProvider::class.java).apply {
+            views.setTextViewText(R.id.widget_btn_action, loc.getString(R.string.widget_clock_in))
+            val clockInIntent = Intent(appContext, WorkRemainingWidgetProvider::class.java).apply {
                 this.action = ACTION_CLOCK_IN
             }
             val pendingClockIn = PendingIntent.getBroadcast(
-                context,
+                appContext,
                 2,
                 clockInIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -247,11 +288,10 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         }
 
         if (today.isDayOff) {
-            // Case 2: Day Off
-            views.setTextViewText(R.id.widget_timer_value, context.getString(R.string.status_day_off))
-            views.setTextViewText(R.id.widget_timer_subtitle, context.getString(R.string.widget_scheduled_day_off))
+            views.setTextViewText(R.id.widget_timer_value, loc.getString(R.string.status_day_off))
+            views.setTextViewText(R.id.widget_timer_subtitle, loc.getString(R.string.widget_scheduled_day_off))
             views.setProgressBar(R.id.widget_progress_bar, 100, 100, false)
-            views.setTextViewText(R.id.widget_info_left, context.getString(R.string.widget_enjoy_rest))
+            views.setTextViewText(R.id.widget_info_left, loc.getString(R.string.widget_enjoy_rest))
             views.setTextViewText(R.id.widget_info_right, "")
             views.setViewVisibility(R.id.widget_btn_action, View.GONE)
             return
@@ -261,30 +301,34 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         val enterMinute = today.enterMinute ?: currentMinute
         val enterTotalMinutes = enterHour * 60 + enterMinute
 
-        // Target departure time
         val expectedExitTotalMinutes = enterTotalMinutes + targetMinutes
         val expectedExitHour = (expectedExitTotalMinutes / 60) % 24
         val expectedExitMinute = expectedExitTotalMinutes % 60
-        val isFarsi = LocaleHelper.isFarsi(context)
-        val formattedExpectedExit = String.format(Locale.getDefault(), "%02d:%02d", expectedExitHour, expectedExitMinute).localizeDigits(isFarsi)
-        val formattedEnter = String.format(Locale.getDefault(), "%02d:%02d", enterHour, enterMinute).localizeDigits(isFarsi)
+        val formattedExpectedExit = WorkRemainingWidgetProvider.ltrIsolate(
+            String.format(Locale.US, "%02d:%02d", expectedExitHour, expectedExitMinute).localizeDigits(isFarsi)
+        )
+        val formattedEnter = WorkRemainingWidgetProvider.ltrIsolate(
+            String.format(Locale.US, "%02d:%02d", enterHour, enterMinute).localizeDigits(isFarsi)
+        )
 
         if (today.hasExitTime) {
-            // Case 3: Shift is already completed (both enter and exit recorded)
             val workedMinutes = today.workedMinutes
             val diff = workedMinutes - targetMinutes
 
-            views.setTextViewText(R.id.widget_timer_value, com.example.ui.localization.AppStrings.Units.formatDuration(context, workedMinutes))
+            views.setTextViewText(
+                R.id.widget_timer_value,
+                WorkRemainingWidgetProvider.ltrIsolate(AppStrings.Units.formatDuration(loc, workedMinutes))
+            )
             val statusText = if (diff >= 0) {
-                context.getString(
+                loc.getString(
                     R.string.widget_shift_completed_overtime,
-                    com.example.ui.localization.AppStrings.Units.formatDuration(context, diff)
+                    WorkRemainingWidgetProvider.ltrIsolate(AppStrings.Units.formatDuration(loc, diff))
                 )
             } else {
                 val deficit = -diff
-                context.getString(
+                loc.getString(
                     R.string.widget_shift_completed_deficit,
-                    com.example.ui.localization.AppStrings.Units.formatDuration(context, deficit)
+                    WorkRemainingWidgetProvider.ltrIsolate(AppStrings.Units.formatDuration(loc, deficit))
                 )
             }
             views.setTextViewText(R.id.widget_timer_subtitle, statusText)
@@ -294,51 +338,61 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
 
             val exitHour = today.exitHour ?: 0
             val exitMinute = today.exitMinute ?: 0
-            val formattedExit = String.format(Locale.getDefault(), "%02d:%02d", exitHour, exitMinute).localizeDigits(isFarsi)
-            views.setTextViewText(R.id.widget_info_left, context.getString(R.string.widget_in_out, formattedEnter, formattedExit))
-            views.setTextViewText(R.id.widget_info_right, context.getString(R.string.widget_target_was, formattedExpectedExit))
+            val formattedExit = WorkRemainingWidgetProvider.ltrIsolate(
+                String.format(Locale.US, "%02d:%02d", exitHour, exitMinute).localizeDigits(isFarsi)
+            )
+            views.setTextViewText(
+                R.id.widget_info_left,
+                loc.getString(R.string.widget_in_out, formattedEnter, formattedExit)
+            )
+            views.setTextViewText(
+                R.id.widget_info_right,
+                loc.getString(R.string.widget_target_was, formattedExpectedExit)
+            )
             views.setViewVisibility(R.id.widget_btn_action, View.GONE)
             return
         }
 
-        // Case 4: Currently at work (Entered, but hasn't exited yet)
         var elapsedMinutes = currentTotalMinutes - enterTotalMinutes
         if (elapsedMinutes < 0) {
-            elapsedMinutes += 24 * 60 // Crossed midnight
+            elapsedMinutes += 24 * 60
         }
 
         val progressPercent = ((elapsedMinutes.toFloat() / targetMinutes.toFloat()) * 100).toInt().coerceIn(0, 100)
         views.setProgressBar(R.id.widget_progress_bar, 100, progressPercent, false)
 
         if (elapsedMinutes >= targetMinutes) {
-            // Target hours reached! In overtime
             val overtimeMinutes = elapsedMinutes - targetMinutes
             views.setTextViewText(
                 R.id.widget_timer_value,
-                com.example.ui.localization.AppStrings.Units.formatSignedDuration(context, overtimeMinutes)
+                WorkRemainingWidgetProvider.ltrIsolate(AppStrings.Units.formatSignedDuration(loc, overtimeMinutes))
             )
-            views.setTextViewText(R.id.widget_timer_subtitle, context.getString(R.string.widget_target_reached_overtime))
+            views.setTextViewText(R.id.widget_timer_subtitle, loc.getString(R.string.widget_target_reached_overtime))
         } else {
-            // Remaining time left to exit
             val remainingMinutes = targetMinutes - elapsedMinutes
             views.setTextViewText(
                 R.id.widget_timer_value,
-                com.example.ui.localization.AppStrings.Units.formatDuration(context, remainingMinutes)
+                WorkRemainingWidgetProvider.ltrIsolate(AppStrings.Units.formatDuration(loc, remainingMinutes))
             )
-            views.setTextViewText(R.id.widget_timer_subtitle, context.getString(R.string.widget_time_left_to_exit))
+            views.setTextViewText(R.id.widget_timer_subtitle, loc.getString(R.string.widget_time_left_to_exit))
         }
 
-        views.setTextViewText(R.id.widget_info_left, context.getString(R.string.widget_check_in_at, formattedEnter))
-        views.setTextViewText(R.id.widget_info_right, context.getString(R.string.widget_target_exit_at, formattedExpectedExit))
+        views.setTextViewText(
+            R.id.widget_info_left,
+            loc.getString(R.string.widget_check_in_at, formattedEnter)
+        )
+        views.setTextViewText(
+            R.id.widget_info_right,
+            loc.getString(R.string.widget_target_exit_at, formattedExpectedExit)
+        )
 
-        // Offer Quick Clock-Out action button
         views.setViewVisibility(R.id.widget_btn_action, View.VISIBLE)
-        views.setTextViewText(R.id.widget_btn_action, context.getString(R.string.widget_clock_out))
-        val clockOutIntent = Intent(context, WorkRemainingWidgetProvider::class.java).apply {
+        views.setTextViewText(R.id.widget_btn_action, loc.getString(R.string.widget_clock_out))
+        val clockOutIntent = Intent(appContext, WorkRemainingWidgetProvider::class.java).apply {
             this.action = ACTION_CLOCK_OUT
         }
         val pendingClockOut = PendingIntent.getBroadcast(
-            context,
+            appContext,
             3,
             clockOutIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -351,9 +405,9 @@ class WorkRemainingWidgetProvider : AppWidgetProvider(), KoinComponent {
         const val ACTION_CLOCK_IN = "com.example.widget.ACTION_CLOCK_IN"
         const val ACTION_CLOCK_OUT = "com.example.widget.ACTION_CLOCK_OUT"
 
-        /**
-         * Helper method to trigger a widget refresh from anywhere in the app
-         */
+        /** LRI…PDI keeps times/numbers from scrambling RTL Farsi labels. */
+        fun ltrIsolate(text: String): String = "\u2066$text\u2069"
+
         fun notifyWidgetUpdate(context: Context) {
             val intent = Intent(context, WorkRemainingWidgetProvider::class.java).apply {
                 action = ACTION_REFRESH_WIDGET
@@ -369,6 +423,10 @@ private data class WidgetScale(
     val titleSp: Float,
     val infoSp: Float,
     val buttonSp: Float,
+    val noteLabelSp: Float,
+    val noteSp: Float,
+    val noteMaxLines: Int,
+    val showNote: Boolean,
     val buttonPadHDp: Int,
     val buttonPadVDp: Int,
     val rootPadDp: Int,
@@ -376,44 +434,58 @@ private data class WidgetScale(
     val refreshPadDp: Int
 ) {
     companion object {
-        fun fromSize(minWidthDp: Int, minHeightDp: Int): WidgetScale {
-            val area = minWidthDp * minHeightDp
+        fun fromSize(widthDp: Int, heightDp: Int): WidgetScale {
             return when {
-                minWidthDp < 180 || minHeightDp < 100 || area < 18_000 -> WidgetScale(
+                // Compact (~default 3x2): timer + progress only
+                heightDp < 130 -> WidgetScale(
                     timerSp = 22f,
                     subtitleSp = 11f,
                     titleSp = 12f,
                     infoSp = 10f,
                     buttonSp = 11f,
+                    noteLabelSp = 10f,
+                    noteSp = 10f,
+                    noteMaxLines = 1,
+                    showNote = false,
                     buttonPadHDp = 8,
                     buttonPadVDp = 4,
                     rootPadDp = 10,
                     refreshIconDp = 22,
                     refreshPadDp = 6
                 )
-                minWidthDp > 280 || minHeightDp > 160 || area > 45_000 -> WidgetScale(
-                    timerSp = 34f,
-                    subtitleSp = 14f,
-                    titleSp = 15f,
-                    infoSp = 13f,
-                    buttonSp = 15f,
-                    buttonPadHDp = 20,
-                    buttonPadVDp = 10,
-                    rootPadDp = 20,
-                    refreshIconDp = 32,
-                    refreshPadDp = 10
-                )
-                else -> WidgetScale(
+                // Medium: unlock short note
+                heightDp < 170 -> WidgetScale(
                     timerSp = 28f,
                     subtitleSp = 12f,
                     titleSp = 13f,
                     infoSp = 11f,
                     buttonSp = 12f,
+                    noteLabelSp = 11f,
+                    noteSp = 11f,
+                    noteMaxLines = 2,
+                    showNote = true,
                     buttonPadHDp = 12,
                     buttonPadVDp = 6,
                     rootPadDp = 16,
                     refreshIconDp = 24,
                     refreshPadDp = 8
+                )
+                // Large: more note lines
+                else -> WidgetScale(
+                    timerSp = 34f,
+                    subtitleSp = 14f,
+                    titleSp = 15f,
+                    infoSp = 13f,
+                    buttonSp = 15f,
+                    noteLabelSp = 12f,
+                    noteSp = 12f,
+                    noteMaxLines = 3,
+                    showNote = true,
+                    buttonPadHDp = 20,
+                    buttonPadVDp = 10,
+                    rootPadDp = 20,
+                    refreshIconDp = 32,
+                    refreshPadDp = 10
                 )
             }
         }
